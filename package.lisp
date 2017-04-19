@@ -1,11 +1,14 @@
-;;;; package.lisp
+;;;; package.lisp (push #p"d:/giusv/lisp/nextent/" asdf:*central-registry*)
 
 (defpackage :lol
   (:use :cl)
   (:export :pandoriclet
            :this
            :dlambda
-           :flatten))
+           :flatten
+           :group
+           :symb
+           :keyw))
 
 (defpackage :parser
   (:use :cl :lol)
@@ -14,24 +17,24 @@
 (defpackage :grammar
   (:use :cl :lol)
   (:export :defprim 
-           :synth
-           :synth-all
-           :rest-key
-           :rest-plain))
+           :synth :synth-all :synth-plist :synth-plist-merge
+           :rest-key :rest-plain))
 
 (defpackage :doc
   (:use :cl :lol :grammar)
-  (:export :empty
-           :text
-           :nest
-           :vcat
-           :hcat))
+  (:export :empty :text :nest :vcat :hcat 
+           :parens :brackets :braces :single-quotes :double-quotes
+           :comma :dot :semi :colon :forward-slash :equals
+           :punctuate :prepend :postpend
+           :lower-camel :upper-camel
+           :split-str :interleave))
 
 (defpackage :html
   (:use :cl :lol :grammar)
   (:export :taglist
            :div
-           :input))
+           :input
+           :button))
 
 ;; (defpackage :expr
 ;;   (:use :cl :lol :grammar))
@@ -39,12 +42,14 @@
 
 (defpackage :gui
   (:use :cl :lol :grammar)
-  (:export :input))
+  (:export :input :button))
 
 (defpackage :web
-  (:use :cl :lol :grammar)
-  (:export :pair))
+  (:use :cl :lol :grammar :doc)
+  (:export :ng-const :ng-pair :ng-array :ng-primitive :ng-class :ng-method 
+           :ng-import :ng-new :ng-call :ng-chain :ng-constructor :ng-arrow 
+           :ng-unit))
 
 (defpackage :nextent
-  (:use :cl :lol :grammar :doc :html))
+  (:use :cl :lol :grammar :doc :html :web))
 

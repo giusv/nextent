@@ -22,8 +22,14 @@
                       (doc:vcat (open-tag attributes)
                                 (doc:nest 4 (apply #'doc:vcat (synth-all :doc body)))
                                 (close-tag))))))))
-(deftag div)
-(deftag input)
+(defmacro deftags (&rest names)
+  `(progn
+     ,@(mapcar #'(lambda (name)
+		   `(deftag ,name))
+	       names)))
+
+(deftags div input button)
+
 ;; (defprim div (&rest args)
 ;;   (:pretty () `(div (:attributes ,(rest-key args) :body ,@(synth-all :pretty (rest-plain args)))))
 ;;   (:doc () (labels ((open-tag (as) (doc:text "<~(~a~)~{ ~(~a~)=\"~(~a~)\"~}>" 'div as))

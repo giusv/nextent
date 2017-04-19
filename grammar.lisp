@@ -23,16 +23,23 @@
   `(defun ,name ,lambda-list
      (pandoriclet ,(mapcar #`(,a1 ,a1) (parser:arg-names lambda-list))
        (dlambda ,@attrs
-                (t (&rest args) (apply lol:this args))))))
+                (t (&rest *) ;; (apply lol:this args)
+                   (error "attribute not found"))))))
 
 (defun synth (att box &rest args)
-  (apply box att args))
+  (if box (apply box att args)))
 
 (defun synth-all (att boxlist &rest args)
-  (mapcar (lambda (box) (apply #'synth att box args))
-          boxlist))
+  (if boxlist (mapcar (lambda (box) (apply #'synth att box args))
+           boxlist)))
 
+(defun synth-plist (func plst &rest args)
+  (apply #'append (mapcar (lambda (pair) (list (car pair) (apply #'synth func (cadr pair) args)))
+			   (group plst 2))))
 
+(defun synth-plist-merge (func plst &rest args)
+  (mapcar (lambda (pair) (apply func pair args))
+	   (group plst 2)))
 
 ;; (defprim text (template &rest args)
 ;;   (:pretty () `(text (:template ,template :args ,args))))

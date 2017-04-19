@@ -33,7 +33,9 @@
   (defun symb (&rest args)
     (values (intern (apply #'mkstr args)))))
 
-
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun keyw (&rest args)
+   (values (intern (apply #'mkstr args) "KEYWORD"))))
 
 (defun group (source n)
   (if (zerop n) (error "zero length"))

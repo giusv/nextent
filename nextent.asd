@@ -14,7 +14,8 @@
                ;; (:file "input")
                (:module "gui"
                         :serial t
-                        :components ((:file "input")))
+                        :components ((:file "input")
+                                     (:file "button")))
                (:module "web"
                         :serial t
                         :components ((:file "angular")))

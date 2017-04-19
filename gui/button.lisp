@@ -1,0 +1,30 @@
+(in-package :gui)
+
+(defmacro evnames (&rest actions)
+  `(append ,@(mapcar #'(lambda (action) 
+                         `(if ,action (list ,(keyw "(" action ")") (concatenate 'string (doc:lower-camel ',action) (doc:upper-camel name) "()"))))
+                     actions)))
+
+
+(defprim button (name expr &key click)
+  (:pretty () (list 'button (list :name name 
+                                  :expr (synth :pretty expr)
+                                  :click (synth :pretty click))))
+  (:req (*) (html:taglist 
+		       (doc:text "Pulsante identificato come ")
+                       ;; (span-color (string-downcase name))
+                       (doc:text " e etichettato con la seguente espressione:") 
+                       (synth :req expr)
+                       ;; (dlist click (span nil (doc:text "Sottoposto a click: ")) (synth :req click)
+                       ;;        hover (span nil (doc:text "Sottoposto a hover: ")) (synth :req hover))
+                       ))
+  (:brief (path) (synth :req this path))
+  (:reqlist (*) nil) 
+  (:template (&optional *) (html:button :|(click)| (doc:text "~aClick()" (doc:lower-camel name))))
+
+  (:controller () (web:ng-method (doc:text "~aClick" (doc:lower-camel name)) 
+                                 (list (web:ng-pair 'heroes 'string
+                                                    ))
+                                 'void)))
+ 
+

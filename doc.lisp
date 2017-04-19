@@ -51,3 +51,83 @@
 	       (reduce #'+ (synth-all :extent fdocs)))))
 
 
+(defmacro vcat-all (fn lst)
+  `(apply #'vcat (mapcar #',fn ,lst)))
+
+(defun wrap (doc start end &key newline (padding 0))
+(if newline 
+      (vcat start doc end)
+      (hcat start (padding padding) doc (padding padding) end)))
+
+(defmacro defwrapper (name start end)
+  `(defun ,name (doc &key newline (padding 0))
+     (wrap doc (text ,start) (text ,end) :newline newline :padding padding)))
+
+(defwrapper parens "(" ")")
+(defwrapper brackets "[" "]")
+(defwrapper braces "{" "}")
+(defwrapper single-quotes "'" "'")
+(defwrapper double-quotes "\"" "\"")
+
+(defun padding (p)
+  (text "~a" (make-string p :initial-element #\Space)))
+
+(defun comma ()
+  (text ","))
+(defun dot ()
+  (text "."))
+(defun semi ()
+  (text ";"))
+(defun colon ()
+  (text ":"))
+(defun forward-slash ()
+  (text "/"))
+(defun equals () 
+  (text "="))
+
+(defun punctuate (p newline &rest docs)
+  (cond ((null docs) nil)
+	((eq 1 (length docs)) (car docs))
+	(t (if newline
+	       (vcat (hcat (car docs) p) (apply #'punctuate p newline (cdr docs)))
+	       (hcat (car docs) p (apply #'punctuate p newline (cdr docs)))))))
+
+(defun prepend (p newline &rest docs)
+  (cond ((null docs) (empty)) 
+	((eq 1 (length docs)) (hcat p (car docs)))
+        (t (if newline
+               (vcat (hcat p (car docs)) (apply #'prepend p newline (cdr docs)))
+	       (hcat p (car docs) (apply #'prepend newline (cdr docs)))))))
+
+(defun postpend (p newline &rest docs)
+  (cond ((null docs) (empty)) 
+	((eq 1 (length docs)) (hcat (car docs) p))
+        (t (if newline
+	       (vcat (hcat (car docs) p) (apply #'postpend p newline (cdr docs)))
+	       (hcat (car docs) p (apply #'postpend newline (cdr docs)))))))
+
+
+(defun split-str-1 (string &optional (separator "-") (r nil))
+  (let ((n (position separator string
+		     :from-end t
+		     :test #'(lambda (x y)
+			       (find y x :test #'string=)))))
+    (if n
+	(split-str-1 (subseq string 0 n) separator (cons (subseq string (1+ n)) r))
+      (cons string r))))
+
+(defun split-str (string &optional (separator "-"))
+  (split-str-1 string separator))
+
+(defun interleave (lst sep)
+  (if (equal 1 (length lst))
+      lst
+      (cons (car lst) (cons sep (interleave (cdr lst) sep)))))
+
+(defun lower-camel (sym &optional (separator ""))
+  (let ((words (interleave (mapcar #'string-capitalize (split-str (symbol-name sym))) separator)))
+    (format nil "~(~a~)~{~a~}" (car words) (cdr words))))
+
+(defun upper-camel (sym &optional (separator ""))
+  (let ((words (interleave (mapcar #'string-capitalize (split-str (symbol-name sym))) separator)))
+    (format nil "~{~a~}" words)))
