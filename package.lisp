@@ -3,6 +3,7 @@
 (defpackage :lol
   (:use :cl)
   (:export :pandoriclet
+           :get-pandoric
            :this
            :dlambda
            :flatten
@@ -12,7 +13,9 @@
 
 (defpackage :parser
   (:use :cl :lol)
-  (:export :arg-names))
+  (:export :tuple :result :apply-parser :parse :bind :fail :item :do-with :sat :sym :choose :zero :plus :choice 
+           :many :many1 :sepby :sepby1 :sublist :pair :optional :atomic :var-init :req-var :opt-var :lambda-list :arg-names)) 
+
 
 (defpackage :grammar
   (:use :cl :lol)
@@ -27,32 +30,44 @@
            :comma :dot :semi :colon :forward-slash :equals
            :punctuate :prepend :postpend
            :lower-camel :upper-camel
-           :split-str :interleave))
+           :split-str :interleave
+           :append*))
 
 (defpackage :html
   (:use :cl :lol :grammar)
-  (:export :taglist
-           :div
-           :input
-           :button
-           :li
-           :ul))
+  (:export :tag 
+           :taglist
+           :span-color
+           :html :head :title :meta :link :body :h1 :h2 :h3 :h4 :h5 :div :span :li :dl :dt :dd :ul :ol :pre :i 
+           :strong :code :script
+           :table :tr :th :td
+           :section :article :aside :p :a
+           :button :input :textarea))
 
 ;; (defpackage :expr
 ;;   (:use :cl :lol :grammar))
 
 
+(defpackage :url
+  (:use :cl :lol :parser :grammar)
+  (:export :void :static-chunk :dynamic-chunk :expression-chunk :path-parameter :query-parameter :login-parameter 
+           :backward-chain :multi :forward-chain :queried))
+
+
 (defpackage :gui
   (:use :cl :lol :grammar)
   (:export :input :button
-           :vert))
+           :vert :vert*
+           :horz :horz*
+           :abst
+           :static))
 
 (defpackage :web
   (:use :cl :lol :grammar :doc)
   (:export :ng-const :ng-pair :ng-array :ng-primitive :ng-class :ng-method 
            :ng-import :ng-new :ng-call :ng-chain :ng-constructor :ng-arrow 
-           :ng-unit))
+           :ng-list :ng-unit))
 
 (defpackage :nextent
-  (:use :cl :lol :grammar :doc :html :web))
+  (:use :cl :lol :doc :grammar ))
 

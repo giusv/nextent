@@ -20,11 +20,13 @@
 
 
 (defmacro defprim (name lambda-list &rest attrs)
-  `(defun ,name ,lambda-list
-     (pandoriclet ,(mapcar #`(,a1 ,a1) (parser:arg-names lambda-list))
-       (dlambda ,@attrs
-                (t (&rest *) ;; (apply lol:this args)
-                   (error "attribute not found"))))))
+  (let ((args (parser:arg-names lambda-list)))
+    `(defun ,name ,lambda-list
+       (pandoriclet ,(mapcar #`(,a1 ,a1) args)
+                    (dlambda ,@(mapcar #`(,(keyw a1) nil (get-pandoric ,name ,a1)) args)
+                             ,@attrs
+                             (t (&rest *) ;; (apply lol:this args)
+                                (error "attribute not found")))))))
 
 (defun synth (att box &rest args)
   (if box (apply box att args)))

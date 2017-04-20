@@ -52,7 +52,9 @@
                                         (synth-all :typescript methods)))
                          :newline t))))
 
-
+(defprim ng-list (&rest statements)
+  (:pretty () (list 'ng-list (list :statements (synth-all :pretty statements))))
+  (:typescript () (apply #'vcat (append* (synth-all :typescript statements)))))
 
 (defprim ng-method (name parameters rtype &rest statements)
   (:pretty () (list 'ng-method (list :name name 
@@ -114,8 +116,10 @@
                          :newline t))))
 
 
-(defprim ng-unit (&rest elements)
-  (:pretty () (list 'ng-unit (list :elements (synth-all :pretty elements))))
-  (:typescript () (apply #'vcat (synth-all :typescript elements))))
+(defprim ng-unit (name &rest elements)
+  (:pretty () (list 'ng-unit (list :name name :elements (synth-all :pretty elements))))
+  (:typescript () (apply #'vcat 
+                         (text "Unit ~a" name)
+                         (synth-all :typescript elements))))
 
 

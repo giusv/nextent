@@ -22,9 +22,7 @@
                                             :name (string-downcase name)
                                             :placeholder (synth :doc init)))
 
-  (:controller () (web:ng-method (doc:text "~aClick" (doc:lower-camel name)) 
-                                 (list (web:ng-pair 'heroes 'string
-                                        ))
-                                 'void)))
+  (:controller () nil)
+  (:components () nil))
  
 

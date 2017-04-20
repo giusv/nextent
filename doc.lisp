@@ -50,6 +50,11 @@
   (:extent () (let ((fdocs (flatten docs)))
 	       (reduce #'+ (synth-all :extent fdocs)))))
 
+(defun append* (&rest args)
+  (let ((args* (mapcar (lambda (arg) 
+                         (if (atom arg) (list arg) arg))
+                       args)))
+    (apply #'append args*)))
 
 (defmacro vcat-all (fn lst)
   `(apply #'vcat (mapcar #',fn ,lst)))

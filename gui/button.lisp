@@ -11,20 +11,20 @@
                                   :expr (synth :pretty expr)
                                   :click (synth :pretty click))))
   (:req (*) (html:taglist 
-		       (doc:text "Pulsante identificato come ")
-                       ;; (span-color (string-downcase name))
-                       (doc:text " e etichettato con la seguente espressione:") 
-                       (synth :req expr)
-                       ;; (dlist click (span nil (doc:text "Sottoposto a click: ")) (synth :req click)
-                       ;;        hover (span nil (doc:text "Sottoposto a hover: ")) (synth :req hover))
-                       ))
+             (doc:text "Pulsante identificato come ")
+             ;; (span-color (string-downcase name))
+             (doc:text " e etichettato con la seguente espressione:") 
+             (synth :req expr)
+             ;; (dlist click (span nil (doc:text "Sottoposto a click: ")) (synth :req click)
+             ;;        hover (span nil (doc:text "Sottoposto a hover: ")) (synth :req hover))
+             ))
   (:brief (path) (synth :req this path))
   (:reqlist (*) nil) 
   (:template (&optional *) (html:button :|(click)| (doc:text "~aClick()" (doc:lower-camel name))))
 
   (:controller () (web:ng-method (doc:text "~aClick" (doc:lower-camel name)) 
-                                 (list (web:ng-pair 'heroes 'string
-                                                    ))
-                                 'void)))
+                                 nil
+                                 'void))
+  (:components () nil))
  
 
