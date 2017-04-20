@@ -34,7 +34,9 @@
   (:export :taglist
            :div
            :input
-           :button))
+           :button
+           :li
+           :ul))
 
 ;; (defpackage :expr
 ;;   (:use :cl :lol :grammar))
@@ -42,7 +44,8 @@
 
 (defpackage :gui
   (:use :cl :lol :grammar)
-  (:export :input :button))
+  (:export :input :button
+           :vert))
 
 (defpackage :web
   (:use :cl :lol :grammar :doc)

@@ -16,6 +16,7 @@
                        (close-tag () (doc:text "</~(~a~)>" ',name))
                        (open-close-tag (as) (doc:text "<~(~a~)~{ ~(~a~)=\"~a\"~}/>" ',name (mapcar #'stringify as))))
                 (let ((attributes (rest-key args))
+                      ;; (body )
                       (body (rest-plain args)))
                   (if (null body)
                       (open-close-tag attributes)
@@ -28,7 +29,7 @@
 		   `(deftag ,name))
 	       names)))
 
-(deftags div input button)
+(deftags div input button ul li)
 
 ;; (defprim div (&rest args)
 ;;   (:pretty () `(div (:attributes ,(rest-key args) :body ,@(synth-all :pretty (rest-plain args)))))

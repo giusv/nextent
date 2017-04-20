@@ -15,7 +15,8 @@
                (:module "gui"
                         :serial t
                         :components ((:file "input")
-                                     (:file "button")))
+                                     (:file "button")
+                                     (:file "vert")))
                (:module "web"
                         :serial t
                         :components ((:file "angular")))
