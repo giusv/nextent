@@ -9,8 +9,9 @@
 ;;                                              (vai (gui:static :test nil (gui:button 'vai (text "vaiClick"))))
 ;;                                              (torna (gui:button 'torna (text "tornaClick")))))) 0)
 
-(synth :output (synth :doc (apply #'vcat (synth-all :typescript (synth :components (gui:static :test nil (gui:button 'vai (text "vaiClick"))))))) 0)
-(synth :output (synth :doc (synth :template (gui:static :test nil (gui:button 'vai (text "vaiClick"))))) 0)
+(defparameter gui (gui:static :test nil (gui:button 'vai (text "vaiClick"))))
+(synth :output (synth :doc (apply #'vcat (synth-all :typescript (synth :components gui)))) 0)
+;; (synth :output (synth :doc (synth :template (gui:static :test nil (gui:button 'vai (text "vaiClick"))))) 0)
 
 
 ;; (synth :output (synth :typescript (ng-unit (ng-import (ng-const "@angular/core") 'component 'onInit)

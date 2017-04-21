@@ -20,7 +20,11 @@
 
 (defprim ng-const (lit)
   (:pretty () (list 'ng-const (list :lit lit)))
-  (:typescript () (double-quotes (text "~a" lit))))
+  (:typescript () (single-quotes (text "~a" lit))))
+
+(defprim ng-template (element)
+  (:pretty () (list 'ng-template (list :element (synth :pretty element))))
+  (:typescript () (back-quotes (synth :doc element) :newline t)))
 
 (defprim ng-array (&rest elems)
   (:pretty () `(ng-array (:elems ,(synth-all :pretty elems))))

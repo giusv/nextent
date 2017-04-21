@@ -23,7 +23,13 @@
                     (synth :reqlist element newpath))))
   (:template (&optional father) (html:tag name))
   (:controller () nil) 
-  (:components () (list (web:ng-unit name))))
+  (:components () (list (ng-unit name
+                                 (ng-import (ng-const "@angular/core") 'component 'input )
+                                 (ng-primitive 'component
+                                               :selector (ng-const (string-downcase name))
+                                               :template (ng-template (synth :template element)))
+                                 (ng-class (doc:upper-camel (symb name "-COMPONENT")))
+                                 ))))
 
 (defmacro static (name queries element)
   `(static% ,name 

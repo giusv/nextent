@@ -26,7 +26,7 @@
 (defpackage :doc
   (:use :cl :lol :grammar)
   (:export :empty :text :nest :vcat :hcat 
-           :parens :brackets :braces :single-quotes :double-quotes
+           :parens :brackets :braces :single-quotes :double-quotes :back-quotes
            :comma :dot :semi :colon :forward-slash :equals
            :punctuate :prepend :postpend
            :lower-camel :upper-camel
@@ -54,19 +54,19 @@
            :backward-chain :multi :forward-chain :queried))
 
 
+(defpackage :web
+  (:use :cl :lol :grammar :doc)
+  (:export :ng-const :ng-pair :ng-array :ng-primitive :ng-class :ng-method 
+           :ng-import :ng-new :ng-call :ng-chain :ng-constructor :ng-arrow 
+           :ng-list :ng-unit :ng-template))
+
 (defpackage :gui
-  (:use :cl :lol :grammar)
+  (:use :cl :lol :grammar :web)
   (:export :input :button
            :vert :vert*
            :horz :horz*
            :abst
            :static))
-
-(defpackage :web
-  (:use :cl :lol :grammar :doc)
-  (:export :ng-const :ng-pair :ng-array :ng-primitive :ng-class :ng-method 
-           :ng-import :ng-new :ng-call :ng-chain :ng-constructor :ng-arrow 
-           :ng-list :ng-unit))
 
 (defpackage :nextent
   (:use :cl :lol :doc :grammar ))
