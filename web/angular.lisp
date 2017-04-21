@@ -48,7 +48,7 @@
                                     :fields (synth-all :pretty fields) 
                                     :constructor (synth :pretty constructor)
                                     :methods (synth-all :pretty methods))))
-  (:typescript () (vcat (text "export class ~a" (string-downcase name)) 
+  (:typescript () (vcat (text "export class ~a" (upper-camel name)) 
                         (braces 
                          (nest 4 (apply #'vcat (apply #'postpend (semi) t 
                                                       (synth-all :typescript fields))
@@ -78,8 +78,8 @@
                                      :elements elements)))
   (:typescript () (if elements 
                       (hcat (text "import ")
-                            (hcat (braces (apply #'punctuate (comma) nil (mapcar #'text (mapcar #'upper-camel elements))) :padding 1)
-                                  (text " from ") (synth :typescript name))))))
+                            (hcat (braces (apply #'punctuate (text ", ") nil (mapcar #'text (mapcar #'upper-camel elements))) :padding 1)
+                                  (text " from ") (synth :typescript name) (semi))))))
 
 (defprim ng-new (name &rest parameters)
   (:pretty () (list 'ng-new (list :name name 
@@ -123,7 +123,7 @@
 (defprim ng-unit (name &rest elements)
   (:pretty () (list 'ng-unit (list :name name :elements (synth-all :pretty elements))))
   (:typescript () (apply #'vcat 
-                         (text "Unit ~a" name)
+                         ;; (text "Unit ~a" name)
                          (synth-all :typescript elements))))
 
 

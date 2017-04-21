@@ -52,7 +52,9 @@
 
 (defun append* (&rest args)
   (let ((args* (mapcar (lambda (arg) 
-                         (if (atom arg) (list arg) arg))
+                         (cond ((null arg) nil)
+                               ((atom arg) (list arg))
+                               (t arg)))
                        args)))
     (apply #'append args*)))
 
@@ -130,10 +132,17 @@
       lst
       (cons (car lst) (cons sep (interleave (cdr lst) sep)))))
 
-(defun lower-camel (sym &optional (separator ""))
-  (let ((words (interleave (mapcar #'string-capitalize (split-str (symbol-name sym))) separator)))
+(defun lower-camel (item &optional (separator ""))
+  (let ((words (interleave (mapcar #'string-capitalize (split-str (mkstr item))) separator)))
     (format nil "~(~a~)~{~a~}" (car words) (cdr words))))
 
-(defun upper-camel (sym &optional (separator ""))
-  (let ((words (interleave (mapcar #'string-capitalize (split-str (symbol-name sym))) separator)))
+(defun upper-camel (item &optional (separator ""))
+  (let ((words (interleave (mapcar #'string-capitalize (split-str (mkstr item))) separator)))
     (format nil "~{~a~}" words)))
+
+(defun write-file (name content)
+    (with-open-file (stream name
+        :direction :output
+        :if-exists :supersede
+        :if-does-not-exist :create)
+    (format stream content)))

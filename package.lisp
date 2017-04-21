@@ -2,14 +2,7 @@
 
 (defpackage :lol
   (:use :cl)
-  (:export :pandoriclet
-           :get-pandoric
-           :this
-           :dlambda
-           :flatten
-           :group
-           :symb
-           :keyw))
+  (:export :pandoriclet :get-pandoric :this :dlambda :flatten :group :mkstr :symb :keyw))
 
 (defpackage :parser
   (:use :cl :lol)
@@ -31,7 +24,8 @@
            :punctuate :prepend :postpend
            :lower-camel :upper-camel
            :split-str :interleave
-           :append*))
+           :append*
+           :write-file))
 
 (defpackage :html
   (:use :cl :lol :grammar)
@@ -66,7 +60,7 @@
            :vert :vert*
            :horz :horz*
            :abst
-           :static))
+           :static :static%))
 
 (defpackage :nextent
   (:use :cl :lol :doc :grammar ))

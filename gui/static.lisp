@@ -24,12 +24,11 @@
   (:template (&optional father) (html:tag name))
   (:controller () nil) 
   (:components () (list (ng-unit name
-                                 (ng-import (ng-const "@angular/core") 'component 'input )
+                                 (ng-import (ng-const "@angular/core") 'component)
                                  (ng-primitive 'component
                                                :selector (ng-const (string-downcase name))
                                                :template (ng-template (synth :template element)))
-                                 (ng-class (doc:upper-camel (symb name "-COMPONENT")))
-                                 ))))
+                                 (ng-class (symb name "-COMPONENT"))))))
 
 (defmacro static (name queries element)
   `(static% ,name 

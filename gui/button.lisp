@@ -20,7 +20,8 @@
              ))
   (:brief (path) (synth :req this path))
   (:reqlist (*) nil) 
-  (:template (&optional *) (html:button :|(click)| (doc:text "~aClick()" (doc:lower-camel name))))
+  (:template (&optional *) (html:button :|(click)| (doc:text "~aClick()" (doc:lower-camel name))
+                                        expr))
 
   (:controller () (web:ng-method (doc:text "~aClick" (doc:lower-camel name)) 
                                  nil

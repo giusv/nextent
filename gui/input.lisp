@@ -5,12 +5,12 @@
                                  :label (synth :pretty label)
                                  :init (synth :pretty init))))
   (:req (*) (html:taglist (doc:text "Campo di input identificato come")
-                             ;; (span-color (string-downcase name))
-                             (doc:text " etichettato con ")
-                             (synth :req label) 
-                             ;; (if init
-                             ;;     (dlist init (span nil (text "Valore iniziale")) (synth :req init)))
-                             ))
+                          ;; (span-color (string-downcase name))
+                          (doc:text " etichettato con ")
+                          (synth :req label) 
+                          ;; (if init
+                          ;;     (dlist init (span nil (text "Valore iniziale")) (synth :req init)))
+                          ))
   (:brief (path) (synth :req this path))
   (:reqlist (*) nil) 
   (:template (&optional father) (html:input :type "text" 
@@ -20,7 +20,7 @@
                                                                (doc:text "~a.~a" father name)
                                                                (doc:text "~a" name))
                                             :name (string-downcase name)
-                                            :placeholder (synth :doc init)))
+                                            :placeholder (if init (synth :doc init) "")))
 
   (:controller () nil)
   (:components () nil))
