@@ -11,7 +11,7 @@
 ;; (within-braces (text "@Component") (vcat (text "selector: ~a" selector)))
 
 (defprim ng-pair (name type &key init const)
-  (:pretty () `(ng-pair (:name ,name :type ,type :init ,(synth :pretty init) :const ,const)))
+  (:pretty () (list 'ng-pair (list :name name :type type :init (synth :pretty init) :const const)))
   (:typescript () (hcat (if const (text "const ") (empty))
                         (text "~a: ~a" (string-downcase name) (string-downcase type))
                         (if init 
@@ -22,16 +22,38 @@
   (:pretty () (list 'ng-const (list :lit lit)))
   (:typescript () (single-quotes (text "~a" lit))))
 
+;; (defprim ng-bool (value)
+;;   (:pretty () (list 'ng-bool (list :value (synth :pretty value))))
+;;   (:string () (synth :string value)))
+
+;; (defprim ng-number (value)
+;;   (:pretty () (list 'ng-number (list :value (synth :pretty value))))
+;;   (:string () (synth :string value)))
+
+;; (defprim ng-string (value)
+;;   (:pretty () (list 'ng-string (list :value (synth :pretty value))))
+;;   (:string () (synth :string value)))
+
+(defprim ng-array (&rest elems)
+  (:pretty () (list 'ng-array (list :elems (synth-all :pretty elems))))
+  (:typescript () (brackets (apply #'punctuate (comma) t (synth-all :string elems)) :padding 1 :newline nil)))
+
+(defprim ng-object (&rest elems)
+  (:pretty () (list 'ng-object (list :elems (synth-all :pretty elems))))
+  (:typescript () (braces 
+                   (nest 4 (apply #'punctuate (comma) t 
+                                  (synth-plist-merge 
+                                   #'(lambda (pair) (hcat (text "\"~a\": " (lower-camel (first pair)))
+                                                          (synth :string (second pair)))) 
+                                   elems)))
+                   :newline t)))
 (defprim ng-template (element)
   (:pretty () (list 'ng-template (list :element (synth :pretty element))))
   (:typescript () (back-quotes (synth :doc element) :newline t)))
 
-(defprim ng-array (&rest elems)
-  (:pretty () `(ng-array (:elems ,(synth-all :pretty elems))))
-  (:typescript () (brackets (apply #'punctuate (comma) t (synth-all :typescript elems)) :padding 1 :newline nil)))
 
 (defprim ng-primitive (name &rest props)
-  (:pretty () `(ng-primitive (name ,name :props ,(synth-plist :pretty props))))
+  (:pretty () (list 'ng-primitive (list name name :props (synth-plist :pretty props))))
   (:typescript () (vcat (text "@~a" (upper-camel name)) 
                   (parens
                    (braces 
@@ -56,9 +78,15 @@
                                         (synth-all :typescript methods)))
                          :newline t))))
 
+;; (defprim taglist (&rest tags)
+;;   (:pretty () (list 'taglist (list :tags (synth-all :pretty tags))))
+;;   (:doc () (apply #'doc:vcat (synth-all :doc (apply #'doc:append* tags)))))
+
+
+
 (defprim ng-list (&rest statements)
   (:pretty () (list 'ng-list (list :statements (synth-all :pretty statements))))
-  (:typescript () (apply #'vcat (append* (synth-all :typescript statements)))))
+  (:typescript () (apply #'vcat (synth-all :typescript (apply #'append* statements)))))
 
 (defprim ng-method (name parameters rtype &rest statements)
   (:pretty () (list 'ng-method (list :name name 
