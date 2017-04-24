@@ -22,7 +22,9 @@
 
 (defun append* (&rest args)
   (let ((args* (mapcar (lambda (arg) 
-                         (if (atom arg) (list arg) arg))
+                         (cond ((null arg) nil)
+                               ((atom arg) (list arg))
+                               (t arg)))
                        args)))
     (apply #'append args*)))
 
@@ -38,9 +40,9 @@
                        (open-close-tag (as) (doc:text "<~a~{ ~a=\"~a\"~}/>" ',(string-downcase name) (mapcar #'stringify as))))
                 (let ((attributes (rest-key args))
                       ;; (body (rest-plain args))
-                      (body (apply #'append* (rest-plain args))))
-                  (pprint (rest-plain args))
-                  (pprint body)
+                      (body (append* (rest-plain args))))
+                  (princ "rest-plain:") (pprint (rest-plain args)) (fresh-line)
+                  (princ "body:") (pprint body) (fresh-line)
                   (if (null body)
                       (open-close-tag attributes)
                       (doc:vcat (open-tag attributes)
@@ -59,7 +61,7 @@
 
 (defun span-color (name)
   (let ((n (mod (reduce #'+ (mapcar #'char-code (coerce name 'list))) 100))) 
-    (span (list :class "label" :style (concatenate 'string "background-color:" (string-downcase (nth (mod n (length html-colors)) html-colors)))) (text "~a" name))))
+    (span (list :class "label" :style (concatenate 'string "background-color:" (string-downcase (nth (mod n (length html-colors)) html-colors)))) (doc:text "~a" name))))
 
 (defparameter html-colors 
   (list 'aliceblue

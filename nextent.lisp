@@ -16,7 +16,8 @@
       (filename (lol::mkstr "d:/giusv/angular/template/src/app/" (lower-camel (synth :name gui)) ".component.ts"))) 
   (pprint filename)
   (pprint output)
-  (write-file filename (synth :string (synth :doc (apply #'vcat (synth-all :typescript (synth :components gui)))))))
+  ;; (write-file filename (synth :string (synth :doc (apply #'vcat (synth-all :typescript (synth :components gui))))))
+  )
 
 ;; (synth :output (synth :typescript (ng-unit (ng-import (ng-const "@angular/core") 'component 'onInit)
 ;;                                            (ng-primitive 'component 
