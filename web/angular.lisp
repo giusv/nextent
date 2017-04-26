@@ -10,17 +10,22 @@
 ;;          (text ")")))
 ;; (within-braces (text "@Component") (vcat (text "selector: ~a" selector)))
 
+(defprim ng-empty ()
+  (:pretty () (list 'ng-empty))
+  (:typescript () (empty)))
 (defprim ng-pair (name type &key init const)
   (:pretty () (list 'ng-pair (list :name name :type type :init (synth :pretty init) :const const)))
   (:typescript () (hcat (if const (text "const ") (empty))
-                        (text "~a: ~a" (string-downcase name) (string-downcase type))
+                        (text "~a: ~a" (lower-camel name) (upper-camel type))
                         (if init 
                             (hcat (text " = ") (synth :typescript init))
                             (empty)))))
 
 (defprim ng-const (lit)
   (:pretty () (list 'ng-const (list :lit lit)))
-  (:typescript () (single-quotes (text "~a" lit))))
+  (:typescript () (single-quotes (if lit
+                                     (text "~a" lit)
+                                     (empty)))))
 
 ;; (defprim ng-bool (value)
 ;;   (:pretty () (list 'ng-bool (list :value (synth :pretty value))))
@@ -36,16 +41,16 @@
 
 (defprim ng-array (&rest elems)
   (:pretty () (list 'ng-array (list :elems (synth-all :pretty elems))))
-  (:typescript () (brackets (apply #'punctuate (comma) t (synth-all :string elems)) :padding 1 :newline nil)))
+  (:typescript () (brackets (apply #'punctuate (comma) t (synth-all :typescript (apply #'append* elems))) :padding 1 :newline nil)))
 
 (defprim ng-object (&rest elems)
-  (:pretty () (list 'ng-object (list :elems (synth-all :pretty elems))))
+  (:pretty () (list 'ng-object (list :elems (synth-all :pretty (apply #'append* elems)))))
   (:typescript () (braces 
                    (nest 4 (apply #'punctuate (comma) t 
                                   (synth-plist-merge 
-                                   #'(lambda (pair) (hcat (text "\"~a\": " (lower-camel (first pair)))
-                                                          (synth :string (second pair)))) 
-                                   elems)))
+                                   #'(lambda (pair) (hcat (text "~a: " (lower-camel (first pair)))
+                                                          (synth :typescript (second pair)))) 
+                                   (apply #'append* elems))))
                    :newline t)))
 (defprim ng-template (element)
   (:pretty () (list 'ng-template (list :element (synth :pretty element))))
@@ -80,12 +85,12 @@
 
 ;; (defprim taglist (&rest tags)
 ;;   (:pretty () (list 'taglist (list :tags (synth-all :pretty tags))))
-;;   (:doc () (apply #'doc:vcat (synth-all :doc (apply #'doc:append* tags)))))
+;;   (:doc () (apply #'doc:vcat (synth-all :doc (apply #'append* tags)))))
 
 
 
 (defprim ng-list (&rest statements)
-  (:pretty () (list 'ng-list (list :statements (synth-all :pretty statements))))
+  (:pretty () (list 'ng-list (list :statements (synth-all :pretty (apply #'append* statements)))))
   (:typescript () (apply #'vcat (synth-all :typescript (apply #'append* statements)))))
 
 (defprim ng-method (name parameters rtype &rest statements)
@@ -120,6 +125,12 @@
                                    :parameters (synth-all :pretty parameters))))
   (:typescript () (hcat (text "~a" (lower-camel name))
                         (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters))))))
+(defprim ng-static (name)
+  (:pretty () (list 'ng-static (list :name name)))
+  (:typescript () (text "~a" (upper-camel name))))
+(defprim ng-dynamic (name)
+  (:pretty () (list 'ng-dynamic (list :name name)))
+  (:typescript () (text "~a" (lower-camel name))))
 
 (defprim ng-chain (&rest calls)
   (:pretty () (list 'ng-chain (list :calls (synth-all :pretty calls))))
@@ -149,9 +160,9 @@
 
 
 (defprim ng-unit (name &rest elements)
-  (:pretty () (list 'ng-unit (list :name name :elements (synth-all :pretty elements))))
+  (:pretty () (list 'ng-unit (list :name name :elements (synth-all :pretty (apply #'append* elements)))))
   (:typescript () (apply #'vcat 
                          ;; (text "Unit ~a" name)
-                         (synth-all :typescript elements))))
+                         (synth-all :typescript (apply #'append* elements)))))
 
 
