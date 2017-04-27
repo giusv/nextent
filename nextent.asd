@@ -7,21 +7,30 @@
   :license "Specify license here"
   :components ((:file "package")
                (:file "lol")
+               (:file "utils")
                (:file "parser")
                (:file "grammar")
                (:file "doc")
                (:file "html")
+               (:file "expression")
                (:file "url")
-
-               ;; (:file "input")
+               (:module "data"
+                        :serial t
+                        :components ((:file "data")
+                                     (:file "json")
+                                     (:file "jsonschema"))) 
                (:module "gui"
                         :serial t
                         :components ((:file "input")
                                      (:file "button")
                                      (:file "vert")
+                                     (:file "label")
+                                     (:file "listing")
                                      (:file "horz")
                                      (:file "abst")
-                                     (:file "static")))
+                                     (:file "static")
+                                     (:file "alt")
+                                     (:file "form")))
                (:module "web"
                         :serial t
                         :components ((:file "angular")))

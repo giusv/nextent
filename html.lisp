@@ -3,46 +3,39 @@
 (defprim tag (name &rest args)
   (:pretty () (list name (list :attributes (synth-plist :pretty (rest-key args)) :body (synth-all :pretty (rest-plain args)))))
   (:doc () (labels ((stringify (item)
-                         (if (or (numberp item) (stringp item) (keywordp item))
+                         (if (or (numberp item) (stringp item) (keywordp item) (symbolp item))
                              item
                              (synth :string item)))
                        (open-tag (as) (doc:text "<~a~{ ~a=\"~a\"~}>" (string-downcase name) (mapcar #'stringify as)))
-                       (close-tag () (doc:text "</~a>" name))
+                       (close-tag () (doc:text "</~a>" (string-downcase name)))
                        (open-close-tag (as) (doc:text "<~a~{ ~a=\"~a\"~}/>" (string-downcase name) (mapcar #'stringify as))))
                 (let ((attributes (rest-key args)) 
-                      (body (append* (rest-plain args))))
+                      (body (apply #'doc:append* (rest-plain args))))
                   (if (null body)
                       (open-close-tag attributes)
                       (doc:vcat (open-tag attributes)
                                 (doc:nest 4 (apply #'doc:vcat (synth-all :doc body)))
                                 (close-tag)))))))
 (defprim taglist (&rest tags)
-  (:pretty () (list 'taglist (list :tags (synth-all :pretty tags))))
-  (:doc () (apply #'doc:vcat (synth-all :doc (apply #'append* tags)))))
-
-(defun append* (&rest args)
-  (let ((args* (mapcar (lambda (arg) 
-                         (cond ((null arg) nil)
-                               ((atom arg) (list arg))
-                               (t arg)))
-                       args)))
-    (apply #'append args*)))
+  (:pretty () (list 'taglist (list :tags (synth-all :pretty (apply #'doc:append* tags)))))
+  (:doc () (apply #'doc:vcat (synth-all :doc (apply #'doc:append* tags)))))
 
 (defmacro deftag (name)
   `(defprim ,name (&rest args)
      (:pretty () `(,',name (:attributes ,(rest-key args) :body ,(synth-all :pretty (rest-plain args)))))
      (:doc () (labels ((stringify (item)
-                         (if (or (numberp item) (stringp item) (keywordp item))
-                             (doc:lower-camel item)
+                         (if (or (numberp item) (stringp item) (keywordp item) (symbolp item))
+                             item
                              (synth :string item)))
                        (open-tag (as) (doc:text "<~a~{ ~a=\"~a\"~}>" ',(string-downcase name) (mapcar #'stringify as)))
                        (close-tag () (doc:text "</~a>" ',(string-downcase name)))
                        (open-close-tag (as) (doc:text "<~a~{ ~a=\"~a\"~}/>" ',(string-downcase name) (mapcar #'stringify as))))
                 (let ((attributes (rest-key args))
                       ;; (body (rest-plain args))
-                      (body (append* (rest-plain args))))
-                  (princ "rest-plain:") (pprint (rest-plain args)) (fresh-line)
-                  (princ "body:") (pprint body) (fresh-line)
+                      (body (apply #'doc:append* (rest-plain args))))
+                  ;; (princ "rest-plain:") (pprint (rest-plain args)) (fresh-line)
+                  ;; (princ "body:") (pprint body) (fresh-line)
+                  ;; (pprint attributes)
                   (if (null body)
                       (open-close-tag attributes)
                       (doc:vcat (open-tag attributes)
@@ -57,11 +50,15 @@
 (deftags html head title meta link body h1 h2 h3 h4 h5 div span li dl dt dd ul ol pre i strong code script
          table tr th td
          section article aside p a
-         button input textarea)
+         button input textarea
+         label
+         form)
 
 (defun span-color (name)
   (let ((n (mod (reduce #'+ (mapcar #'char-code (coerce name 'list))) 100))) 
-    (span (list :class "label" :style (concatenate 'string "background-color:" (string-downcase (nth (mod n (length html-colors)) html-colors)))) (doc:text "~a" name))))
+    (span :|class| "label" 
+          :|style| (concatenate 'string "background-color:" (string-downcase (nth (mod n (length html-colors)) html-colors)))
+          (doc:text "~a" name))))
 
 (defparameter html-colors 
   (list 'aliceblue

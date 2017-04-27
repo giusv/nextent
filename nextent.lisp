@@ -9,15 +9,107 @@
 ;;                                              (vai (gui:static :test nil (gui:button 'vai (text "vaiClick"))))
 ;;                                              (torna (gui:button 'torna (text "tornaClick")))))) 0)
 
-(defparameter gui (gui:static 'app nil (gui:vert (gui:button 'here (text "here!"))
-                                                 (gui:button 'there (text "there!"))
-                                                 (gui:input 'write (text "write!")))))
-(let ((output (synth :string (synth :doc (apply #'vcat (synth-all :typescript (synth :components gui))))))
-      (filename (lol::mkstr "d:/giusv/angular/template/src/app/" (lower-camel (synth :name gui)) ".component.ts"))) 
-  (pprint filename)
-  (pprint output)
-  ;; (write-file filename (synth :string (synth :doc (apply #'vcat (synth-all :typescript (synth :components gui))))))
-  )
+;; (defparameter gui 
+;;   (gui:static 'app nil 
+;;               (gui:vert (gui:button 'here (text "here!"))
+;;                         (gui:button 'there (text "there!"))
+;;                         ;; (gui:input 'write (text "write!"))
+;;                         )))
+
+
+(defparameter schema (data:jsarray 'heroes "aaa"
+                                   (data:jsobject 'formato-upload-dossier "aaa"
+                                                  (data:jsprop 'id nil (data:jsstring 'id-dossier "aaa"))
+                                                  (data:jsprop 'id-sinistro t (data:jsstring 'id-sinistro "aaa"))
+                                                  (data:jsprop 'perizia t (data:jsstring 'perizia "aaa"))
+                                                  (data:jsprop 'cid t (data:jsbool 'cid "aaa"))
+                                                  (data:jsprop 'indicators t 
+                                                               (data:jsarray 'indicatori "aaa" 
+                                                                             (data:jsobject 'formato-valore-indicatore "aaa"
+                                                                                            (data:jsprop 'nome t (data:jsstring 'nome "aaa"))
+                                                                                            (data:jsprop 'valore t (data:jsstring 'valore "aaa"))))))))
+
+
+(defun to-string (x)
+  (synth :string (synth :doc (synth :typescript x))))
+
+(defun process (name code) 
+  (format t "~%--------------------------------------------------~%~a~%~%~a~%--------------------------------------------------~%" name (to-string code))
+  (write-file name (to-string code)))
+
+;; (defparameter gui 
+;;   (gui:vert (gui:label (expr:const "Welcome")) 
+;;             (gui:alt (gui:label (expr:const "level 0"))
+;;                      (gui:static 'nested nil 
+;;                                  (gui:alt (gui:label (expr:const "level 1"))
+;;                                           (gui:static 'nested2 nil 
+;;                                                       (gui:label (expr:const "level 2"))))))))
+(defparameter gui 
+  (gui:form 'hero-form nil 
+            (gui:obj 'comp-data nil 
+                 ((name name (gui:input 'name (expr:const "Name")))
+                  (address address (gui:input 'address (expr:const "Address")))
+                  (addresses addresses (gui:arr 'addresses nil (gui:input 'secret (expr:const "Secret Lair")))))
+                 (gui:vert name address addresses))))
+
+(defparameter hero-format (data:jsobject 'hero
+                                         (data:jsprop 'name t (data:jsstring 'name "aaa"))
+                                         (data:jsprop 'address t (data:jsstring 'address "aaa"))))
+
+(let* ((basedir "d:/giusv/angular/template/src/app/")
+       (app-models (synth :models hero-format))
+       (app-components (synth :components gui nil))
+       (app-component-names (cons (ng-static 'app-component)
+                                  (mapcar (lambda (component)
+                                            (ng-static (symb (synth :name component) "-COMPONENT")))
+                                          app-components)))
+       (app (ng-unit 'app
+                     (ng-import (ng-const "@angular/core") 'component)
+                     (ng-import (ng-const "@angular/forms") 'form-array 'form-builder 'form-group)
+                     (ng-primitive 'component
+                                   :selector (ng-const (string-downcase 'app))
+                                   :template (ng-template (synth :template gui)))
+                     (ng-class 'app-component
+                               :fields (list (synth :controller gui))))) 
+       (app-module (ng-unit 'app
+                            (ng-import (ng-const "@angular/core") 'ng-module)
+                            (ng-import (ng-const "@angular/platform-browser") 'browser-module)
+                            (ng-import (ng-const "@angular/forms") 'reactive-forms-module)
+                            (ng-import (ng-const "@angular/router") 'router-module 'routes)
+                            (ng-import (ng-const "./app.component") 'app-component) ;; FIXME
+                            (mapcar (lambda (component)
+                                      (ng-import (ng-const (mkstr "./" (string-downcase (synth :name component)) ".component")) 
+                                                 (symb (synth :name component) "-COMPONENT")))
+                                    app-components)
+                            (ng-pair 'app-routes 'routes :const t 
+                                     :init (ng-array (synth :routes gui nil)))
+                            (ng-primitive 'ng-module
+                                          :imports (ng-array (ng-static 'browser-module)
+                                                             (ng-static 'reactive-forms-module)
+                                                             (ng-chain (ng-static 'router-module) 
+                                                                       (ng-call 'for-root (ng-dynamic 'app-routes))))
+                                          :declarations (ng-array app-component-names) 
+                                          :bootstrap (ng-array (ng-static 'app-component)))
+                            (ng-class 'app-module)))
+       (app-components (synth :components gui nil))) 
+  (process (mkstr basedir (string-downcase (synth :name app-module)) ".module.ts") app-module)
+  (process (mkstr basedir (string-downcase (synth :name app)) ".component.ts") app )
+  (mapcar (lambda (component) 
+            (process (mkstr basedir (string-downcase (synth :name component)) ".component.ts") component))
+          app-components))
+
+
+
+;; (let ((json ;; (synth :random (data:jsarray 'test "aaa")))
+;;        (synth :random schema)))
+;;   (pprint (synth :pretty json))
+;;   (format t "~%~a" (synth :string (synth :string json))))
+
+
+
+
+
+
 
 ;; (synth :output (synth :typescript (ng-unit (ng-import (ng-const "@angular/core") 'component 'onInit)
 ;;                                            (ng-primitive 'component 

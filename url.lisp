@@ -1,19 +1,24 @@
 (in-package :url)
 (defprim void ()
   (:url () (empty))
-  (:pretty () (list 'void)))
+  (:pretty () (list 'void))
+  (:last () "default";; (error "no last elements in (void)")
+         ))
 
 (defprim static-chunk (name)
   (:url () (doc:text "~a" (string-downcase name)))
-  (:pretty () (list 'static-chunk (list :name name))))
+  (:pretty () (list 'static-chunk (list :name name)))
+  (:last () name))
 
 (defprim dynamic-chunk (name)
   (:url () (doc:braces (doc:text "~a" (string-downcase name))))
-  (:pretty () (list 'dynamic-chunk (list :name name))))
+  (:pretty () (list 'dynamic-chunk (list :name name)))
+  (:last () name))
 
-(defprim expression-chunk (exp)
-  (:url () (doc:braces (synth :chunk exp)))
-  (:pretty () (list 'expression-chunk (list :exp exp))))
+;; (defprim expression-chunk (exp)
+;;   (:url () (doc:braces (synth :chunk exp)))
+;;   (:pretty () (list 'expression-chunk (list :exp exp)))
+;;   (:last () (error "no last elements in expression chunks")))
 
 (defprim path-parameter (name)
   (:pretty () (list 'path-parameter (list :name name)))
@@ -45,19 +50,23 @@
 (defprim backward-chain (segment pose)
   (:url () (if pose 
 		 (doc:hcat (synth :url pose) (doc:text "/") (synth :url segment))))
-  (:pretty () (list 'backward-chain (list :segment (synth :pretty segment) :pose (synth :pretty pose)))))
+  (:pretty () (list 'backward-chain (list :segment (synth :pretty segment) :pose (synth :pretty pose))))
+  (:last () (synth :last segment)))
 
 (defprim multi (&rest poses)
   (:url () (doc:parens (apply #'punctuate (doc:text ",") nil (synth-all :url poses))))
-  (:pretty () (list 'multi (list :poses (synth-all :pretty poses)))))
+  (:pretty () (list 'multi (list :poses (synth-all :pretty poses))))
+  (:last () (error "no last elements in multi")))
 
 (defprim forward-chain (segment pose)
   (:url () (doc:hcat (synth :url segment) (doc:text "/") (synth :url pose)))
-  (:pretty () (list 'forward-chain (list :segment (synth :pretty segment) :pose (synth :pretty pose)))))
+  (:pretty () (list 'forward-chain (list :segment (synth :pretty segment) :pose (synth :pretty pose))))
+  (:last () (synth :last pose)))
 
 (defprim queried (segment &rest parameters)
   (:url () (doc:hcat (synth :url segment) (doc:text "?") (apply #'punctuate (doc:text "&") nil (synth-all :url parameters))))
-  (:pretty () (list 'queried (list :segment (synth :pretty segment) :parameters (synth-all :pretty parameters)))))
+  (:pretty () (list 'queried (list :segment (synth :pretty segment) :parameters (synth-all :pretty parameters))))
+    (:last () (synth :last segment)))
 
 (defun parse-query-parameter ()
   (do-with ((name (item))
@@ -89,7 +98,7 @@
 				 (parse-chunk))
 			 (sym '/)))) 
     ;; (result (reduce #'forward-chain segs :from-end t))
-    (result (forward-chain (void) (reduce #'forward-chain segs :from-end t)))))
+    (result (reduce #'forward-chain segs :from-end t))))
 
 (defmacro merge-urls (head tail)
   ;; (reduce #'forward-chain head :from-end t :initial-value (url tail))

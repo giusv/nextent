@@ -12,7 +12,7 @@
                                   :click (synth :pretty click))))
   (:req (*) (html:taglist 
              (doc:text "Pulsante identificato come ")
-             ;; (span-color (string-downcase name))
+             (html:span-color (string-downcase name))
              (doc:text " e etichettato con la seguente espressione:") 
              (synth :req expr)
              ;; (dlist click (span nil (doc:text "Sottoposto a click: ")) (synth :req click)
@@ -20,12 +20,13 @@
              ))
   (:brief (path) (synth :req this path))
   (:reqlist (*) nil) 
-  (:template (&optional *) (html:button :|(click)| (doc:text "~aClick()" (doc:lower-camel name))
+  (:template () (html:button :|(click)| (doc:text "~aClick()" (doc:lower-camel name))
                                         expr))
 
   (:controller () (web:ng-method (doc:text "~aClick" (doc:lower-camel name)) 
                                  nil
                                  'void))
-  (:components () nil))
+  (:components (*) nil)
+  (:routes (father) nil))
  
 

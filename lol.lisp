@@ -27,7 +27,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun mkstr (&rest args)
     (with-output-to-string (s)
-      (dolist (a args) (princ a s)))))
+      (dolist (a (remove nil args)) (princ a s)))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun symb (&rest args)

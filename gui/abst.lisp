@@ -18,4 +18,7 @@
                              (synth :req element path)))
   (:brief (path) (synth :req this path))
   (:reqlist (path) (synth :reqlist element path))
-  (:template (&optional father) (synth :template element father)))
+  (:template () (synth :template element))
+  (:controller () (ng-empty))
+  (:components (father) (synth :components element father))
+  (:routes (father) (synth :routes element father)))

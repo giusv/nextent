@@ -6,7 +6,7 @@
                         (apply #'html:ul (mapcar #'html:li (synth-all :req elements path)))))
   (:brief (path) (synth :req this path))
   (:reqlist (path) (apply #'append (synth-all :req elements path)))
-  (:template (&optional father) (apply #'html:taglist (synth-all :template elements father))))
+  (:template () (apply #'html:taglist (synth-all :template elements))))
 
 (defmacro horz* (&rest elements) 
   (let ((gensyms (loop for v in elements collect (gensym (symbol-name (car v))))))

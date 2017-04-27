@@ -6,17 +6,7 @@
 ;;                   (dlambda ,@(mapcar #`(,(car a1) ,(cadr a1) ,(list `(declare (ignorable) ,@(parser:arg-names (cadr a1))) (caadr a1))) attrs)
 ;;                            (t (&rest args) (apply this args))))))
 
-(defun rest-key (list)
-  (cond ((null list) nil)
-        ((atom list) (error "not a list"))
-        ((keywordp (car list)) (cons (car list) (cons (cadr list) (rest-key (cddr list)))))
-        (t (rest-key (cdr list)))))
 
-(defun rest-plain (list)
-  (cond ((null list) nil)
-        ((atom list) (error "not a list"))
-        ((keywordp (car list)) (rest-plain (cddr list)))
-        (t (cons (car list) (rest-plain (cdr list))))))
 
 
 (defmacro defprim (name lambda-list &rest attrs)

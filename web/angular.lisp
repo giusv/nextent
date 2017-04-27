@@ -13,9 +13,10 @@
 (defprim ng-empty ()
   (:pretty () (list 'ng-empty))
   (:typescript () (empty)))
-(defprim ng-pair (name type &key init const)
+(defprim ng-pair (name type &key init const private)
   (:pretty () (list 'ng-pair (list :name name :type type :init (synth :pretty init) :const const)))
-  (:typescript () (hcat (if const (text "const ") (empty))
+  (:typescript () (hcat (if private (text "private ") (empty))
+                        (if const (text "const ") (empty))
                         (text "~a: ~a" (lower-camel name) (upper-camel type))
                         (if init 
                             (hcat (text " = ") (synth :typescript init))
@@ -91,7 +92,7 @@
 
 (defprim ng-list (&rest statements)
   (:pretty () (list 'ng-list (list :statements (synth-all :pretty (apply #'append* statements)))))
-  (:typescript () (apply #'vcat (synth-all :typescript (apply #'append* statements)))))
+  (:typescript () (apply #'punctuate (semi) t (synth-all :typescript (apply #'append* statements)))))
 
 (defprim ng-method (name parameters rtype &rest statements)
   (:pretty () (list 'ng-method (list :name name 
@@ -114,17 +115,28 @@
                             (hcat (braces (apply #'punctuate (text ", ") nil (mapcar #'text (mapcar #'upper-camel elements))) :padding 1)
                                   (text " from ") (synth :typescript name) (semi))))))
 
+(defprim ng-assign (lhs rhs &key as)
+  (:pretty () (list 'ng-assign (list :lhs lhs :rhs rhs)))
+  (:typescript () (hcat (synth :typescript lhs)
+                        (text " = ")
+                        (synth :typescript rhs)
+                        (if as (text " as ~a" (doc:upper-camel as))))))
+
 (defprim ng-new (name &rest parameters)
   (:pretty () (list 'ng-new (list :name name 
                                   :parameters (synth-all :pretty parameters))))
   (:typescript () (hcat (text "new ~a" (upper-camel name)) 
                         (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters))))))
 
-(defprim ng-call (name &rest parameters)
+(defprim ng-call (name &rest args)
   (:pretty () (list 'ng-call (list :name name 
-                                   :parameters (synth-all :pretty parameters))))
+                                   :parameters (synth-all :pretty (rest-plain args))
+                                   :as (getf (rest-key args) :as))))
   (:typescript () (hcat (text "~a" (lower-camel name))
-                        (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters))))))
+                        (parens (apply #'punctuate (comma) nil (synth-all :typescript (rest-plain args))))
+                        (aif (getf (rest-key args) :as)
+                             (text " as ~a" (doc:upper-camel it))
+                             (empty)))))
 (defprim ng-static (name)
   (:pretty () (list 'ng-static (list :name name)))
   (:typescript () (text "~a" (upper-camel name))))
@@ -132,11 +144,14 @@
   (:pretty () (list 'ng-dynamic (list :name name)))
   (:typescript () (text "~a" (lower-camel name))))
 
-(defprim ng-chain (&rest calls)
-  (:pretty () (list 'ng-chain (list :calls (synth-all :pretty calls))))
-  (:typescript () (let ((calls (synth-all :typescript calls)))
+(defprim ng-chain (&rest args)
+  (:pretty () (list 'ng-chain (list :calls (synth-all :pretty (apply #'append* (rest-plain args)))
+                                    :as (getf (rest-key args) :as))))
+  (:typescript () (let ((calls (synth-all :typescript (apply #'append* (rest-plain args))))
+                        (as (getf (rest-key args) :as)))
                     (hcat (car calls)
-                          (apply #'prepend (dot) t (cdr calls))))))
+                          (apply #'prepend (dot) t (cdr calls))
+                          (if as (text " as ~a" (doc:upper-camel as) (empty)))))))
 
 (defprim ng-constructor (parameters &rest statements)
   (:pretty () (list 'ng-constructor (list :parameters (synth-all :pretty parameters) 

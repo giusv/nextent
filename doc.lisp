@@ -1,9 +1,9 @@
 (in-package :doc)
 
 (defprim empty ()
-  (:pretty () `(empty))
-  (:output (*) ())
-  (:string () ())
+  (:pretty () (list 'empty))
+  (:output (*) (format t ""))
+  (:string () "")
   (:doc () this)
   (:extent () 0))
 

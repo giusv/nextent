@@ -21,14 +21,26 @@
             (let ((newpath (backward-chain (static-chunk name) path))) 
               (cons (synth :req this path)
                     (synth :reqlist element newpath))))
-  (:template (&optional father) (html:tag name))
-  (:controller () nil) 
-  (:components () (list (ng-unit name
-                                 (ng-import (ng-const "@angular/core") 'component)
-                                 (ng-primitive 'component
-                                               :selector (ng-const (string-downcase name))
-                                               :template (ng-template (synth :template element)))
-                                 (ng-class (symb name "-COMPONENT"))))))
+  (:template () (html:tag name (doc:empty)))
+  (:controller () (ng-empty)) 
+  (:components (father) 
+               (let ((unit-name (if father 
+                                    (symb father "-" name)
+                                    name))) 
+                 ;; (pprint (synth :pretty (synth :template element)))
+                 (cons (ng-unit unit-name
+                                (ng-import (ng-const "@angular/core") 'component)
+                                (ng-primitive 'component
+                                              :selector (ng-const (string-downcase name))
+                                              :template (ng-template (synth :template element)))
+                                (ng-class (mkstr unit-name "-component")
+                                          :fields (list (synth :controller element))))
+                       (synth :components element name))))
+  (:routes (father) 
+           (list (ng-object :path (ng-const (string-downcase name))
+                            :component (ng-static (mkstr father "-" name "-component"))
+                            (aif (synth :routes element name)
+                                 (list :children (ng-array it)))))))
 
 (defmacro static (name queries element)
   `(static% ,name 
