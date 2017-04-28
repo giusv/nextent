@@ -46,18 +46,76 @@
 ;;                                                       (gui:label (expr:const "level 2"))))))))
 (defparameter gui 
   (gui:form 'hero-form nil 
-            (gui:obj 'comp-data nil 
-                 ((name name (gui:input 'name (expr:const "Name")))
-                  (address address (gui:input 'address (expr:const "Address")))
-                  (addresses addresses (gui:arr 'addresses nil (gui:input 'secret (expr:const "Secret Lair")))))
-                 (gui:vert name address addresses))))
+            (gui:arr 'secrets nil 
+                     (gui:obj 'secret nil 
+                              ((secret 
+                                secret 
+                                (gui:input 'secret (expr:const "Secret Lair")))
+                               ;; (accomplice 
+                               ;;  accomplice
+                               ;;  (gui:obj 'accomplice nil 
+                               ;;           ((name name (gui:input 'name (expr:const "name"))))
+                               ;;           name))
+                               ;; (accomplices 
+                               ;;  accomplices 
+                               ;;  (gui:arr 'accomplices nil 
+                               ;;           (gui:obj 'accomplice nil 
+                               ;;                    ((name name (gui:input 'name (expr:const "name"))))
+                               ;;                    name)))
+                               )
+                              (gui:vert secret ;; accomplices
+                                        )))
+            ;; (gui:obj 'comp-data nil 
+            ;;                      ((name name (gui:input 'name (expr:const "Name")))
+            ;;                       (address address (gui:input 'address (expr:const "Address")))
+            ;;                       (secrets secrets 
+            ;;                                (gui:arr 'secrets nil 
+            ;;                                         (gui:obj 'secret nil 
+            ;;                                                  ((secret 
+            ;;                                                    secret 
+            ;;                                                    (gui:input 'secret (expr:const "Secret Lair")))
+            ;;                                                   ;; (accomplice 
+            ;;                                                   ;;  accomplice
+            ;;                                                   ;;  (gui:obj 'accomplice nil 
+            ;;                                                   ;;           ((name name (gui:input 'name (expr:const "name"))))
+            ;;                                                   ;;           name))
+            ;;                                                   ;; (accomplices 
+            ;;                                                   ;;  accomplices 
+            ;;                                                   ;;  (gui:arr 'accomplices nil 
+            ;;                                                   ;;           (gui:obj 'accomplice nil 
+            ;;                                                   ;;                    ((name name (gui:input 'name (expr:const "name"))))
+            ;;                                                   ;;                    name)))
+            ;;                                                   )
+            ;;                                                  (gui:vert secret ;; accomplices
+            ;;                                                            )))))
+            ;;                      (gui:vert name address secrets))
+            ))
+(defparameter secret-format
+  (data:jsobject 'secret "aa"
+                 (data:jsprop 'secret t (data:jsstring 'secret "aaa"))))
+(defparameter hero-format 
+  (data:jsobject 'hero "aaa"
+                 (data:jsprop 'name t (data:jsstring 'name "aaa"))
+                 (data:jsprop 'address t (data:jsstring 'address "aaa"))
+                 (data:jsprop 'addresses t (data:jsarray 'addresses "aaa" secret-format))))
+(defparameter role-format
+  (data:jsobject 'ruolo "ddd"
+                 (data:jsprop 'nome t (data:jsstring 'ruolo "Ruolo assunto nel sinistro"))))
 
-(defparameter hero-format (data:jsobject 'hero
-                                         (data:jsprop 'name t (data:jsstring 'name "aaa"))
-                                         (data:jsprop 'address t (data:jsstring 'address "aaa"))))
+(defparameter person-format 
+  (data:jsobject 'persona "Formato JSON dei dati relativi a una persona"
+                 (data:jsprop 'id-persona nil (data:jsstring 'id-persona "Identificativo univoco della persona")) 
+                 (data:jsprop 'nome t (data:jsstring 'nome "Nome")) 
+                 (data:jsprop 'cognome t (data:jsstring 'cognome "Cognome")) 
+                 (data:jsprop 'codice-fiscale nil (data:jsstring 'codice-fiscale "Codice fiscale")) 
+                 (data:jsprop 'partita-iva nil (data:jsstring 'partita-iva "Partita IVA")) 
+                 (data:jsprop 'luogo-nascita t (data:jsstring 'luogo-nascita "Luogo di nascita"))
+                 (data:jsprop 'data-nascita t (data:jsstring 'data-nascita "Data di nascita"))  
+                 (data:jsprop 'ruoli nil (data:jsarray 'ruoli "Lista di ruoli assunti nel sinistro" role-format))))
 
 (let* ((basedir "d:/giusv/angular/template/src/app/")
-       (app-models (synth :models hero-format))
+       (app-models (mapcar (lambda (format) (synth :model format)) 
+                           (list secret-format hero-format role-format person-format)))
        (app-components (synth :components gui nil))
        (app-component-names (cons (ng-static 'app-component)
                                   (mapcar (lambda (component)
@@ -81,7 +139,7 @@
                                       (ng-import (ng-const (mkstr "./" (string-downcase (synth :name component)) ".component")) 
                                                  (symb (synth :name component) "-COMPONENT")))
                                     app-components)
-                            (ng-pair 'app-routes 'routes :const t 
+                            (ng-pair 'app-routes (ng-type 'routes) :const t 
                                      :init (ng-array (synth :routes gui nil)))
                             (ng-primitive 'ng-module
                                           :imports (ng-array (ng-static 'browser-module)
@@ -96,7 +154,10 @@
   (process (mkstr basedir (string-downcase (synth :name app)) ".component.ts") app )
   (mapcar (lambda (component) 
             (process (mkstr basedir (string-downcase (synth :name component)) ".component.ts") component))
-          app-components))
+          app-components)
+  (mapcar (lambda (model) 
+            (process (mkstr basedir (string-downcase (synth :name model)) ".ts") model))
+          app-models))
 
 
 

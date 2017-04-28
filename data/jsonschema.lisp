@@ -14,8 +14,9 @@
   (:brief () (doc:text "booleano. ~a" desc))
   (:random () (jbool (expr:const (random-boolean))))
   (:schema () this)
-  (:models () nil)
-  (:type () 'bool))
+  (:model () (error "no model for jsbool"))
+  (:type () (ng-type 'bool :primitive t))
+  (:init () (ng-const 'true)))
 
 (defprim jsstring (name desc)
   (:pretty () (list 'jsstring (list :name (doc:lower-camel name) :desc desc)))
@@ -23,8 +24,9 @@
   (:brief () (doc:text "stringa. ~a" desc))
   (:random () (jstring (expr:const (random-string 10))))
   (:schema () this)
-  (:models () nil)
-  (:type () 'string))
+  (:model () (error "no model for jsstring"))
+  (:type () (ng-type 'string :primitive t))
+  (:init () (ng-const "")))
 
 (defprim jsnumber (name desc)
   (:pretty () (list 'jsnumber (list :name (doc:lower-camel name) :desc desc)))
@@ -33,8 +35,9 @@
   (:brief () (doc:text "numero. ~a" desc))
   (:random () (jnumber (expr:const (random-number 0 100))))
   (:schema () this)
-  (:models () nil)
-  (:type () 'integer))
+  (:model () (error "no model for jsnumber"))
+  (:type () (ng-type 'integer :primitive t))
+  (:init () (ng-const 0)))
 
 ;; handle choice in instantiation
 ;; (defprim (jschoice (&rest (schemas (list jsschema))))
@@ -51,10 +54,9 @@
   (:brief () (doc:text "~a" (upper-camel name)))
   (:random () (apply #'jobject (apply #'append (synth-all :random props))))
   (:schema () this)
-  (:models () (cons (ng-class (doc:upper-camel name)
-                              :fields (synth-all :type props))
-                    (apply #'append (synth-all :models props))))
-  (:type () name))
+  (:model () (ng-unit name (ng-class name :fields (synth-all :type props))))
+  (:type () (ng-type name))
+  (:init () nil))
 
 (defprim jsprop (name required content)
   (:pretty () (list 'jsprop (list :name name :required required :content (synth :pretty content))))
@@ -64,8 +66,9 @@
                           (doc:text ": ")) (synth :brief content)))
   (:random () (list (keyw name) (synth :random content)))
   (:schema () this)
-  (:models () (synth :models content))
-  (:type () (ng-pair name (synth :type content))))
+  (:model () (error "no model for jsprop"))
+  (:type () (ng-pair name (synth :type content) :init (synth :init content)))
+  (:init () (error "should not be reachable")))
 
 (defprim jsarray (name desc element)
   (:pretty () (list 'jsarray (list :name (doc:lower-camel name) :desc desc :element (synth :pretty element)))) 
@@ -77,8 +80,9 @@
                      (values (loop for i from 0 to length collect (synth :random element)))) 
                 (apply #'jarray values)))
   (:schema () this)
-  (:models () (synth :models element))
-  (:type () (ng-pair name (synth :type content))))
+  (:model () (error "no model for jsarray"))
+  (:type () (ng-type (synth :name element) :array t))
+  (:init () nil))
 
 
 (defun get-ident ()

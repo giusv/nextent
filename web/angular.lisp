@@ -14,19 +14,28 @@
   (:pretty () (list 'ng-empty))
   (:typescript () (empty)))
 (defprim ng-pair (name type &key init const private)
-  (:pretty () (list 'ng-pair (list :name name :type type :init (synth :pretty init) :const const)))
+  (:pretty () (list 'ng-pair (list :name name :type (synth :pretty type) :init (synth :pretty init) :const const)))
   (:typescript () (hcat (if private (text "private ") (empty))
                         (if const (text "const ") (empty))
-                        (text "~a: ~a" (lower-camel name) (upper-camel type))
+                        (text "~a: " (lower-camel name)) (synth :typescript type)
                         (if init 
                             (hcat (text " = ") (synth :typescript init))
                             (empty)))))
 
+
 (defprim ng-const (lit)
   (:pretty () (list 'ng-const (list :lit lit)))
-  (:typescript () (single-quotes (if lit
-                                     (text "~a" lit)
-                                     (empty)))))
+  (:typescript () (cond ((stringp lit) (single-quotes (text "~a" lit)))
+                        ((numberp lit) (text "~a" lit))
+                        ((symbolp lit) (text "~a" (lower-camel lit)))
+                        (t (empty)))))
+
+
+(defprim ng-type (name &key primitive array)
+  (:pretty () (list 'ng-type (list :name name :primitive primitive :array array)))
+  (:typescript () (hcat (text "~a" (if primitive (lower-camel name) (upper-camel name)))
+                        (if array (brackets (empty)) (empty)))))
+
 
 ;; (defprim ng-bool (value)
 ;;   (:pretty () (list 'ng-bool (list :value (synth :pretty value))))

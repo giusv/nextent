@@ -27,12 +27,14 @@
                         (synth :form-template element (list name)))))
                      (controller 
                       (list (ng-pair name (synth :type element))
-                            (ng-constructor (list (ng-pair 'fb 'form-builder :private t))
+                            (ng-constructor (list (ng-pair 'fb (ng-type'form-builder) :private t))
                                             (ng-assign (ng-chain (ng-dynamic 'this) (ng-dynamic name))
-                                                       ;; (synth :form element)
-                                                       (ng-chain (ng-dynamic 'this) (ng-dynamic 'fb)
-                                                                 (ng-call 'group 
-                                                                          (ng-object :comp-data (synth :form element))))))
+                                                       (synth :form element)
+                                                       ;; (ng-chain (ng-dynamic 'this) (ng-dynamic 'fb)
+                                                       ;;           (ng-call 'group 
+                                                       ;;                    (ng-object (keyw (synth :name element)) 
+                                                       ;;                               (synth :form element))))
+                                                       ))
                             (synth :form-controller element (list name))))) 
                  (list (ng-unit unit-name
                                 (ng-import (ng-const "@angular/core") 'component)
@@ -72,15 +74,16 @@
   (:brief (path) (synth :req this))
   (:model () (apply #'jobject (apply #'append (synth-all :model bindings))))
   (:reqlist (*) nil)
-  (:form-template (path) ;; (html:taglist (synth-all :template bindings))
-             (html:div :|formGroupName| (doc:lower-camel name)
-                       (synth-all :form-template bindings (doc:append* path name))))
-  (:form-controller (path) (ng-list (synth-all :form-controller bindings (doc:append* path name))))
+  (:form-template (path) (html:taglist (synth-all :form-template bindings path))
+             ;; (html:div :|formGroupName| (doc:lower-camel name)
+             ;;           (synth-all :form-template bindings (doc:append* path name)))
+             )
+  (:form-controller (path) (ng-list (synth-all :form-controller bindings path)))
   (:components (*) nil)
   (:routes (*) nil)
   (:form () (ng-chain (ng-dynamic 'this) (ng-dynamic 'fb)
                       (ng-call 'group (ng-object (apply #'append (synth-all :form bindings))))))
-  (:type () 'form-group))
+  (:type () (ng-type 'form-group)))
 
 (defmacro obj (name schema binds elem)
   `(let* ,(mapcar #'(lambda (bind)
@@ -107,32 +110,34 @@
                           :|formArrayName| (doc:lower-camel name)
                           (html:div :|*ngFor| (doc:text "let control of ~{~a.controls~^.~}; let i=index" 
                                                         (mapcar #'doc:lower-camel (doc:append* path name)))
-                                    :|[formGroupName]| 'i 
-                                    (synth :template element))
-                          (html:button :|(click)| (doc:text "Add~aElement" (doc:upper-camel name)) 
+                                    :|[formGroupName]| "i" 
+                                    (synth :form-template element path))
+                          (html:button :|(click)| (doc:text "add~aElement()" (doc:upper-camel name)) 
                                        :|type| "button"
                                        (doc:text "Add element"))
-                          (html:button :|(click)| (doc:text "remove~aElement" (doc:upper-camel name)) 
+                          (html:button :|(click)| (doc:text "remove~aElement()" (doc:upper-camel name)) 
                                        :|type| "button"
                                        (doc:text "Remove element"))))
   (:form-controller (path) (ng-list 
                             (ng-method (doc:text "add~aElement" (doc:upper-camel name)) nil 'void
-                                       (ng-pair 'elements 'form-array :const t :init 
+                                       (ng-pair 'elements (ng-type 'form-array) :const t :init 
                                                 (ng-chain (ng-dynamic 'this)
                                                           (ng-dynamic (car path))
                                                           (mapcar (lambda (elem)
                                                                     (ng-call 'get (ng-const (doc:lower-camel elem))))
-                                                                  (doc:append* path name))
+                                                                  (doc:append* (cdr path) name))
                                                           :as 'form-array))
                                        (ng-chain (ng-dynamic 'elements)
-                                                 (ng-call 'push (ng-chain (ng-dynamic 'this)
-                                                                          (ng-dynamic 'fb)
-                                                                          (ng-call 'group (ng-new (synth :name element)))))))))
+                                                 (ng-call 'push (synth :form element)
+                                                          ;; (ng-chain (ng-dynamic 'this)
+                                                          ;;           (ng-dynamic 'fb)
+                                                          ;;           (ng-call 'group (ng-new (synth :name element))))
+                                                          )))))
   (:components (*) nil)
   (:routes (*) nil)
   (:form () (ng-chain (ng-dynamic 'this) (ng-dynamic 'fb)
-                      (ng-call 'array (ng-array))))
-  (:type () 'form-array))
+                      (ng-call 'array (ng-array (synth :form element)))))
+  (:type () (ng-type 'form-array)))
 
 ;; (defmacro arr* (name schema elem)
 ;;   `(let* ,(mapcar #'(lambda (bind)
