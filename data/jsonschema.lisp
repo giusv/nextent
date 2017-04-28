@@ -14,7 +14,8 @@
   (:brief () (doc:text "booleano. ~a" desc))
   (:random () (jbool (expr:const (random-boolean))))
   (:schema () this)
-  (:models () nil))
+  (:models () nil)
+  (:type () 'bool))
 
 (defprim jsstring (name desc)
   (:pretty () (list 'jsstring (list :name (doc:lower-camel name) :desc desc)))
@@ -22,7 +23,8 @@
   (:brief () (doc:text "stringa. ~a" desc))
   (:random () (jstring (expr:const (random-string 10))))
   (:schema () this)
-  (:models () nil))
+  (:models () nil)
+  (:type () 'string))
 
 (defprim jsnumber (name desc)
   (:pretty () (list 'jsnumber (list :name (doc:lower-camel name) :desc desc)))
@@ -31,7 +33,8 @@
   (:brief () (doc:text "numero. ~a" desc))
   (:random () (jnumber (expr:const (random-number 0 100))))
   (:schema () this)
-  (:models () nil))
+  (:models () nil)
+  (:type () 'integer))
 
 ;; handle choice in instantiation
 ;; (defprim (jschoice (&rest (schemas (list jsschema))))
@@ -48,7 +51,10 @@
   (:brief () (doc:text "~a" (upper-camel name)))
   (:random () (apply #'jobject (apply #'append (synth-all :random props))))
   (:schema () this)
-  (:models () nil))
+  (:models () (cons (ng-class (doc:upper-camel name)
+                              :fields (synth-all :type props))
+                    (apply #'append (synth-all :models props))))
+  (:type () name))
 
 (defprim jsprop (name required content)
   (:pretty () (list 'jsprop (list :name name :required required :content (synth :pretty content))))
@@ -57,18 +63,22 @@
                               (doc:text " (facoltativa)")) 
                           (doc:text ": ")) (synth :brief content)))
   (:random () (list (keyw name) (synth :random content)))
-  (:schema () this))
+  (:schema () this)
+  (:models () (synth :models content))
+  (:type () (ng-pair name (synth :type content))))
 
-(defprim jsarray (name desc elem)
-  (:pretty () (list 'jsarray (list :name (doc:lower-camel name) :desc desc :elem (synth :pretty elem)))) 
+(defprim jsarray (name desc element)
+  (:pretty () (list 'jsarray (list :name (doc:lower-camel name) :desc desc :element (synth :pretty element)))) 
   (:req () (html:taglist
-            (doc:text "array (~a) denominato ~a costituito dal seguente elemento:" desc (doc:lower-camel name))
-            (synth :req elem)))
+            (doc:text "array (~a) denominato ~a costituito dal seguente elementento:" desc (doc:lower-camel name))
+            (synth :req element)))
   (:brief () (doc:text "~a" (upper-camel name)))
   (:random () (let* ((length (random-number 2 5))
-                     (values (loop for i from 0 to length collect (synth :random elem)))) 
+                     (values (loop for i from 0 to length collect (synth :random element)))) 
                 (apply #'jarray values)))
-  (:schema () this))
+  (:schema () this)
+  (:models () (synth :models element))
+  (:type () (ng-pair name (synth :type content))))
 
 
 (defun get-ident ()
