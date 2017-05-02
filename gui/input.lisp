@@ -13,12 +13,12 @@
                           ))
   (:brief (path) (synth :req this path))
   (:reqlist (*) nil) 
-  (:form-template (path) (html:div :|class| "form-group" 
+  (:form-template (loopvar indexes) (html:div :|class| "form-group" 
                           (html:label :|class| "center-block"
                                       (synth :template label)
                                       (html:input ;; :|type| "text"
                                        :|class| "form-control" 
-                                       :|formControlName| (string-downcase name)))))
+                                       :|formControlName| (doc:lower-camel name)))))
   (:template () (html:div :|class| "form-group" 
                           (html:input 
                            :|type| "text"
@@ -29,5 +29,5 @@
   (:form-controller (path) (ng-empty))
   (:components (*) nil)
   (:routes (*) nil)
-  (:form () (ng-const "")))
+  (:form () (ng-new 'form-control (ng-const ""))))
 

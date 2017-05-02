@@ -13,6 +13,10 @@
 (defprim ng-empty ()
   (:pretty () (list 'ng-empty))
   (:typescript () (empty)))
+(defprim ng-comment (text)
+  (:pretty () (list 'ng-comment (list :text text)))
+  (:typescript () (text "//~a" (synth :string text))))
+
 (defprim ng-pair (name type &key init const private)
   (:pretty () (list 'ng-pair (list :name name :type (synth :pretty type) :init (synth :pretty init) :const const)))
   (:typescript () (hcat (if private (text "private ") (empty))
@@ -149,18 +153,27 @@
 (defprim ng-static (name)
   (:pretty () (list 'ng-static (list :name name)))
   (:typescript () (text "~a" (upper-camel name))))
+
+
 (defprim ng-dynamic (name)
   (:pretty () (list 'ng-dynamic (list :name name)))
   (:typescript () (text "~a" (lower-camel name))))
 
+(defprim ng-element (array index)
+  (:pretty () (list 'ng-element (list :array array :index (synth :pretty index))))
+  (:typescript () (hcat (text "~a" (lower-camel array))
+                        (brackets (synth :typescript index)))))
+
 (defprim ng-chain (&rest args)
   (:pretty () (list 'ng-chain (list :calls (synth-all :pretty (apply #'append* (rest-plain args)))
                                     :as (getf (rest-key args) :as))))
-  (:typescript () (let ((calls (synth-all :typescript (apply #'append* (rest-plain args))))
-                        (as (getf (rest-key args) :as)))
-                    (hcat (car calls)
-                          (apply #'prepend (dot) t (cdr calls))
-                          (if as (text " as ~a" (doc:upper-camel as) (empty)))))))
+  (:typescript () (let* ((calls (synth-all :typescript (apply #'append* (rest-plain args))))
+                         (as (getf (rest-key args) :as))
+                         (chain (hcat (car calls) (apply #'prepend (dot) t (cdr calls)))))
+                    (if as 
+                        (parens (hcat (text "<~a>" (doc:upper-camel as)) 
+                                      chain))
+                        chain))))
 
 (defprim ng-constructor (parameters &rest statements)
   (:pretty () (list 'ng-constructor (list :parameters (synth-all :pretty parameters) 

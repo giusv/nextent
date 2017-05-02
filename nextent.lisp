@@ -44,52 +44,71 @@
 ;;                                  (gui:alt (gui:label (expr:const "level 1"))
 ;;                                           (gui:static 'nested2 nil 
 ;;                                                       (gui:label (expr:const "level 2"))))))))
-(defparameter gui 
-  (gui:form 'hero-form nil 
-            (gui:arr 'secrets nil 
-                     (gui:obj 'secret nil 
-                              ((secret 
-                                secret 
-                                (gui:input 'secret (expr:const "Secret Lair")))
-                               ;; (accomplice 
-                               ;;  accomplice
-                               ;;  (gui:obj 'accomplice nil 
-                               ;;           ((name name (gui:input 'name (expr:const "name"))))
-                               ;;           name))
-                               ;; (accomplices 
-                               ;;  accomplices 
-                               ;;  (gui:arr 'accomplices nil 
-                               ;;           (gui:obj 'accomplice nil 
-                               ;;                    ((name name (gui:input 'name (expr:const "name"))))
-                               ;;                    name)))
-                               )
-                              (gui:vert secret ;; accomplices
-                                        )))
-            ;; (gui:obj 'comp-data nil 
-            ;;                      ((name name (gui:input 'name (expr:const "Name")))
-            ;;                       (address address (gui:input 'address (expr:const "Address")))
-            ;;                       (secrets secrets 
-            ;;                                (gui:arr 'secrets nil 
-            ;;                                         (gui:obj 'secret nil 
-            ;;                                                  ((secret 
-            ;;                                                    secret 
-            ;;                                                    (gui:input 'secret (expr:const "Secret Lair")))
-            ;;                                                   ;; (accomplice 
-            ;;                                                   ;;  accomplice
-            ;;                                                   ;;  (gui:obj 'accomplice nil 
-            ;;                                                   ;;           ((name name (gui:input 'name (expr:const "name"))))
-            ;;                                                   ;;           name))
-            ;;                                                   ;; (accomplices 
-            ;;                                                   ;;  accomplices 
-            ;;                                                   ;;  (gui:arr 'accomplices nil 
-            ;;                                                   ;;           (gui:obj 'accomplice nil 
-            ;;                                                   ;;                    ((name name (gui:input 'name (expr:const "name"))))
-            ;;                                                   ;;                    name)))
-            ;;                                                   )
-            ;;                                                  (gui:vert secret ;; accomplices
-            ;;                                                            )))))
-            ;;                      (gui:vert name address secrets))
-            ))
+
+(defparameter gui
+  (gui:form 'trip-form nil
+            (gui:obj 'trip nil 
+                     ((name name (gui:input 'name (expr:const "Trip name")))
+                      (cities cities (gui:arr 'cities nil 
+                                              (gui:obj 'city nil 
+                                                       ((city-name city-name (gui:input 'city-name (expr:const "City name"))) 
+                                                        (places places (gui:arr 'places nil
+                                                                                (gui:obj 'place nil
+                                                                                         ((place-name place-name (gui:input 'place-name (expr:const "Place name")))
+                                                                                          (place-values place-values (gui:arr 'place-values nil
+                                                                                                                              (gui:obj 'place-value nil
+                                                                                                                                       ((place-value place-value (gui:input 'place-value (expr:const "Place value"))))
+                                                                                                                                       place-value))))
+                                                                                         (gui:vert place-name place-values)))))
+                                                       (gui:vert city-name places)))))
+                     (gui:vert name cities))))
+
+;; (defparameter gui 
+;;   (gui:form 'hero-form nil 
+;;             (gui:arr 'secrets nil 
+;;                      (gui:obj 'secret nil 
+;;                               ((secret 
+;;                                 secret 
+;;                                 (gui:input 'secret (expr:const "Secret Lair")))
+;;                                ;; (accomplice 
+;;                                ;;  accomplice
+;;                                ;;  (gui:obj 'accomplice nil 
+;;                                ;;           ((name name (gui:input 'name (expr:const "name"))))
+;;                                ;;           name))
+;;                                ;; (accomplices 
+;;                                ;;  accomplices 
+;;                                ;;  (gui:arr 'accomplices nil 
+;;                                ;;           (gui:obj 'accomplice nil 
+;;                                ;;                    ((name name (gui:input 'name (expr:const "name"))))
+;;                                ;;                    name)))
+;;                                )
+;;                               (gui:vert secret ;; accomplices
+;;                                         )))
+;;             ;; (gui:obj 'comp-data nil 
+;;             ;;                      ((name name (gui:input 'name (expr:const "Name")))
+;;             ;;                       (address address (gui:input 'address (expr:const "Address")))
+;;             ;;                       (secrets secrets 
+;;             ;;                                (gui:arr 'secrets nil 
+;;             ;;                                         (gui:obj 'secret nil 
+;;             ;;                                                  ((secret 
+;;             ;;                                                    secret 
+;;             ;;                                                    (gui:input 'secret (expr:const "Secret Lair")))
+;;             ;;                                                   ;; (accomplice 
+;;             ;;                                                   ;;  accomplice
+;;             ;;                                                   ;;  (gui:obj 'accomplice nil 
+;;             ;;                                                   ;;           ((name name (gui:input 'name (expr:const "name"))))
+;;             ;;                                                   ;;           name))
+;;             ;;                                                   ;; (accomplices 
+;;             ;;                                                   ;;  accomplices 
+;;             ;;                                                   ;;  (gui:arr 'accomplices nil 
+;;             ;;                                                   ;;           (gui:obj 'accomplice nil 
+;;             ;;                                                   ;;                    ((name name (gui:input 'name (expr:const "name"))))
+;;             ;;                                                   ;;                    name)))
+;;             ;;                                                   )
+;;             ;;                                                  (gui:vert secret ;; accomplices
+;;             ;;                                                            )))))
+;;             ;;                      (gui:vert name address secrets))
+;;             ))
 (defparameter secret-format
   (data:jsobject 'secret "aa"
                  (data:jsprop 'secret t (data:jsstring 'secret "aaa"))))
@@ -123,7 +142,7 @@
                                           app-components)))
        (app (ng-unit 'app
                      (ng-import (ng-const "@angular/core") 'component)
-                     (ng-import (ng-const "@angular/forms") 'form-array 'form-builder 'form-group)
+                     (ng-import (ng-const "@angular/forms") 'form-array 'form-builder 'form-group 'form-control)
                      (ng-primitive 'component
                                    :selector (ng-const (string-downcase 'app))
                                    :template (ng-template (synth :template gui)))
@@ -155,9 +174,10 @@
   (mapcar (lambda (component) 
             (process (mkstr basedir (string-downcase (synth :name component)) ".component.ts") component))
           app-components)
-  (mapcar (lambda (model) 
-            (process (mkstr basedir (string-downcase (synth :name model)) ".ts") model))
-          app-models))
+  ;; (mapcar (lambda (model) 
+  ;;           (process (mkstr basedir (string-downcase (synth :name model)) ".ts") model))
+  ;;         app-models)
+  )
 
 
 

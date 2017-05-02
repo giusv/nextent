@@ -60,7 +60,8 @@
 
 (defpackage :web
   (:use :cl :lol :utils :grammar :doc)
-  (:export :ng-empty :ng-const :ng-type :ng-pair :ng-array :ng-object :ng-primitive :ng-class :ng-method 
+  (:export :ng-empty :ng-comment :ng-const :ng-type :ng-pair :ng-array :ng-element
+           :ng-object :ng-primitive :ng-class :ng-method 
            :ng-import :ng-new :ng-call :ng-static :ng-dynamic :ng-chain :ng-constructor :ng-arrow 
            :ng-list :ng-unit :ng-template :ng-assign))
 
