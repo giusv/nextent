@@ -117,8 +117,20 @@
                                                    (doc:lower-camel name)
                                                    ;; (mapcar #'doc:lower-camel (doc:append* (cdr path) name))
                                                    new-index)
-                               :|[formGroupName]| new-index 
-                               (synth :form-template element new-loopvar (append indexes (list new-index))))
+                               :|class| "panel panel-default"
+                              
+                               (html:div 
+                                :|class| "panel heading" 
+                                (html:span :|class| "glyphicon glyphicon-remove pull-right"
+                                           :|(click)| (doc:hcat (doc:text "remove~aElement" (doc:upper-camel name))
+                                                                 (doc:parens (apply #'doc:punctuate (doc:comma) nil
+                                                                                    (mapcar (lambda (index)
+                                                                                              (doc:text "~a" (doc:lower-camel index)))
+                                                                                            (append indexes (list new-index)))))) (doc:empty))) 
+                               (html:div 
+                                :|class| "panel body"
+                                :|[formGroupName]| new-index
+                                (synth :form-template element new-loopvar (append indexes (list new-index)))))
                      (html:button :|(click)| (doc:hcat (doc:text "add~aElement" (doc:upper-camel name))
                                                        (doc:parens (apply #'doc:punctuate (doc:comma) nil
                                                                           (mapcar (lambda (index)
@@ -126,13 +138,7 @@
                                                                                   indexes)))) 
                                   :|type| "button"
                                   (doc:text "+" ))
-                     (html:button :|(click)| (doc:hcat (doc:text "remove~aElement" (doc:upper-camel name))
-                                                       (doc:parens (apply #'doc:punctuate (doc:comma) nil
-                                                                          (mapcar (lambda (index)
-                                                                                    (doc:text "~a" (doc:lower-camel index)))
-                                                                                  (append indexes (list new-index)))))) 
-                                  :|type| "button"
-                                  (doc:text "-")))))
+                     )))
   (:form-controller (path) 
                     (let ((newpath (append path (list (list* (doc:lower-camel (mkstr name)) 'form-array))) ))
                       (ng-list 
