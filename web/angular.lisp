@@ -35,10 +35,11 @@
                         (t (empty)))))
 
 
-(defprim ng-type (name &key primitive array)
-  (:pretty () (list 'ng-type (list :name name :primitive primitive :array array)))
+(defprim ng-type (name &key primitive array template)
+  (:pretty () (list 'ng-type (list :name name :primitive primitive :array array :template template)))
   (:typescript () (hcat (text "~a" (if primitive (lower-camel name) (upper-camel name)))
-                        (if array (brackets (empty)) (empty)))))
+                        (if array (brackets (empty)) (empty))
+                        (if template (angular synth :typescript template)))))
 
 
 ;; (defprim ng-bool (value)

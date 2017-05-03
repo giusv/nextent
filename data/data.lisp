@@ -7,7 +7,12 @@
                 (html:span-color (string-downcase name))
                 (doc:text ", istanza dello schema dati ~a " (doc:lower-camel (synth :name schema)))
                 (doc:text "e popolata al caricamento dell'elemento tramite richiesta HTTP GET verso l'URL ")
-                (html:p (html:code (synth :url url))))))
+                (html:p (html:code (synth :url url)))))
+  (:template () ())
+  (:controller () (ng-method (symb 'get "-" 'name)
+                             nil
+                             (ng-type 'observable :template (ng-type (synth :name schema) :array t))))
+  (:components () nil))
 
 (defprim rand (name schema)
   (:pretty () (list 'rand (list :name name :schema (synth :pretty schema))))

@@ -73,6 +73,7 @@
 (defwrapper parens "(" ")")
 (defwrapper brackets "[" "]")
 (defwrapper braces "{" "}")
+(defwrapper angular "<" ">")
 (defwrapper single-quotes "'" "'")
 (defwrapper double-quotes "\"" "\"")
 (defwrapper back-quotes "`" "`")
