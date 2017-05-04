@@ -22,7 +22,7 @@
                 (doc:text ", istanza dello schema dati ~a " (doc:lower-camel (synth :name schema)))
                 (doc:text "e popolata al caricamento dell'elemento tramite generazione casuale")))
   (:template () ())
-  (:controller () (ng-pair name 'any :init (synth :model (synth :random schema))))
+  (:controller () (ng-pair name (ng-type 'any :primitive t) :init (synth :model (synth :random schema))))
   (:components (*) nil))
 
 (defprim with-data% (bindings element)

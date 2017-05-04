@@ -9,7 +9,8 @@
 (defpackage :utils
   (:use :cl :lol)
   (:export :random-number :random-string :random-boolean
-           :rest-key :rest-plain))
+           :rest-key :rest-plain
+           :plist-keys :plist-values))
 
 (defpackage :parser
   (:use :cl :lol :utils)
@@ -40,7 +41,7 @@
            :span-color
            :html :head :title :meta :link :body :h1 :h2 :h3 :h4 :h5 :div :span :li :dl :dt :dd :ul :ol :pre :i 
            :strong :code :script
-           :table :tr :th :td
+           :table :thead :tbody :tr :th :td
            :section :article :aside :p :a
            :button :input :textarea
            :label
@@ -85,7 +86,10 @@
            :label
            :listing :listing%
            :alt
-           :form :bnd :obj% :obj :arr))
+           :form :bnd :obj% :obj :arr
+           :table :table%
+           :description :description%
+           :panel))
 
 (defpackage :nextent
   (:use :cl :lol :utils :doc :grammar :web))

@@ -59,7 +59,7 @@
   (:typescript () (brackets (apply #'punctuate (comma) t (synth-all :typescript (apply #'append* elems))) :padding 1 :newline nil)))
 
 (defprim ng-object (&rest elems)
-  (:pretty () (list 'ng-object (list :elems (synth-all :pretty (apply #'append* elems)))))
+  (:pretty () (list 'ng-object (list :elems (synth-plist :pretty (apply #'append* elems)))))
   (:typescript () (braces 
                    (nest 4 (apply #'punctuate (comma) t 
                                   (synth-plist-merge 

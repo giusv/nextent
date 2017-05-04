@@ -17,7 +17,7 @@
   (:req () (html:taglist (html:span-color (doc:lower-camel name)) 
                          (doc:text "!~a"  (doc:lower-camel exp))))
   (:string () (doc:text "~a!~a" (doc:lower-camel (synth :name name)) (doc:lower-camel exp)))
-  (:template () (doc:text "{{~a.~a}}" (doc:lower-camel (synth :name name)) (doc:lower-camel exp))))
+  (:template () (doc:text "{{~a.~a}}" (doc:lower-camel name) (doc:lower-camel exp))))
 
 
 

@@ -63,12 +63,26 @@
 ;;                                                        (gui:vert city-name places)))))
 ;;                      (gui:vert name cities))))
 
+(defparameter place-format
+  (data:jsobject 'place "aaa"
+                 (data:jsprop 'name t (data:jsstring 'name "aaa"))
+                 (data:jsprop 'value t (data:jsstring 'value "aaa"))))
 (defparameter gui
-  (data:with-data ((places (data:remote 'places (data:jsobject 'place 
-                                                               (data:jsprop 'name t (data:jsstring 'name "aaa"))) 
-                                        (url:url `(home)))))
-    (gui:label (expr:attr places 'name))))
+  (data:with-data ((places ;; (data:remote 'places place-format 
+                           ;;              (url:url `(home)))
+                    (data:rand 'places (data:jsarray 'places "aaa" place-format))
+                    ))
+    (gui:table 'table places (row)
+      :|Name| (gui:label (expr:attr row 'name))
+      :|Value| (gui:label (expr:attr row 'value))
+      :|Description| (gui:description 'description row 
+                         :|Name| (expr:attr row 'name)
+                         :|Value| (expr:attr row 'value))
+      :|Details| (gui:button 'details (doc:text "Details"))
+      :|Panel| (gui:panel 'panel (gui:label (expr:attr row 'name)) (gui:label (expr:attr row 'value))))))
 
+;; (pprint (synth :pretty (synth :random (data:jsarray 'places "aaa" place-format))))
+;; (pprint (synth :pretty (synth :model (synth :random (data:jsarray 'places "aaa" place-format)))))
 ;; (defparameter gui 
 ;;   (gui:form 'hero-form nil 
 ;;             (gui:arr 'secrets nil 

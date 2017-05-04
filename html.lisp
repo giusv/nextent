@@ -48,7 +48,7 @@
 	       names)))
 
 (deftags html head title meta link body h1 h2 h3 h4 h5 div span li dl dt dd ul ol pre i strong code script
-         table tr th td
+         table thead tbody tr th td
          section article aside p a
          button input textarea
          label

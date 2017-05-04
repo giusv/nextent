@@ -23,3 +23,10 @@
 				   (elt vowels (random 5)))))))
 (defun random-boolean ()
   (elt (list t nil) (random 2)))
+
+
+(defun plist-keys (plst)
+  (loop for (key value . rest) on plst by #'cddr collect key))
+
+(defun plist-values (plst)
+  (loop for (key value . rest) on plst by #'cddr collect value))

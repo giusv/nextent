@@ -20,11 +20,10 @@
   (:string () (synth :string value))
   (:model () (ng-const value)))
 
-
 (defprim jarray (&rest values)
   (:pretty () (list 'jarray (list :values (synth-all :pretty values))))
   (:string () (doc:brackets (apply #'doc:punctuate (doc:comma) t (synth-all :string values)) :padding 1 :newline nil))
-  (:model () (apply #'ng-array values)))
+  (:model () (apply #'ng-array (synth-all :model values))))
 
 (defprim jobject (&rest values)
   (:pretty () (list 'jobject (list :values (synth-plist :pretty values))))
@@ -35,7 +34,7 @@
                                                           (synth :string (second pair)))) 
                                    values)))
                :newline t))
-  (:model () (apply #'ng-object values)))
+  (:model () (apply #'ng-object (synth-plist :model values))))
 
 ;; (defprim (jobject2 (&rest (values (plist json))))
 ;;   (:pretty () (list 'alt (:elements (synth-plist :pretty elements)))))
