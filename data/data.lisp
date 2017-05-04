@@ -9,10 +9,10 @@
                 (doc:text "e popolata al caricamento dell'elemento tramite richiesta HTTP GET verso l'URL ")
                 (html:p (html:code (synth :url url)))))
   (:template () ())
-  (:controller () (ng-method (symb 'get "-" 'name)
+  (:controller () (ng-method (doc:text "get~a" (doc:upper-camel name))
                              nil
                              (ng-type 'observable :template (ng-type (synth :name schema) :array t))))
-  (:components () nil))
+  (:components (*) nil))
 
 (defprim rand (name schema)
   (:pretty () (list 'rand (list :name name :schema (synth :pretty schema))))
@@ -23,7 +23,7 @@
                 (doc:text "e popolata al caricamento dell'elemento tramite generazione casuale")))
   (:template () ())
   (:controller () (ng-pair name 'any :init (synth :model (synth :random schema))))
-  (:components () nil))
+  (:components (*) nil))
 
 (defprim with-data% (bindings element)
   (:pretty () (list 'with-data (list :bindings (synth-all :pretty bindings) :element (synth :pretty element))))
@@ -34,7 +34,7 @@
   (:reqlist (path) (synth :reqlist element path))
   (:template () (synth :template element))
   (:controller () (ng-list (synth-all :controller bindings) ))
-  (:components () nil)
+  (:components (*) nil)
   (:routes (path) nil))
 
 

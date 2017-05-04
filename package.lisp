@@ -25,7 +25,7 @@
 (defpackage :doc
   (:use :cl :lol :utils :grammar)
   (:export :empty :text :nest :vcat :hcat 
-           :parens :brackets :braces :single-quotes :double-quotes :back-quotes
+           :parens :brackets :braces :single-quotes :double-quotes :back-quotes :angular
            :comma :dot :semi :colon :forward-slash :equals
            :punctuate :prepend :postpend
            :lower-camel :upper-camel

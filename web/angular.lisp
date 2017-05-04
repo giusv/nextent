@@ -39,7 +39,7 @@
   (:pretty () (list 'ng-type (list :name name :primitive primitive :array array :template template)))
   (:typescript () (hcat (text "~a" (if primitive (lower-camel name) (upper-camel name)))
                         (if array (brackets (empty)) (empty))
-                        (if template (angular synth :typescript template)))))
+                        (if template (angular (synth :typescript template))))))
 
 
 ;; (defprim ng-bool (value)
@@ -115,7 +115,8 @@
                                      :statements (synth-all :pretty statements))))
   (:typescript () (vcat (hcat name
                               (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters)))
-                              (text ": ~a" (string-downcase rtype))) 
+                              (text ": ") 
+                              (synth :typescript rtype)) 
                         (braces 
                          (nest 4 (apply #'postpend (semi) t 
                                         (synth-all :typescript statements)))
