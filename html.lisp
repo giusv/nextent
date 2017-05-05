@@ -47,7 +47,7 @@
 		   `(deftag ,name))
 	       names)))
 
-(deftags html head title meta link body h1 h2 h3 h4 h5 div span li dl dt dd ul ol pre i strong code script
+(deftags html head title meta link nav body h1 h2 h3 h4 h5 div span li dl dt dd ul ol pre i strong code script
          table thead tbody tr th td
          section article aside p a
          button input textarea

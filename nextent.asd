@@ -23,6 +23,8 @@
                         :serial t
                         :components ((:file "input")
                                      (:file "button")
+                                     (:file "link")
+                                     (:file "navbar")
                                      (:file "vert")
                                      (:file "label")
                                      (:file "panel")

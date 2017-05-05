@@ -1,15 +1,19 @@
-(defprim navbar (name &rest anchors)
-  (:pretty () (list 'navbar (list :name name :anchors (synth-all :pretty anchors))))
-  ;; (:req (path) (funcall #'vcat 
-  ;;       		  (text "Barra di navigazione con i seguenti elementi:")
-  ;;       		  (nest 4 (apply #'vcat (synth-all :req anchors path)))))
+(defprim navbar (name &rest links)
+  (:pretty () (list 'navbar (list :name name :links (synth-all :pretty links))))
   (:html (path) (multitags (text "Barra di navigazione ")
-                             (if (not  anchors) 
+                             (if (not  links) 
                                  (text "vuota") 
                                  (text "composta dai seguenti link:"))
                              (apply #'ul nil ;; (list :class 'list-group)
-                                    (mapcar #'listify (synth-all :html anchors path)))))
-  (:brief (path) (synth :html (apply #'navbar name anchors) path))
-  (toplevel () nil)
-  (req (path) nil))
+                                    (mapcar #'listify (synth-all :html links path)))))
+  (:brief (path) (synth :html this path))
+  
+  (:reqlist (*) nil)
+  (:template () (html:nav 
+                    :|class| "navbar navbar-default"
+                    (synth-all :template links)))
+
+  (:controller () (ng-empty))
+  (:components (*) nil)
+  (:routes (father) nil))
 

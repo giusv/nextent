@@ -45,7 +45,8 @@
            :section :article :aside :p :a
            :button :input :textarea
            :label
-           :form))
+           :form
+           :nav))
 
 (defpackage :expr
   (:use :cl :lol :utils :grammar)
@@ -89,7 +90,8 @@
            :form :bnd :obj% :obj :arr
            :table :table%
            :description :description%
-           :panel))
+           :panel
+           :link :navbar))
 
 (defpackage :nextent
   (:use :cl :lol :utils :doc :grammar :web))
