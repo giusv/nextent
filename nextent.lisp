@@ -67,19 +67,55 @@
   (data:jsobject 'place "aaa"
                  (data:jsprop 'name t (data:jsstring 'name "aaa"))
                  (data:jsprop 'value t (data:jsstring 'value "aaa"))))
+
+(gui:vert (gui:label (expr:const "Welcome")) 
+            (gui:alt (gui:label (expr:const "level 0"))
+                     (gui:static 'nested nil 
+                                 (gui:alt (gui:label (expr:const "level 1"))
+                                          (gui:static 'nested2 nil 
+                                                      (gui:label (expr:const "level 2")))))))
+
+
 (defparameter gui
-  (data:with-data ((places ;; (data:remote 'places place-format 
-                           ;;              (url:url `(home)))
-                    (data:rand 'places (data:jsarray 'places "aaa" place-format))
-                    ))
-    (gui:table 'table places (row)
-      :|Name| (gui:label (expr:attr row 'name))
-      :|Value| (gui:label (expr:attr row 'value))
-      :|Description| (gui:description 'description row 
-                         :|Name| (expr:attr row 'name)
-                         :|Value| (expr:attr row 'value))
-      :|Details| (gui:button 'details (doc:text "Details"))
-      :|Panel| (gui:panel 'panel (gui:label (expr:attr row 'name)) (gui:label (expr:attr row 'value))))))
+  (gui:vert
+   (gui:navbar 'nav 
+               (gui:link 'home (expr:const "home") (url:void))
+               (gui:link 'nested (expr:const "nested") (url:url `(nested)))
+               (gui:link 'nested2 (expr:const "form") (url:url `(form)))
+               (gui:link 'nested2 (expr:const "nested2") (url:url `(nested / nested2)))) 
+   (gui:alt (gui:label (expr:const "level 0"))
+            (gui:static 'nested nil 
+                        (gui:alt (gui:label (expr:const "level 1"))
+                                 (gui:static 'nested2 nil 
+                                             (gui:vert (gui:label (expr:const "level 2"))
+                                                       (data:with-data ((places ;; (data:remote 'places place-format 
+                                                                         ;;              (url:url `(home)))
+                                                                         (data:rand 'places (data:jsarray 'places "aaa" place-format))))
+                                                         (gui:table 'table places (row)
+                                                           :|Name| (gui:label (expr:attr row 'name))
+                                                           :|Value| (gui:label (expr:attr row 'value))
+                                                           :|Description| (gui:description 'description row 
+                                                                            :|Name| (expr:attr row 'name)
+                                                                            :|Value| (expr:attr row 'value))
+                                                           :|Details| (gui:button 'details (doc:text "Details"))
+                                                           :|Panel| (gui:panel 'panel (gui:label (expr:attr row 'name)) (gui:label (expr:attr row 'value)))))))))
+            (gui:static 'form nil
+                        (gui:form 'trip-form nil
+                                  (gui:obj 'trip nil 
+                                           ((name name (gui:input 'name (expr:const "Trip name")))
+                                            (cities cities (gui:arr 'cities nil 
+                                                                    (gui:obj 'city nil 
+                                                                             ((city-name city-name (gui:input 'city-name (expr:const "City name"))) 
+                                                                              (places places (gui:arr 'places nil
+                                                                                                      (gui:obj 'place nil
+                                                                                                               ((place-name place-name (gui:input 'place-name (expr:const "Place name")))
+                                                                                                                (place-values place-values (gui:arr 'place-values nil
+                                                                                                                                                    (gui:obj 'place-value nil
+                                                                                                                                                             ((place-value place-value (gui:input 'place-value (expr:const "Place value"))))
+                                                                                                                                                             place-value))))
+                                                                                                               (gui:vert place-name place-values)))))
+                                                                             (gui:vert city-name places)))))
+                                           (gui:vert name cities)))))))
 
 ;; (pprint (synth :pretty (synth :random (data:jsarray 'places "aaa" place-format))))
 ;; (pprint (synth :pretty (synth :model (synth :random (data:jsarray 'places "aaa" place-format)))))

@@ -23,6 +23,6 @@
                                                 (ng-class (symb unit-name "-COMPONENT")
                                                           :fields (list (synth :controller default))))))
                                (synth-all :components elements father)))
-  (:routes (father) (cons (ng-object :path (ng-const nil)
+  (:routes (father) (cons (ng-object :path (ng-const "")
                                      :component (ng-static (mkstr father "-default-component")))
                           (apply #'append (synth-all :routes elements father)))))

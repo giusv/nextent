@@ -37,7 +37,7 @@
                                           :fields (list (synth :controller element))))
                        (synth :components element name))))
   (:routes (father) 
-           (list (ng-object :path (ng-const (string-downcase name))
+           (list (ng-object :path (progn (pprint (string-downcase name)) (ng-const (string-downcase name)))
                             :component (ng-static (mkstr father "-" name "-component"))
                             (aif (synth :routes element name)
                                  (list :children (ng-array it)))))))

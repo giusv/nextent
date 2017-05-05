@@ -13,7 +13,8 @@
   (:brief (path) (synth :html (link name expr :click click :hover hover) path)) 
   (:reqlist (*) nil)
   (:template () (html:a 
-                    :|[routerLink]| (synth :template target)
+                    :|routerLink| (synth :url target)
+                    :|routerLinkActive| "active"
                     (synth :template expr)))
 
   (:controller () (ng-empty))

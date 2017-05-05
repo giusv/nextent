@@ -6,7 +6,7 @@
   ;; (:url () (doc:text "~a" lit))
   ;; (:chunk () lit)
   (:string () (synth :template this))
-  (:template () (cond ((stringp lit) (doc:double-quotes (doc:text "~a" lit)))
+  (:template () (cond ((stringp lit) (doc:text "~a" lit))
                       ((numberp lit) (doc:text "~a" lit))
                       ((eq nil lit) (doc:text "false"))
                       ((eq t lit) (doc:text "true"))
