@@ -125,10 +125,13 @@
 (defprim ng-import (name &rest elements)
   (:pretty () (list 'ng-import (list :name (synth :pretty name) 
                                      :elements elements)))
-  (:typescript () (if elements 
-                      (hcat (text "import ")
+  (:typescript () (hcat (text "import ")
+                        (if elements 
                             (hcat (braces (apply #'punctuate (text ", ") nil (mapcar #'text (mapcar #'upper-camel elements))) :padding 1)
-                                  (text " from ") (synth :typescript name) (semi))))))
+                                  (text " from "))
+                            (empty)) 
+                        (synth :typescript name)
+                        (semi))))
 
 (defprim ng-assign (lhs rhs &key as)
   (:pretty () (list 'ng-assign (list :lhs lhs :rhs rhs)))
@@ -187,15 +190,21 @@
                                         (synth-all :typescript statements)))
                          :newline t))))
 
-(defprim ng-arrow (parameters &rest statements)
+;; (defprim ng-arrow (parameters &rest statements)
+;;   (:pretty () (list 'ng-arrow (list :parameters (synth-all :pretty parameters) 
+;;                                     :statements (synth-all :pretty statements))))
+;;   (:typescript () (hcat (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters)))
+;;                         (text " => ") 
+;;                         (braces 
+;;                          (nest 4 (apply #'postpend (semi) t 
+;;                                         (synth-all :typescript statements)))
+;;                          :newline t))))
+(defprim ng-arrow (parameters expression)
   (:pretty () (list 'ng-arrow (list :parameters (synth-all :pretty parameters) 
-                                    :statements (synth-all :pretty statements))))
+                                    :expression (synth :pretty expression))))
   (:typescript () (hcat (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters)))
                         (text " => ") 
-                        (braces 
-                         (nest 4 (apply #'postpend (semi) t 
-                                        (synth-all :typescript statements)))
-                         :newline t))))
+                        (synth :typescript expression))))
 
 
 (defprim ng-unit (name &rest elements)
@@ -203,5 +212,11 @@
   (:typescript () (apply #'vcat 
                          ;; (text "Unit ~a" name)
                          (synth-all :typescript (apply #'append* elements)))))
+
+(defprim ng-return  (expression)
+  (:pretty () (list 'ng-return (list :expression expression)))
+  (:typescript () (hcat (text "return ")
+                         (synth :typescript expression))))
+
 
 

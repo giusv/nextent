@@ -81,15 +81,23 @@
    (gui:navbar 'nav 
                (gui:link 'home (expr:const "home") (url:void))
                (gui:link 'nested (expr:const "nested") (url:url `(nested)))
-               (gui:link 'nested2 (expr:const "form") (url:url `(form)))
+               (gui:link 'nested2 (expr:const "form") (url:url `(my-form)))
                (gui:link 'nested2 (expr:const "nested2") (url:url `(nested / nested2)))) 
-   (gui:alt (gui:label (expr:const "level 0"))
+   (gui:alt (gui:vert 
+             (gui:label (expr:const "level 0"))
+             (gui:label (expr:const "level 0 1"))
+             (gui:button 'test (doc:text "level 0 1"))
+
+             (data:with-data ((places (data:remote 'places place-format 
+                                                   (url:url `(home)))))
+               (gui:table 'table places (row)
+                 :|Name| (gui:label (expr:attr row 'name))
+                 :|Value| (gui:label (expr:attr row 'value)))))
             (gui:static 'nested nil 
                         (gui:alt (gui:label (expr:const "level 1"))
                                  (gui:static 'nested2 nil 
                                              (gui:vert (gui:label (expr:const "level 2"))
-                                                       (data:with-data ((places ;; (data:remote 'places place-format 
-                                                                         ;;              (url:url `(home)))
+                                                       (data:with-data ((places 
                                                                          (data:rand 'places (data:jsarray 'places "aaa" place-format))))
                                                          (gui:table 'table places (row)
                                                            :|Name| (gui:label (expr:attr row 'name))
@@ -99,7 +107,7 @@
                                                                             :|Value| (expr:attr row 'value))
                                                            :|Details| (gui:button 'details (doc:text "Details"))
                                                            :|Panel| (gui:panel 'panel (gui:label (expr:attr row 'name)) (gui:label (expr:attr row 'value)))))))))
-            (gui:static 'form nil
+            (gui:static 'my-form nil
                         (gui:form 'trip-form nil
                                   (gui:obj 'trip nil 
                                            ((name name (gui:input 'name (expr:const "Trip name")))
@@ -115,7 +123,8 @@
                                                                                                                                                              place-value))))
                                                                                                                (gui:vert place-name place-values)))))
                                                                              (gui:vert city-name places)))))
-                                           (gui:vert name cities)))))))
+                                           (gui:vert name cities))))
+            )))
 
 ;; (pprint (synth :pretty (synth :random (data:jsarray 'places "aaa" place-format))))
 ;; (pprint (synth :pretty (synth :model (synth :random (data:jsarray 'places "aaa" place-format)))))
@@ -207,6 +216,7 @@
        (app-module (ng-unit 'app
                             (ng-import (ng-const "@angular/core") 'ng-module)
                             (ng-import (ng-const "@angular/platform-browser") 'browser-module)
+                            (ng-import (ng-const "@angular/http") 'http-module)
                             (ng-import (ng-const "@angular/forms") 'reactive-forms-module)
                             (ng-import (ng-const "@angular/router") 'router-module 'routes)
                             (ng-import (ng-const "./app.component") 'app-component) ;; FIXME
@@ -218,6 +228,7 @@
                                      :init (ng-array (synth :routes gui nil)))
                             (ng-primitive 'ng-module
                                           :imports (ng-array (ng-static 'browser-module)
+                                                             (ng-static 'http-module)
                                                              (ng-static 'reactive-forms-module)
                                                              (ng-chain (ng-static 'router-module) 
                                                                        (ng-call 'for-root (ng-dynamic 'app-routes))))

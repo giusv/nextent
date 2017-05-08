@@ -6,7 +6,11 @@
                              (html:ul (mapcar #'html:li (synth-all :req elements path)))))
   (:brief (path) (synth :req this path))
   (:reqlist (path) (apply #'append (synth-all :req elements path)))
-  (:template () (html:taglist (synth-all :template elements)))
+  (:template () (html:taglist (mapcar (lambda (template)
+                                        (html:div
+                                         :|class| "row"
+                                         template))
+                                      (synth-all :template elements))))
   (:controller () (ng-list (synth-all :controller elements))) 
   (:components (father) (apply #'append (synth-all :components elements father)))
   (:routes (father) (apply #'append (synth-all :routes elements father))))

@@ -149,7 +149,7 @@
                                             (ng-pair (car index) (ng-type 'number :primitive t)))
                                           (remove-if-not (lambda (elem) (eq 'form-group (cdr elem)))
                                                          (cdr newpath)))
-                                  'void
+                                  (ng-type 'void :primitive t)
                                   (ng-chain (reduce (lambda (acc elem)
                                                       (ng-chain acc 
                                                                 (ng-element 'controls (ng-const (car elem))) 
@@ -168,7 +168,7 @@
                                             (ng-pair (car index) (ng-type 'number :primitive t)))
                                           (append (remove-if-not (lambda (elem) (eq 'form-group (cdr elem)))
                                                           (cdr newpath)) (list (list* newindex nil))))
-                                  'void
+                                  (ng-type 'void :primitive t)
                                   (ng-chain (reduce (lambda (acc elem)
                                                       (ng-chain acc 
                                                                 (ng-element 'controls (ng-const (car elem))) 

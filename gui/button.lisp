@@ -25,7 +25,7 @@
 
   (:controller () (web:ng-method (doc:text "~aClick" (doc:lower-camel name)) 
                                  nil
-                                 'void))
+                                 (ng-type 'void :primitive t)))
   (:components (*) nil)
   (:routes (father) nil))
  

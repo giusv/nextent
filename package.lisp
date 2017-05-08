@@ -65,7 +65,7 @@
   (:export :ng-empty :ng-comment :ng-const :ng-type :ng-pair :ng-array :ng-element
            :ng-object :ng-primitive :ng-class :ng-method 
            :ng-import :ng-new :ng-call :ng-static :ng-dynamic :ng-chain :ng-constructor :ng-arrow 
-           :ng-list :ng-unit :ng-template :ng-assign))
+           :ng-list :ng-unit :ng-template :ng-assign :ng-return))
 
 
 (defpackage :data
@@ -79,7 +79,7 @@
 
 (defpackage :gui
   (:use :cl :lol :utils :grammar :web)
- (:export :input :button
+  (:export :input :button
            :vert :vert*
            :horz :horz*
            :abst

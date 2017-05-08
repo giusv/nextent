@@ -17,10 +17,15 @@
                                                     (symb "DEFAULT"))))
                                  (list (ng-unit unit-name
                                                 (ng-import (ng-const "@angular/core") 'component)
+                                                (ng-import (ng-const "@angular/http") 'http 'response)
+                                                (ng-import (ng-const "rxjs/Rx") 'observable)
+                                                (ng-import (ng-const "rxjs/add/operator/map"))
+                                                (ng-import (ng-const "rxjs/add/operator/catch"))
                                                 (ng-primitive 'component
                                                               :selector (ng-const (string-downcase unit-name))
                                                               :template (ng-template (synth :template default)))
                                                 (ng-class (symb unit-name "-COMPONENT")
+                                                          :constructor (ng-constructor (list (ng-pair 'http (ng-type 'http) :private t)))
                                                           :fields (list (synth :controller default))))))
                                (synth-all :components elements father)))
   (:routes (father) (cons (ng-object :path (ng-const "")

@@ -30,10 +30,15 @@
                  ;; (pprint (synth :pretty (synth :template element)))
                  (cons (ng-unit unit-name
                                 (ng-import (ng-const "@angular/core") 'component)
+                                (ng-import (ng-const "@angular/http") 'http 'response)
+                                (ng-import (ng-const "rxjs/Rx") 'observable)
+                                (ng-import (ng-const "rxjs/add/operator/map"))
+                                (ng-import (ng-const "rxjs/add/operator/catch"))
                                 (ng-primitive 'component
                                               :selector (ng-const (string-downcase name))
                                               :template (ng-template (synth :template element)))
                                 (ng-class (mkstr unit-name "-component")
+                                          :constructor (ng-constructor (list (ng-pair 'http (ng-type 'http) :private t)))
                                           :fields (list (synth :controller element))))
                        (synth :components element name))))
   (:routes (father) 
