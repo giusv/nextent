@@ -68,12 +68,12 @@
                  (data:jsprop 'name t (data:jsstring 'name "aaa"))
                  (data:jsprop 'value t (data:jsstring 'value "aaa"))))
 
-(gui:vert (gui:label (expr:const "Welcome")) 
-            (gui:alt (gui:label (expr:const "level 0"))
-                     (gui:static 'nested nil 
-                                 (gui:alt (gui:label (expr:const "level 1"))
-                                          (gui:static 'nested2 nil 
-                                                      (gui:label (expr:const "level 2")))))))
+;; (gui:vert (gui:label (expr:const "Welcome")) 
+;;             (gui:alt (gui:label (expr:const "level 0"))
+;;                      (gui:static 'nested nil 
+;;                                  (gui:alt (gui:label (expr:const "level 1"))
+;;                                           (gui:static 'nested2 nil 
+;;                                                       (gui:label (expr:const "level 2")))))))
 
 
 (defparameter gui
@@ -84,8 +84,11 @@
                (gui:link 'nested2 (expr:const "form") (url:url `(my-form)))
                (gui:link 'nested2 (expr:const "nested2") (url:url `(nested / nested2)))) 
    (gui:alt (gui:vert 
-             (gui:label (expr:const "level 0"))
-             (gui:label (expr:const "level 0 1"))
+             (gui:horz (gui:label (expr:const "level 0"))
+                       (gui:label (expr:const "level 0 1"))
+                       (gui:label (expr:const "level 0 1"))
+                       (gui:label (expr:const "level 0 1"))
+                       (gui:label (expr:const "level 0 1")))
              (gui:button 'test (doc:text "level 0 1"))
 
              (data:with-data ((places (data:remote 'places place-format 

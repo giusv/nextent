@@ -8,7 +8,7 @@
   (:reqlist (path) (apply #'append (synth-all :req elements path)))
   (:template () (html:taglist (mapcar (lambda (template)
                                         (html:div
-                                         :|class| "row"
+                                         :|class| (doc:text "col-md-~a" (round (/ 12 (length elements))))
                                          template))
                                       (synth-all :template elements))))
   (:controller () (ng-list (synth-all :controller elements))) 
