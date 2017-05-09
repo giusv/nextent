@@ -117,15 +117,17 @@
                                             (cities cities (gui:arr 'cities nil 
                                                                     (gui:obj 'city nil 
                                                                              ((city-name city-name (gui:input 'city-name (expr:const "City name"))) 
-                                                                              (places places (gui:arr 'places nil
-                                                                                                      (gui:obj 'place nil
-                                                                                                               ((place-name place-name (gui:input 'place-name (expr:const "Place name")))
-                                                                                                                (place-values place-values (gui:arr 'place-values nil
-                                                                                                                                                    (gui:obj 'place-value nil
-                                                                                                                                                             ((place-value place-value (gui:input 'place-value (expr:const "Place value"))))
-                                                                                                                                                             place-value))))
-                                                                                                               (gui:vert place-name place-values)))))
-                                                                             (gui:vert city-name places)))))
+                                                                              ;; (places places (gui:arr 'places nil
+                                                                              ;;                         (gui:obj 'place nil
+                                                                              ;;                                  ((place-name place-name (gui:input 'place-name (expr:const "Place name")))
+                                                                              ;;                                   (place-values place-values (gui:arr 'place-values nil
+                                                                              ;;                                                                       (gui:obj 'place-value nil
+                                                                              ;;                                                                                ((place-value place-value (gui:input 'place-value (expr:const "Place value"))))
+                                                                              ;;                                                                                place-value))))
+                                                                              ;;                                  (gui:vert place-name place-values))))
+                                                                              )
+                                                                             (gui:vert city-name ;; places
+                                                                                       )))))
                                            (gui:vert name cities))))
             )))
 

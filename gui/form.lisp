@@ -117,10 +117,10 @@
                                                    (doc:lower-camel name)
                                                    ;; (mapcar #'doc:lower-camel (doc:append* (cdr path) name))
                                                    new-index)
-                               :|class| "panel panel-default"
-                              
+                               :|class| "panel panel-default" 
                                (html:div 
                                 :|class| "panel heading" 
+                                (html:span (doc:text "~a" name))
                                 (html:span :|class| "glyphicon glyphicon-remove pull-right"
                                            :|(click)| (doc:hcat (doc:text "remove~aElement" (doc:upper-camel name))
                                                                  (doc:parens (apply #'doc:punctuate (doc:comma) nil
