@@ -21,4 +21,6 @@
   (:template () (synth :template element))
   (:controller () (ng-empty))
   (:components (father) (synth :components element father))
-  (:routes (father) (synth :routes element father)))
+  (:routes (father) (synth :routes element father))
+  (:imports () (synth :imports element))
+  (:dependencies () (synth :dependencies element)))

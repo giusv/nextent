@@ -27,6 +27,8 @@
                                  nil
                                  (ng-type 'void :primitive t)))
   (:components (*) nil)
-  (:routes (father) nil))
+  (:routes (father) nil)
+  (:imports () nil)
+  (:dependencies () nil))
  
 

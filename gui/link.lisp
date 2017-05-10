@@ -19,6 +19,8 @@
 
   (:controller () (ng-empty))
   (:components (*) nil)
-  (:routes (*) nil))
+  (:routes (*) nil)
+  (:imports () nil)
+  (:dependencies () nil))
 
 

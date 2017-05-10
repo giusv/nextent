@@ -22,5 +22,7 @@
 
   (:controller () (ng-empty))
   (:components (*) nil)
-  (:routes (father) nil))
+  (:routes (father) nil)
+  (:imports () nil)
+  (:dependencies () nil))
 

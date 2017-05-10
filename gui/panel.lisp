@@ -13,7 +13,7 @@
 
   
   (:template () (html:div 
-                 :|class| "panel panel-default" 
+                 :|class| "panel panel-primary" 
                  (html:div
                   :|class| "panel-heading" (synth :template header))
                  (html:div
@@ -23,7 +23,13 @@
                       :|class| "panel-footer" (synth :template footer)))))
   (:controller () (ng-empty))
   (:components (*) nil)
-  (:routes (*) nil))
+  (:routes (*) nil)
+  (:imports () (append (synth :imports header)
+                       (synth :imports body)
+                       (if footer (synth :imports footer))))
+  (:dependencies () (append (synth :dependencies header)
+                       (synth :dependencies body)
+                       (if footer (synth :dependencies footer)))))
 
 (defmacro panel* (header body &optional footer)
   `(panel (gensym "PANEL") ,header ,body ,footer))

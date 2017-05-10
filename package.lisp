@@ -51,7 +51,8 @@
 (defpackage :expr
   (:use :cl :lol :utils :grammar)
   (:export :const 
-           :attr))
+           :attr
+           :value))
 
 
 (defpackage :url
@@ -84,10 +85,11 @@
            :horz :horz*
            :abst
            :static :static%
+           :dynamic :dynamic%
            :label
            :listing :listing%
            :alt
-           :form :bnd :obj% :obj :arr
+           :form% :form :bnd :obj% :obj :arr% :arr
            :table :table%
            :description :description%
            :panel

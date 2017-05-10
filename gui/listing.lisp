@@ -22,11 +22,13 @@
                   ;; (pprint "in listing%")
                   ;; (pprint (synth :pretty element))
                   (html:div :|*ngFor| (doc:hcat (doc:text "let ~a of ~a" (doc:lower-camel rowname) (doc:lower-camel (synth :name source))) )
-                               (synth :template element))))
+                            (synth :template element))))
 
   (:controller () (ng-empty))
   (:components (*) nil)
-  (:routes (father) nil))
+  (:routes (father) nil)
+  (:imports () (synth :imports element))
+  (:dependencies () (synth :dependencies element)))
 
 ;; (defun csplice (cond &rest exps)
 ;;   (if cond

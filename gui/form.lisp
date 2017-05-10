@@ -1,6 +1,6 @@
 (in-package :gui)
 
-(defprim form (name schema element)
+(defprim form% (name schema element)
   (:pretty () (list 'form (list :name name :schema (synth :pretty schema) 
                                 :element (synth :pretty element))))
   (:req (path) (html:taglist 
@@ -37,14 +37,24 @@
                                                        ))
                             (synth :form-controller element (list (list* name 'form-group)))))) 
                  (list (ng-unit unit-name
-                                (ng-import (ng-const "@angular/core") 'component)
-                                (ng-import (ng-const "@angular/forms") 'form-array 'form-builder 'form-group 'form-control)
+                                (ng-import "@angular/core" 'component)
+                                (ng-import "@angular/forms" 'form-array 'form-builder 'form-group 'form-control)
+                                (synth :imports this)
                                 (ng-primitive 'component
                                               :selector (ng-const (string-downcase name))
                                               :template template )
                                 (ng-class (mkstr unit-name "-component")
                                           :fields controller)))))
-  (:routes (*) nil))
+  (:routes (*) nil)
+  (:imports () (synth :imports element))
+  (:dependencies () (synth :dependencies element)))
+
+(defmacro form (name schema binds elem)
+  `(let* ,(mapcar #'(lambda (bind)
+		      (destructuring-bind (name key elem) bind
+			`(,name (bnd ',key ,elem))))
+		  binds) 
+     (form% ,name ,schema (obj% ,name ,schema (list ,@(mapcar #'car binds)) ,elem))))
 
 (defprim bnd (name element)
   (:pretty () (list 'bnd (list :name name :element (synth :pretty element))))
@@ -57,7 +67,9 @@
   (:components (*) nil)
   (:routes (*) nil)
   (:form () (list (keyw name) (synth :form element)))
-  (:type () (error "should not be visible") ))
+  (:type () (error "should not be visible"))
+  (:imports () (synth :imports element))
+  (:dependencies () (synth :dependencies element)))
 
 (defprim obj% (name schema bindings element)
   (:pretty () (list 'obj (list :name name :schema (synth :pretty schema) 
@@ -83,7 +95,13 @@
          ;; (ng-chain (ng-dynamic 'this) (ng-dynamic 'fb)
          ;;              (ng-call 'group (ng-object (apply #'append (synth-all :form bindings)))))
          )
-  (:type () (ng-type 'form-group)))
+  (:type () (ng-type 'form-group))
+  (:imports () (cons (ng-import (mkstr "./" (string-downcase (synth :name schema))) (synth :name schema))
+                     (apply #'append 
+                       (synth-plist-merge (lambda (pair)
+                                            (synth :imports (cadr pair)))
+                                          bindings))))
+  (:dependencies () (synth :dependencies element)))
 
 (defmacro obj (name schema binds elem)
   `(let* ,(mapcar #'(lambda (bind)
@@ -93,7 +111,7 @@
      (let ((f (obj% ,name ,schema (list ,@(mapcar #'car binds)) ,elem))) 
        (values f f))))
 
-(defprim arr (name schema element)
+(defprim arr% (name schema element)
   (:pretty () (list 'arr (list :name name 
                                :schema (synth :pretty schema) 
                                :element (synth :pretty element))))
@@ -117,18 +135,18 @@
                                                    (doc:lower-camel name)
                                                    ;; (mapcar #'doc:lower-camel (doc:append* (cdr path) name))
                                                    new-index)
-                               :|class| "panel panel-default" 
+                               :|class| "panel panel-primary" 
                                (html:div 
-                                :|class| "panel heading" 
+                                :|class| "panel-heading" 
                                 (html:span (doc:text "~a" name))
                                 (html:span :|class| "glyphicon glyphicon-remove pull-right"
                                            :|(click)| (doc:hcat (doc:text "remove~aElement" (doc:upper-camel name))
-                                                                 (doc:parens (apply #'doc:punctuate (doc:comma) nil
-                                                                                    (mapcar (lambda (index)
-                                                                                              (doc:text "~a" (doc:lower-camel index)))
-                                                                                            (append indexes (list new-index)))))) (doc:empty))) 
+                                                                (doc:parens (apply #'doc:punctuate (doc:comma) nil
+                                                                                   (mapcar (lambda (index)
+                                                                                             (doc:text "~a" (doc:lower-camel index)))
+                                                                                           (append indexes (list new-index)))))) (doc:empty))) 
                                (html:div 
-                                :|class| "panel body"
+                                :|class| "panel-body"
                                 :|[formGroupName]| new-index
                                 (synth :form-template element new-loopvar (append indexes (list new-index)))))
                      (html:button :|(click)| (doc:hcat (doc:text "add~aElement" (doc:upper-camel name))
@@ -167,7 +185,7 @@
                                   (mapcar (lambda (index)
                                             (ng-pair (car index) (ng-type 'number :primitive t)))
                                           (append (remove-if-not (lambda (elem) (eq 'form-group (cdr elem)))
-                                                          (cdr newpath)) (list (list* newindex nil))))
+                                                                 (cdr newpath)) (list (list* newindex nil))))
                                   (ng-type 'void :primitive t)
                                   (ng-chain (reduce (lambda (acc elem)
                                                       (ng-chain acc 
@@ -187,11 +205,13 @@
          ;; (ng-chain (ng-dynamic 'this) (ng-dynamic 'fb)
          ;;              (ng-call 'array (ng-array (synth :form element))))
          )
-  (:type () (ng-type 'form-array)))
+  (:type () (ng-type 'form-array))
+  (:imports () (synth :imports element))
+  (:dependencies () (synth :dependencies element)))
 
-;; (defmacro arr* (name schema elem)
-;;   `(let* ,(mapcar #'(lambda (bind)
-;; 		      (destructuring-bind (name key elem) bind
-;; 			`(,name (bnd ',key ,elem))))
-;; 		  binds)
-;;      ))
+(defmacro arr (name schema binds elem)
+  `(let* ,(mapcar #'(lambda (bind)
+		      (destructuring-bind (name key elem) bind
+			`(,name (bnd ',key ,elem))))
+		  binds) 
+     (arr% ,name ,schema (obj% ,name ,schema (list ,@(mapcar #'car binds)) ,elem))))

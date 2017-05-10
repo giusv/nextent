@@ -27,7 +27,16 @@
 
   (:controller () (ng-empty))
   (:components (*) nil)
-  (:routes (father) nil))
+  (:routes (father) nil)
+  (:imports () nil ;; (cons (ng-import (synth :name source) (synth :name source))
+            ;;       nil
+            ;;       ;; (apply #'append 
+            ;;       ;;        (synth-plist-merge (lambda (pair)
+            ;;       ;;                             (synth :imports (cadr pair)))
+            ;;       ;;                           bindings))
+            ;;       )
+            )
+  (:dependencies () nil))
 
 (defmacro description (name source &body bindings)
   `(description% ,name

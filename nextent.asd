@@ -34,6 +34,7 @@
                                      (:file "description")
                                      (:file "abst")
                                      (:file "static")
+                                     (:file "dynamic")
                                      (:file "alt")
                                      (:file "form")))
                (:module "web"

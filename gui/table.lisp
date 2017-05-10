@@ -22,19 +22,27 @@
  
   (:template () (html:table 
                     :|class| "table table-striped"
-                    (html:thead 
-                     (html:tr 
-                      (mapcar (lambda (name) (html:th (doc:text "~a" (symbol-name name)))) 
-                              (plist-keys bindings))))
-                    (html:tbody
-                     :|*ngFor| (doc:hcat (doc:text "let ~a of ~a" (doc:lower-camel rowname) (doc:lower-camel (synth :name source))))
-                     (html:tr
-                      (mapcar (lambda (element) (html:td (synth :template element))) 
-                              (plist-values bindings))))))
+                  (html:thead 
+                   (html:tr 
+                    (mapcar (lambda (name) (html:th (doc:text "~a" (symbol-name name)))) 
+                            (plist-keys bindings))))
+                  (html:tbody
+                   :|*ngFor| (doc:hcat (doc:text "let ~a of ~a" (doc:lower-camel rowname) (doc:lower-camel (synth :name source))))
+                   (html:tr
+                    (mapcar (lambda (element) (html:td (synth :template element))) 
+                            (plist-values bindings))))))
 
   (:controller () (ng-empty))
   (:components (*) nil)
-  (:routes (father) nil))
+  (:routes (father) nil)
+  (:imports () (apply #'append 
+                      (synth-plist-merge (lambda (pair)
+                                           (synth :imports (cadr pair)))
+                                         bindings)))
+  (:dependencies () (apply #'append 
+                           (synth-plist-merge (lambda (pair)
+                                                (synth :dependencies (cadr pair)))
+                                              bindings))))
 
 ;; (defun csplice (cond &rest exps)
 ;;   (if cond

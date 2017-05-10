@@ -90,7 +90,10 @@
                                     :fields (synth-all :pretty fields) 
                                     :constructor (synth :pretty constructor)
                                     :methods (synth-all :pretty methods))))
-  (:typescript () (vcat (text "export class ~a" (upper-camel name)) 
+  (:typescript () (vcat (hcat (text "export class ~a" (upper-camel name))
+                              (if interfaces (hcat (text " implements ") 
+                                                   (punctuate (comma) nil (mapcar (lambda (int) (text "~a" (upper-camel int)))
+                                                                                     interfaces))))) 
                         (braces 
                          (nest 4 (apply #'vcat (apply #'postpend (semi) t 
                                                       (synth-all :typescript fields))
@@ -130,7 +133,7 @@
                             (hcat (braces (apply #'punctuate (text ", ") nil (mapcar #'text (mapcar #'upper-camel elements))) :padding 1)
                                   (text " from "))
                             (empty)) 
-                        (synth :typescript name)
+                        (text "'~a'" name)
                         (semi))))
 
 (defprim ng-assign (lhs rhs &key as)

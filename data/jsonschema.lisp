@@ -15,6 +15,7 @@
   (:random () (jbool (random-boolean)))
   (:schema () this)
   (:model () (error "no model for jsbool"))
+  (:imports () nil)
   (:type () (ng-type 'bool :primitive t))
   (:init () (ng-const 'true)))
 
@@ -25,6 +26,7 @@
   (:random () (jstring (random-string 10)))
   (:schema () this)
   (:model () (error "no model for jsstring"))
+  (:imports () nil)
   (:type () (ng-type 'string :primitive t))
   (:init () (ng-const "")))
 
@@ -36,6 +38,7 @@
   (:random () (jnumber (random-number 0 100)))
   (:schema () this)
   (:model () (error "no model for jsnumber"))
+  (:imports () nil)
   (:type () (ng-type 'integer :primitive t))
   (:init () (ng-const 0)))
 
@@ -54,7 +57,10 @@
   (:brief () (doc:text "~a" (upper-camel name)))
   (:random () (apply #'jobject (apply #'append (synth-all :random props))))
   (:schema () this)
-  (:model () (ng-unit name (ng-class name :fields (synth-all :type props))))
+  (:model () (ng-unit name 
+                      (synth-all :imports props) 
+                      (ng-class name :fields (synth-all :type props))))
+  (:imports ()  (ng-import (mkstr "./" (string-downcase name)) name)) 
   (:type () (ng-type name))
   (:init () nil))
 
@@ -67,6 +73,7 @@
   (:random () (list (keyw name) (synth :random content)))
   (:schema () this)
   (:model () (error "no model for jsprop"))
+  (:imports () (synth :imports content))
   (:type () (ng-pair name (synth :type content) :init (synth :init content)))
   (:init () (error "should not be reachable")))
 
@@ -81,6 +88,7 @@
                 (apply #'jarray values)))
   (:schema () this)
   (:model () (error "no model for jsarray"))
+  (:imports () (synth :imports element))
   (:type () (ng-type (synth :name element) :array t))
   (:init () nil))
 

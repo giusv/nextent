@@ -29,5 +29,7 @@
   (:form-controller (path) (ng-empty))
   (:components (*) nil)
   (:routes (*) nil)
-  (:form () (ng-new 'form-control (ng-const ""))))
+  (:form () (ng-new 'form-control (ng-const "")))
+  (:imports () nil)
+  (:dependencies () nil))
 
