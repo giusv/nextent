@@ -32,7 +32,7 @@
                     (mapcar (lambda (element) (html:td (synth :template element))) 
                             (plist-values bindings))))))
 
-  (:controller () (ng-empty))
+  (:controller () (bb-empty))
   (:components (*) nil)
   (:routes (father) nil)
   (:imports () (apply #'append 

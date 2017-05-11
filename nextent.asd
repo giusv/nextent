@@ -14,11 +14,17 @@
                (:file "html")
                (:file "expression")
                (:file "url")
+               (:module "lang"
+                        :serial t
+                        :components ((:file "blub")))
                (:module "data"
                         :serial t
                         :components ((:file "data")
                                      (:file "json")
-                                     (:file "jsonschema"))) 
+                                     (:file "jsonschema")))
+               (:module "server"
+                        :serial t
+                        :components ((:file "rest")))
                (:module "gui"
                         :serial t
                         :components ((:file "input")
@@ -36,10 +42,7 @@
                                      (:file "static")
                                      (:file "dynamic")
                                      (:file "alt")
-                                     (:file "form")))
-               (:module "web"
-                        :serial t
-                        :components ((:file "angular")))
+                                     (:file "form"))) 
                (:file "nextent")))
 
 

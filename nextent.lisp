@@ -6,8 +6,15 @@
   (synth :string (synth :doc (synth :typescript x))))
 
 (defun process (name code) 
-  (format t "~%~%~a~%--------------------------------------------------~%~%~a~%--------------------------------------------------~%" name (to-string code))
+  ;; (format t "~%~%~a~%--------------------------------------------------~%~%~a~%--------------------------------------------------~%" name (to-string code))
   (write-file name (to-string code)))
+
+
+(defparameter server
+  (server:rest-get (url:url `(trips)) nil))
+
+(synth :output (synth :java (synth :interface server)) 0)
+
 
 (defparameter place-format
   (data:jsobject 'place "aaa"
@@ -78,40 +85,40 @@
        (app-models (mapcar (lambda (format) (synth :model format)) 
                            model-list))
        (app-components (synth :components gui nil))
-       (app-component-names (cons (ng-static 'app-component)
+       (app-component-names (cons (bb-static 'app-component)
                                   (mapcar (lambda (component)
-                                            (ng-static (symb (synth :name component) "-COMPONENT")))
+                                            (bb-static (symb (synth :name component) "-COMPONENT")))
                                           app-components)))
-       (app (ng-unit 'app
-                     (ng-import "@angular/core" 'component)
-                     (ng-import "@angular/forms" 'form-array 'form-builder 'form-group 'form-control)
-                     (ng-primitive 'component
-                                   :selector (ng-const (string-downcase 'app))
-                                   :template (ng-template (synth :template gui)))
-                     (ng-class 'app-component
+       (app (bb-unit 'app
+                     (bb-import "@angular/core" 'component)
+                     (bb-import "@angular/forms" 'form-array 'form-builder 'form-group 'form-control)
+                     (bb-annotation 'component
+                                   :selector (bb-const (string-downcase 'app))
+                                   :template (bb-template (synth :template gui)))
+                     (bb-class 'app-component
                                :fields (list (synth :controller gui))))) 
-       (app-module (ng-unit 'app
-                            (ng-import "@angular/core" 'ng-module)
-                            (ng-import "@angular/platform-browser" 'browser-module)
-                            (ng-import "@angular/http" 'http-module)
-                            (ng-import "@angular/forms" 'reactive-forms-module)
-                            (ng-import "@angular/router" 'router-module 'routes)
-                            (ng-import "./app.component" 'app-component) ;; FIXME
+       (app-module (bb-unit 'app
+                            (bb-import "@angular/core" 'bb-module)
+                            (bb-import "@angular/platform-browser" 'browser-module)
+                            (bb-import "@angular/http" 'http-module)
+                            (bb-import "@angular/forms" 'reactive-forms-module)
+                            (bb-import "@angular/router" 'router-module 'routes)
+                            (bb-import "./app.component" 'app-component) ;; FIXME
                             (mapcar (lambda (component)
-                                      (ng-import (mkstr "./" (string-downcase (synth :name component)) ".component") 
+                                      (bb-import (mkstr "./" (string-downcase (synth :name component)) ".component") 
                                                  (symb (synth :name component) "-COMPONENT")))
                                     app-components)
-                            (ng-pair 'app-routes (ng-type 'routes) :const t 
-                                     :init (ng-array (synth :routes gui nil)))
-                            (ng-primitive 'ng-module
-                                          :imports (ng-array (ng-static 'browser-module)
-                                                             (ng-static 'http-module)
-                                                             (ng-static 'reactive-forms-module)
-                                                             (ng-chain (ng-static 'router-module) 
-                                                                       (ng-call 'for-root (ng-dynamic 'app-routes))))
-                                          :declarations (ng-array app-component-names) 
-                                          :bootstrap (ng-array (ng-static 'app-component)))
-                            (ng-class 'app-module)))
+                            (bb-pair 'app-routes (bb-type 'routes) :const t 
+                                     :init (bb-array (synth :routes gui nil)))
+                            (bb-annotation 'bb-module
+                                          :imports (bb-array (bb-static 'browser-module)
+                                                             (bb-static 'http-module)
+                                                             (bb-static 'reactive-forms-module)
+                                                             (bb-chain (bb-static 'router-module) 
+                                                                       (bb-call 'for-root (bb-dynamic 'app-routes))))
+                                          :declarations (bb-array app-component-names) 
+                                          :bootstrap (bb-array (bb-static 'app-component)))
+                            (bb-class 'app-module)))
        (app-components (synth :components gui nil))) 
   (process (mkstr basedir (string-downcase (synth :name app-module)) ".module.ts") app-module)
   (process (mkstr basedir (string-downcase (synth :name app)) ".component.ts") app )
@@ -206,66 +213,66 @@
 
 
 
-;; (synth :output (synth :typescript (ng-unit (ng-import (ng-const "@angular/core") 'component 'onInit)
-;;                                            (ng-primitive 'component 
-;;                                                          :selector (ng-const "my-heroes") 
-;;                                                          :template-url  (ng-const "test") 
-;;                                                          :style-urls (ng-array (ng-const "test")))
-;;                                            (ng-class 'hero-search 
-;;                                                      :fields (list (ng-pair 'heroes0 'string :init (ng-new 'heroes))
-;;                                                                    (ng-pair 'heroes 'string :init (ng-array (ng-const "aaa")))
-;;                                                                    (ng-pair 'heroes2 'string :init (ng-call 'get (ng-const "aaa")))
-;;                                                                    (ng-pair 'heroes3 'string :init (ng-chain (ng-call 'get (ng-const "aaa"))
-;;                                                                                                              (ng-call 'set (ng-const "aaa"))
-;;                                                                                                              (ng-call 'set (ng-const "bbb"))))
-;;                                                                    (ng-pair 'heroes4 'string :init (ng-call 'catch (ng-arrow (list (ng-pair 'e 'error)) (ng-call 'test (ng-const 'e)))) :const t))
-;;                                                      :constructor (ng-constructor (list (ng-pair 'heroes 'string)))
-;;                                                      :methods (list (ng-method (text "on-init") 
-;;                                                                                (list (ng-pair 'heroes 'string))
+;; (synth :output (synth :typescript (bb-unit (bb-import (bb-const "@angular/core") 'component 'onInit)
+;;                                            (bb-annotation 'component 
+;;                                                          :selector (bb-const "my-heroes") 
+;;                                                          :template-url  (bb-const "test") 
+;;                                                          :style-urls (bb-array (bb-const "test")))
+;;                                            (bb-class 'hero-search 
+;;                                                      :fields (list (bb-pair 'heroes0 'string :init (bb-new 'heroes))
+;;                                                                    (bb-pair 'heroes 'string :init (bb-array (bb-const "aaa")))
+;;                                                                    (bb-pair 'heroes2 'string :init (bb-call 'get (bb-const "aaa")))
+;;                                                                    (bb-pair 'heroes3 'string :init (bb-chain (bb-call 'get (bb-const "aaa"))
+;;                                                                                                              (bb-call 'set (bb-const "aaa"))
+;;                                                                                                              (bb-call 'set (bb-const "bbb"))))
+;;                                                                    (bb-pair 'heroes4 'string :init (bb-call 'catch (bb-arrow (list (bb-pair 'e 'error)) (bb-call 'test (bb-const 'e)))) :const t))
+;;                                                      :constructor (bb-constructor (list (bb-pair 'heroes 'string)))
+;;                                                      :methods (list (bb-method (text "on-init") 
+;;                                                                                (list (bb-pair 'heroes 'string))
 ;;                                                                                'void))))) 0)
 
- ;; (synth :output (nest 10 (ng-const "~a" 24)) 0)
-;; (pprint (synth :output (synth :doc (html:div :class "a" (doc:ng-const "SS"))) 0))
-;; (pprint (synth :pretty (html:div :class "a" (ng-const "ss"))))
-;; (synth :output (synth :doc (synth :template (gui:input 'name (ng-const "Name") :init (ng-const "hello")))) 0)
+ ;; (synth :output (nest 10 (bb-const "~a" 24)) 0)
+;; (pprint (synth :output (synth :doc (html:div :class "a" (doc:bb-const "SS"))) 0))
+;; (pprint (synth :pretty (html:div :class "a" (bb-const "ss"))))
+;; (synth :output (synth :doc (synth :template (gui:input 'name (bb-const "Name") :init (bb-const "hello")))) 0)
 
-;; (pprint (synth :pretty (ng-unit
-;;                         (ng-import (ng-const "@angular/core") 'component 'onInit)
-;;                         (ng-primitive 'component 
-;;                                       :selector (ng-const "my-heroes") 
-;;                                       :template-url  (ng-const "test") 
-;;                                       :style-urls (ng-array (ng-const "test")))
-;;                         (ng-class 'hero-search 
-;;                                   :fields (list (ng-pair 'heroes0 'string :init (ng-new 'heroes))
-;;                                                 (ng-pair 'heroes 'string :init (ng-array (ng-const "aaa")))
-;;                                                 (ng-pair 'heroes2 'string :init (ng-call 'get (ng-const "aaa")))
-;;                                                 (ng-pair 'heroes3 'string :init (ng-chain (ng-call 'get (ng-const "aaa"))
-;;                                                                                           (ng-call 'set (ng-const "aaa"))
-;;                                                                                           (ng-call 'set (ng-const "bbb"))))
-;;                                                 (ng-pair 'heroes4 'string :init (ng-call 'catch (ng-arrow (list (ng-pair 'e 'error)) (ng-call 'test (ng-const 'e)))) :const t))
-;;                                   :constructor (ng-constructor (list (ng-pair 'heroes 'string)))
-;;                                   :methods (list (ng-method 'on-init 
-;;                                                             (list (ng-pair 'heroes 'string))
+;; (pprint (synth :pretty (bb-unit
+;;                         (bb-import (bb-const "@angular/core") 'component 'onInit)
+;;                         (bb-annotation 'component 
+;;                                       :selector (bb-const "my-heroes") 
+;;                                       :template-url  (bb-const "test") 
+;;                                       :style-urls (bb-array (bb-const "test")))
+;;                         (bb-class 'hero-search 
+;;                                   :fields (list (bb-pair 'heroes0 'string :init (bb-new 'heroes))
+;;                                                 (bb-pair 'heroes 'string :init (bb-array (bb-const "aaa")))
+;;                                                 (bb-pair 'heroes2 'string :init (bb-call 'get (bb-const "aaa")))
+;;                                                 (bb-pair 'heroes3 'string :init (bb-chain (bb-call 'get (bb-const "aaa"))
+;;                                                                                           (bb-call 'set (bb-const "aaa"))
+;;                                                                                           (bb-call 'set (bb-const "bbb"))))
+;;                                                 (bb-pair 'heroes4 'string :init (bb-call 'catch (bb-arrow (list (bb-pair 'e 'error)) (bb-call 'test (bb-const 'e)))) :const t))
+;;                                   :constructor (bb-constructor (list (bb-pair 'heroes 'string)))
+;;                                   :methods (list (bb-method 'on-init 
+;;                                                             (list (bb-pair 'heroes 'string))
 ;;                                                             'void))))))
 
-;; (synth :typescript (ng-pair 'e 'error))
-;; (synth :typescript (ng-unit
-;;                     (ng-import (text "@angular/core") 'component 'onInit)
-;;                     ;; (ng-primitive 'component 
+;; (synth :typescript (bb-pair 'e 'error))
+;; (synth :typescript (bb-unit
+;;                     (bb-import (text "@angular/core") 'component 'onInit)
+;;                     ;; (bb-annotation 'component 
 ;;                     ;;               :selector (text "my-heroes") 
 ;;                     ;;               :template-url  (text "test") 
-;;                     ;;               :style-urls (ng-array (text "test")))
-;;                     ;; (ng-class 'hero-search 
-;;                     ;;           :fields (list (ng-pair 'heroes0 'string :init (ng-new 'heroes))
-;;                     ;;                         (ng-pair 'heroes 'string :init (ng-array (text "aaa")))
-;;                     ;;                         (ng-pair 'heroes2 'string :init (ng-call 'get (text "aaa")))
-;;                     ;;                         (ng-pair 'heroes3 'string :init (ng-chain (ng-call 'get (text "aaa"))
-;;                     ;;                                                                   (ng-call 'set (text "aaa"))
-;;                     ;;                                                                   (ng-call 'set (text "bbb"))))
-;;                     ;;                         (ng-pair 'heroes4 'string :init (ng-call 'catch (ng-arrow (list (ng-pair 'e 'error)) (ng-call 'test (text 'e)))) :const t))
-;;                     ;;           :constructor (ng-constructor (list (ng-pair 'heroes 'string)))
-;;                     ;;           :methods (list (ng-method 'on-init 
-;;                     ;;                                     (list (ng-pair 'heroes 'string))
+;;                     ;;               :style-urls (bb-array (text "test")))
+;;                     ;; (bb-class 'hero-search 
+;;                     ;;           :fields (list (bb-pair 'heroes0 'string :init (bb-new 'heroes))
+;;                     ;;                         (bb-pair 'heroes 'string :init (bb-array (text "aaa")))
+;;                     ;;                         (bb-pair 'heroes2 'string :init (bb-call 'get (text "aaa")))
+;;                     ;;                         (bb-pair 'heroes3 'string :init (bb-chain (bb-call 'get (text "aaa"))
+;;                     ;;                                                                   (bb-call 'set (text "aaa"))
+;;                     ;;                                                                   (bb-call 'set (text "bbb"))))
+;;                     ;;                         (bb-pair 'heroes4 'string :init (bb-call 'catch (bb-arrow (list (bb-pair 'e 'error)) (bb-call 'test (text 'e)))) :const t))
+;;                     ;;           :constructor (bb-constructor (list (bb-pair 'heroes 'string)))
+;;                     ;;           :methods (list (bb-method 'on-init 
+;;                     ;;                                     (list (bb-pair 'heroes 'string))
 ;;                     ;;                                     'void)))
 ;;                     ))
 

@@ -25,10 +25,10 @@
                                        (html:label (synth :template (cadr binding))))) 
                                (group bindings 2))))
 
-  (:controller () (ng-empty))
+  (:controller () (bb-empty))
   (:components (*) nil)
   (:routes (father) nil)
-  (:imports () nil ;; (cons (ng-import (synth :name source) (synth :name source))
+  (:imports () nil ;; (cons (bb-import (synth :name source) (synth :name source))
             ;;       nil
             ;;       ;; (apply #'append 
             ;;       ;;        (synth-plist-merge (lambda (pair)

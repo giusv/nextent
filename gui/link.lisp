@@ -17,7 +17,7 @@
                     :|routerLinkActive| "active"
                     (synth :template expr)))
 
-  (:controller () (ng-empty))
+  (:controller () (bb-empty))
   (:components (*) nil)
   (:routes (*) nil)
   (:imports () nil)

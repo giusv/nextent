@@ -16,8 +16,8 @@
   (:schema () this)
   (:model () (error "no model for jsbool"))
   (:imports () nil)
-  (:type () (ng-type 'bool :primitive t))
-  (:init () (ng-const 'true)))
+  (:type () (bb-type 'bool :primitive t))
+  (:init () (bb-const 'true)))
 
 (defprim jsstring (name desc)
   (:pretty () (list 'jsstring (list :name (doc:lower-camel name) :desc desc)))
@@ -27,8 +27,8 @@
   (:schema () this)
   (:model () (error "no model for jsstring"))
   (:imports () nil)
-  (:type () (ng-type 'string :primitive t))
-  (:init () (ng-const "")))
+  (:type () (bb-type 'string :primitive t))
+  (:init () (bb-const "")))
 
 (defprim jsnumber (name desc)
   (:pretty () (list 'jsnumber (list :name (doc:lower-camel name) :desc desc)))
@@ -39,8 +39,8 @@
   (:schema () this)
   (:model () (error "no model for jsnumber"))
   (:imports () nil)
-  (:type () (ng-type 'integer :primitive t))
-  (:init () (ng-const 0)))
+  (:type () (bb-type 'integer :primitive t))
+  (:init () (bb-const 0)))
 
 ;; handle choice in instantiation
 ;; (defprim (jschoice (&rest (schemas (list jsschema))))
@@ -57,11 +57,11 @@
   (:brief () (doc:text "~a" (upper-camel name)))
   (:random () (apply #'jobject (apply #'append (synth-all :random props))))
   (:schema () this)
-  (:model () (ng-unit name 
+  (:model () (bb-unit name 
                       (synth-all :imports props) 
-                      (ng-class name :fields (synth-all :type props))))
-  (:imports ()  (ng-import (mkstr "./" (string-downcase name)) name)) 
-  (:type () (ng-type name))
+                      (bb-class name :fields (synth-all :type props))))
+  (:imports ()  (bb-import (mkstr "./" (string-downcase name)) name)) 
+  (:type () (bb-type name))
   (:init () nil))
 
 (defprim jsprop (name required content)
@@ -74,7 +74,7 @@
   (:schema () this)
   (:model () (error "no model for jsprop"))
   (:imports () (synth :imports content))
-  (:type () (ng-pair name (synth :type content) :init (synth :init content)))
+  (:type () (bb-pair name (synth :type content) :init (synth :init content)))
   (:init () (error "should not be reachable")))
 
 (defprim jsarray (name desc element)
@@ -89,7 +89,7 @@
   (:schema () this)
   (:model () (error "no model for jsarray"))
   (:imports () (synth :imports element))
-  (:type () (ng-type (synth :name element) :array t))
+  (:type () (bb-type (synth :name element) :array t))
   (:init () nil))
 
 

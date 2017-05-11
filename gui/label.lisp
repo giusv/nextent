@@ -8,7 +8,7 @@
   (:brief (path) (synth :req this path))
   (:reqlist (*) nil)
   (:template () (html:label (synth :template expr)))
-  (:controller () (ng-empty))
+  (:controller () (bb-empty))
   (:components (*) nil)
   (:routes (*) nil)
   (:imports () nil)

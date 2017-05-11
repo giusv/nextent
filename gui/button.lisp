@@ -23,9 +23,9 @@
   (:template () (html:button :|(click)| (doc:text "~aClick()" (doc:lower-camel name))
                                         expr))
 
-  (:controller () (web:ng-method (doc:text "~aClick" (doc:lower-camel name)) 
+  (:controller () (lang:bb-method (doc:text "~aClick" (doc:lower-camel name)) 
                                  nil
-                                 (ng-type 'void :primitive t)))
+                                 (bb-type 'void :primitive t)))
   (:components (*) nil)
   (:routes (father) nil)
   (:imports () nil)

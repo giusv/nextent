@@ -22,34 +22,45 @@
   ;;             (cons (synth :req this path)
   ;;                   (synth :reqlist element newpath))))
   (:template () (html:tag name (doc:empty)))
-  (:controller () (ng-empty)) 
+  (:controller () (bb-empty)) 
   (:components (father) 
                (let ((unit-name (if father 
                                     (symb father "-" name)
                                     name))) 
                  ;; (pprint (synth :pretty (synth :template element)))
-                 (cons (ng-unit unit-name
-                                (ng-import "@angular/core" 'component 'on-init)
-                                (ng-import "@angular/router" 'router 'activated-route 'params)
+                 (cons (bb-unit unit-name
+                                (bb-import "@angular/core" 'component 'on-init)
+                                (bb-import "@angular/router" 'router 'activated-route 'params)
                                 (synth :imports this)
-                                (ng-primitive 'component
-                                              :selector (ng-const (string-downcase name))
-                                              :template (ng-template (synth :template element)))
-                                (ng-class (mkstr unit-name "-component")
+                                (bb-annotation 'component
+                                              :selector (bb-const (string-downcase name))
+                                              :template (bb-template (synth :template element)))
+                                (bb-class (mkstr unit-name "-component")
                                           :interfaces (list 'on-init)
-                                          :constructor (ng-constructor 
+                                          :constructor (bb-constructor 
                                                         (apply #'list 
-                                                               (ng-pair 'route (ng-type 'activated-route) :private t)
-                                                               (ng-pair 'router (ng-type 'router) :private t) 
+                                                               (bb-pair 'route (bb-type 'activated-route) :private t)
+                                                               (bb-pair 'router (bb-type 'router) :private t) 
                                                                (synth :dependencies this)))
-                                          :fields (list (synth :controller element))
-                                          :methods (list (ng-method (doc:text "~a" (doc:lower-camel 'ng-on-init)) nil (ng-type 'void :primitive t)))))
+                                          :fields (list 
+                                                   (bb-pair param (bb-type 'any :primitive t))
+                                                   (synth :controller element))
+                                          :methods (list (bb-method (doc:text "~a" (doc:lower-camel 'bb-on-init))
+                                                                    nil (bb-type 'void :primitive t)
+                                                                    (bb-chain (bb-dynamic 'this)
+                                                                              (bb-dynamic 'route)
+                                                                              (bb-dynamic 'params)
+                                                                              (bb-call 'subscribe 
+                                                                                       (bb-arrow (list (bb-pair 'params (bb-type 'any :primitive t)))
+                                                                                                 (bb-assign (bb-chain (bb-dynamic 'this) 
+                                                                                                                      (bb-dynamic param))
+                                                                                                            (bb-element 'params (bb-const "id"))))))))))
                        (synth :components element name))))
   (:routes (father) 
-           (list (ng-object :path (ng-const (string-downcase (mkstr ":" param)))
-                            :component (ng-static (mkstr father "-" name "-component"))
+           (list (bb-object :path (bb-const (string-downcase (mkstr ":" param)))
+                            :component (bb-static (mkstr father "-" name "-component"))
                             (aif (synth :routes element name)
-                                 (list :children (ng-array it))))))
+                                 (list :children (bb-array it))))))
   (:imports () (synth :imports element))
   (:dependencies () (synth :dependencies element)))
 

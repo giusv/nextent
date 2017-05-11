@@ -21,7 +21,7 @@
                  (if footer 
                      (html:div
                       :|class| "panel-footer" (synth :template footer)))))
-  (:controller () (ng-empty))
+  (:controller () (bb-empty))
   (:components (*) nil)
   (:routes (*) nil)
   (:imports () (append (synth :imports header)

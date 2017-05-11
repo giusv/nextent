@@ -24,6 +24,13 @@
 (defun random-boolean ()
   (elt (list t nil) (random 2)))
 
+(defun ppair-p (pair)
+  (and (consp pair)
+       (eql (length pair) 2)
+       (typep (car pair) 'keyword)))
+(defun plist-p (lst)
+  (every #'ppair-p (group lst 2)))
+
 
 (defun plist-keys (plst)
   (loop for (key value . rest) on plst by #'cddr collect key))

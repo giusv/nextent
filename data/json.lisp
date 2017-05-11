@@ -8,22 +8,22 @@
 (defprim jbool (value)
   (:pretty () (list 'jbool (list :value (synth :pretty value))))
   (:string () (synth :string value))
-  (:model () (ng-const value)))
+  (:model () (bb-const value)))
 
 (defprim jnumber (value)
   (:pretty () (list 'jnumber (list :value (synth :pretty value))))
   (:string () (synth :string value))
-  (:model () (ng-const value)))
+  (:model () (bb-const value)))
 
 (defprim jstring (value)
   (:pretty () (list 'jstring (list :value (synth :pretty value))))
   (:string () (synth :string value))
-  (:model () (ng-const value)))
+  (:model () (bb-const value)))
 
 (defprim jarray (&rest values)
   (:pretty () (list 'jarray (list :values (synth-all :pretty values))))
   (:string () (doc:brackets (apply #'doc:punctuate (doc:comma) t (synth-all :string values)) :padding 1 :newline nil))
-  (:model () (apply #'ng-array (synth-all :model values))))
+  (:model () (apply #'bb-array (synth-all :model values))))
 
 (defprim jobject (&rest values)
   (:pretty () (list 'jobject (list :values (synth-plist :pretty values))))
@@ -34,7 +34,7 @@
                                                           (synth :string (second pair)))) 
                                    values)))
                :newline t))
-  (:model () (apply #'ng-object (synth-plist :model values))))
+  (:model () (apply #'bb-object (synth-plist :model values))))
 
 ;; (defprim (jobject2 (&rest (values (plist json))))
 ;;   (:pretty () (list 'alt (:elements (synth-plist :pretty elements)))))

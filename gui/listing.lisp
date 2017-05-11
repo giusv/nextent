@@ -24,7 +24,7 @@
                   (html:div :|*ngFor| (doc:hcat (doc:text "let ~a of ~a" (doc:lower-camel rowname) (doc:lower-camel (synth :name source))) )
                             (synth :template element))))
 
-  (:controller () (ng-empty))
+  (:controller () (bb-empty))
   (:components (*) nil)
   (:routes (father) nil)
   (:imports () (synth :imports element))

@@ -22,27 +22,27 @@
               (cons (synth :req this path)
                     (synth :reqlist element newpath))))
   (:template () (html:tag name (doc:empty)))
-  (:controller () (ng-empty)) 
+  (:controller () (bb-empty)) 
   (:components (father) 
                (let ((unit-name (if father 
                                     (symb father "-" name)
                                     name))) 
                  ;; (pprint (synth :pretty (synth :template element)))
-                 (cons (ng-unit unit-name
-                                (ng-import "@angular/core" 'component)
+                 (cons (bb-unit unit-name
+                                (bb-import "@angular/core" 'component)
                                 (synth :imports this)
-                                (ng-primitive 'component
-                                              :selector (ng-const (string-downcase name))
-                                              :template (ng-template (synth :template element)))
-                                (ng-class (mkstr unit-name "-component")
-                                          :constructor (ng-constructor (synth :dependencies this))
+                                (bb-annotation 'component
+                                              :selector (bb-const (string-downcase name))
+                                              :template (bb-template (synth :template element)))
+                                (bb-class (mkstr unit-name "-component")
+                                          :constructor (bb-constructor (synth :dependencies this))
                                           :fields (list (synth :controller element))))
                        (synth :components element name))))
   (:routes (father) 
-           (list (ng-object :path (progn (pprint (string-downcase name)) (ng-const (string-downcase name)))
-                            :component (ng-static (mkstr father "-" name "-component"))
+           (list (bb-object :path (progn (pprint (string-downcase name)) (bb-const (string-downcase name)))
+                            :component (bb-static (mkstr father "-" name "-component"))
                             (aif (synth :routes element name)
-                                 (list :children (ng-array it))))))
+                                 (list :children (bb-array it))))))
   (:imports () (synth :imports element))
   (:dependencies () (synth :dependencies element)))
 

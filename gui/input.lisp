@@ -25,11 +25,11 @@
                            :|id| (string-downcase name) 
                            :|placeholder| (if init (synth :doc init) ""))))
 
-  (:controller () (ng-empty))
-  (:form-controller (path) (ng-empty))
+  (:controller () (bb-empty))
+  (:form-controller (path) (bb-empty))
   (:components (*) nil)
   (:routes (*) nil)
-  (:form () (ng-new 'form-control (ng-const "")))
+  (:form () (bb-new 'form-control (bb-const "")))
   (:imports () nil)
   (:dependencies () nil))
 

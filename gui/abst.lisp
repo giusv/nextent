@@ -19,7 +19,7 @@
   (:brief (path) (synth :req this path))
   (:reqlist (path) (synth :reqlist element path))
   (:template () (synth :template element))
-  (:controller () (ng-empty))
+  (:controller () (bb-empty))
   (:components (father) (synth :components element father))
   (:routes (father) (synth :routes element father))
   (:imports () (synth :imports element))

@@ -10,7 +10,8 @@
   (:use :cl :lol)
   (:export :random-number :random-string :random-boolean
            :rest-key :rest-plain
-           :plist-keys :plist-values))
+           :plist-keys :plist-values
+           :plist-p))
 
 (defpackage :parser
   (:use :cl :lol :utils)
@@ -61,16 +62,20 @@
            :backward-chain :multi :forward-chain :queried
            :url))
 
-(defpackage :web
+(defpackage :lang
   (:use :cl :lol :utils :grammar :doc)
-  (:export :ng-empty :ng-comment :ng-const :ng-type :ng-pair :ng-array :ng-element
-           :ng-object :ng-primitive :ng-class :ng-method 
-           :ng-import :ng-new :ng-call :ng-static :ng-dynamic :ng-chain :ng-constructor :ng-arrow 
-           :ng-list :ng-unit :ng-template :ng-assign :ng-return))
+  (:export :bb-empty :bb-comment :bb-const :bb-type :bb-pair :bb-array :bb-element
+           :bb-object :bb-annotation :bb-class :bb-method 
+           :bb-import :bb-new :bb-call :bb-static :bb-dynamic :bb-chain :bb-constructor :bb-arrow 
+           :bb-list :bb-unit :bb-template :bb-assign :bb-return))
+
+(defpackage :server
+  (:use :cl :lol :utils :grammar :lang)
+  (:export :rest-get :rest-post :rest-put :rest-delete))
 
 
 (defpackage :data
-  (:use :cl :lol :utils :parser :grammar :web) 
+  (:use :cl :lol :utils :parser :grammar :lang) 
   (:export :with-data :with-data%
            :remote
            :rand
@@ -79,7 +84,7 @@
            :filter :ident :prop :elem :comp))
 
 (defpackage :gui
-  (:use :cl :lol :utils :grammar :web)
+  (:use :cl :lol :utils :grammar :lang)
   (:export :input :button
            :vert :vert*
            :horz :horz*
@@ -96,5 +101,5 @@
            :link :navbar))
 
 (defpackage :nextent
-  (:use :cl :lol :utils :doc :grammar :web))
+  (:use :cl :lol :utils :doc :grammar :lang))
 

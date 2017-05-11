@@ -331,7 +331,7 @@
 
 
 
-(defun let-binding-transform (bs)
+(defun let-bindibb-transform (bs)
   (if bs
     (cons
       (cond ((symbolp (car bs))
@@ -340,7 +340,7 @@
               (car bs))
             (t
               (error "Bad let bindings")))
-      (let-binding-transform (cdr bs)))))
+      (let-bindibb-transform (cdr bs)))))
 
 (defun pandoriclet-get (letargs)
   `(case sym
@@ -362,7 +362,7 @@
 (defmacro pandoriclet (letargs &rest body)
   (let ((letargs (cons
                    '(this)
-                   (let-binding-transform
+                   (let-bindibb-transform
                      letargs))))
     `(let (,@letargs)
        (setq this ,@(last body))

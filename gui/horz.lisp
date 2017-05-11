@@ -11,7 +11,7 @@
                                          :|class| (doc:text "col-md-~a" (round (/ 12 (length elements))))
                                          template))
                                       (synth-all :template elements))))
-  (:controller () (ng-list (synth-all :controller elements))) 
+  (:controller () (bb-list (synth-all :controller elements))) 
   (:components (father) (apply #'append (synth-all :components elements father)))
   (:routes (father) (apply #'append (synth-all :routes elements father)))
   (:imports () (apply #'append (synth-all :imports elements)))
