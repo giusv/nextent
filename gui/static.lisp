@@ -1,7 +1,7 @@
 (in-package :gui)
 
-(defprim static% (name element)
-  (:pretty () (list 'static (list :name name :element (synth :pretty element))))
+(defprim static% (name queries element)
+  (:pretty () (list 'static (list :name name :queries queries :element (synth :pretty element))))
   (:brief (path) (let ((newpath (backward-chain (static-chunk name) path)))
                    (html:strong 
                     (doc:text "~a (URL: " (upper-camel name #\Space)) 
@@ -46,11 +46,8 @@
   (:imports () (synth :imports element))
   (:dependencies () (synth :dependencies element)))
 
-(defmacro static (name queries element)
-  `(static% ,name 
-            ,(if queries 
-                 `(let ,(mapcar #'(lambda (query) 
-                                    `(,query (query-parameter ',query)))
-                                queries)
-                    (abst (list ,@queries) ,element))
-                 element)))
+(defmacro static (name (&rest queries) element)
+  `(let ,(mapcar #'(lambda (query) 
+                     `(,query (url:query-parameter ',query)))
+                 queries)
+     (static% ,name (list ,queries) ,element)))

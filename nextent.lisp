@@ -32,7 +32,7 @@
                (gui:link 'home (expr:const "home") (url:void))
                (gui:link 'nested (expr:const "nested") (url:url `(nested)))
                (gui:link 'nested2 (expr:const "form") (url:url `(my-form)))
-               (gui:link 'nested2 (expr:const "nested2") (url:url `(nested / nested2)))) 
+               (gui:link 'dynamic (expr:const "dynamic") (url:url `(nested / param)))) 
    (gui:alt 
     (gui:vert 
      (gui:panel 'panel-test 
@@ -45,21 +45,22 @@
          :|Name| (gui:label (expr:attr row 'name))
          :|Value| (gui:label (expr:attr row 'value)))))
     (gui:static 'nested nil 
-                (gui:alt (gui:label (expr:const "level 1"))
-                         (gui:static 'nested2 nil 
-                                     (gui:vert (gui:label (expr:const "level 2"))
-                                               (data:with-data ((places 
-                                                                 (data:rand 'places (data:jsarray 'places "aaa" place-format))))
-                                                 (gui:table 'table places (row)
-                                                   :|Name| (gui:label (expr:attr row 'name))
-                                                   :|Value| (gui:label (expr:attr row 'value))
-                                                   :|Description| (gui:description 'description row 
-                                                                    :|Name| (expr:attr row 'name)
-                                                                    :|Value| (expr:attr row 'value))
-                                                   :|Details| (gui:button 'details (doc:text "Details"))
-                                                   :|Panel| (gui:panel 'panel (gui:label (expr:attr row 'name)) (gui:label (expr:attr row 'value)))))))))
-    (gui:dynamic 'dyn id 
-                 (gui:label (expr:value id)))
+                (gui:alt (gui:label (expr:const "nested"))
+                         (gui:dynamic 'dyn (id) 
+                                      (gui:label (expr:value id)))))
+    (gui:static 'nested2 nil 
+                (gui:vert (gui:label (expr:const "nested 2"))
+                          (data:with-data ((places 
+                                            (data:rand 'places (data:jsarray 'places "aaa" place-format))))
+                            (gui:table 'table places (row)
+                              :|Name| (gui:label (expr:attr row 'name))
+                              :|Value| (gui:label (expr:attr row 'value))
+                              :|Description| (gui:description 'description row 
+                                               :|Name| (expr:attr row 'name)
+                                               :|Value| (expr:attr row 'value))
+                              :|Details| (gui:button 'details (doc:text "Details"))
+                              :|Panel| (gui:panel 'panel (gui:label (expr:attr row 'name)) 
+                                                  (gui:label (expr:attr row 'value)))))))    
     (gui:static 'my-form nil
                 (gui:form 'trip-form trip-format
                           ((name name (gui:input 'name (expr:const "Trip name")))
