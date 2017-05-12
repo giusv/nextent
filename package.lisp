@@ -26,13 +26,14 @@
 
 (defpackage :doc
   (:use :cl :lol :utils :grammar)
-  (:export :empty :text :nest :vcat :hcat 
+  (:export :empty :text :nest :vcat :hcat :hcat+
            :parens :brackets :braces :single-quotes :double-quotes :back-quotes :angular
-           :comma :dot :semi :colon :forward-slash :equals
+           :comma :dot :semi :colon :forward-slash :equals :blank
            :punctuate :prepend :postpend
            :lower-camel :upper-camel
            :split-str :interleave
            :append*
+           :textify
            :write-file))
 
 (defpackage :html
@@ -65,13 +66,16 @@
 (defpackage :lang
   (:use :cl :lol :utils :grammar :doc)
   (:export :bb-empty :bb-comment :bb-const :bb-type :bb-pair :bb-array :bb-element
-           :bb-object :bb-annotation :bb-class :bb-method 
+           :bb-object :bb-annotation :bb-with-annotations :bb-class :bb-interface :bb-method 
            :bb-import :bb-new :bb-call :bb-static :bb-dynamic :bb-chain :bb-constructor :bb-arrow 
            :bb-list :bb-unit :bb-template :bb-assign :bb-return))
 
 (defpackage :server
   (:use :cl :lol :utils :grammar :lang)
-  (:export :rest-get :rest-post :rest-put :rest-delete))
+  (:export :rest-service :rest-static 
+           :rest-dynamic% :rest-dynamic
+           :rest-get% :rest-get
+           :rest-post :rest-put :rest-delete))
 
 
 (defpackage :data

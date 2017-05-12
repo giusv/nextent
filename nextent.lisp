@@ -11,10 +11,18 @@
 
 
 (defparameter server
-  (server:rest-get (url:url `(trips)) nil))
+  (server:rest-service 'trip-service (url:void)
+                       (server:rest-static 'trips (list (server:rest-get (query1 query2) ;; (bb-empty)
+                                                                         (bb-list (bb-comment (text "TEST"))
+                                                                                  (bb-import "test" query1 query2))) 
+                                                        (server:rest-post (bb-empty)))
+                                           (server:rest-dynamic 'trip (trip) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))
+                                                                (server:rest-static 'cities (list (server:rest-get () (bb-empty)) (server:rest-post (bb-empty)))
+                                                                                    (server:rest-dynamic 'city (city) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))
+                                                                                                         (server:rest-static 'places (list (server:rest-get () (bb-empty)) (server:rest-post (bb-empty)))
+                                                                                                                             (server:rest-dynamic 'place (place) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))))))))))
 
-(synth :output (synth :java (synth :interface server)) 0)
-
+(synth :output (synth :java (synth :class server)) 0)
 
 (defparameter place-format
   (data:jsobject 'place "aaa"

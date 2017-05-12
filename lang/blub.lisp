@@ -92,6 +92,12 @@
   (:typescript () (back-quotes (synth :doc element) :newline t))
   (:java () (error "not available in java")))
 
+(defprim bb-with-annotations (annotations expr &key (newline t))
+  (:pretty () (list 'bb-with-annotation (list :annotations (synth-all :pretty annotations) :expr (synth :pretty expr))))
+  (:typescript () (apply (if newline #'vcat #'hcat) (doc:append* (synth-all :typescript annotations)
+                                                                 (synth :typescript expr))))
+  (:java () (apply (if newline #'vcat #'hcat+) (doc:append* (synth-all :java annotations)
+                                                           (synth :java expr)))))
 
 (defprim bb-annotation (name &rest props)
   (:pretty () (list 'bb-annotation (list name name :props (synth-plist :pretty props))))
@@ -110,14 +116,16 @@
                                           (nest 4 (apply #'punctuate (comma) t 
                                                          (synth-plist-merge 
                                                           #'(lambda (pair) (hcat (text "~a = " (string-downcase (first pair)))
-                                                                                 (synth :java (second pair)))) 
+                                                                                 (second pair))) 
                                                           props)))
                                           :newline t))
-                        ((= (length props) 1) (parens (synth :java (car props))))
+                        ((and (listp props) (= (length props) 1)) (parens (car props)))
+                        (listp props) (parens (braces (punctuate (comma) nil props)))
                         (t (error "case not allowed"))))))
 
-(defprim bb-class (name &key interfaces parent fields constructor methods)
+(defprim bb-class (name &key public interfaces parent fields constructor methods)
   (:pretty () (list 'bb-class (list :name name 
+                                    :public public
                                     :interfaces interfaces 
                                     :parent parent 
                                     :fields (synth-all :pretty fields) 
@@ -126,24 +134,39 @@
   (:typescript () (vcat (hcat (text "export class ~a" (upper-camel name))
                               (if interfaces (hcat (text " implements ") 
                                                    (punctuate (comma) nil (mapcar (lambda (int) (text "~a" (upper-camel int)))
-                                                                                     interfaces))))) 
+                                                                                  interfaces))))) 
                         (braces 
                          (nest 4 (apply #'vcat (apply #'postpend (semi) t 
                                                       (synth-all :typescript fields))
                                         (synth :typescript constructor)
                                         (synth-all :typescript methods)))
                          :newline t)))
-  (:java () (vcat (hcat (text "class ~a" (upper-camel name))
-                              (if parent (hcat (text " implements ") (text "~a" (upper-camel parent))))
-                              (if interfaces (hcat (text " implements ") 
-                                                   (punctuate (comma) nil (mapcar (lambda (int) (text "~a" (upper-camel int)))
-                                                                                  interfaces))))) 
-                        (braces 
-                         (nest 4 (apply #'vcat (apply #'postpend (semi) t 
-                                                      (synth-all :java fields))
-                                        (synth :java constructor)
-                                        (synth-all :java methods)))
-                         :newline t))))
+  (:java () (vcat (hcat 
+                   (if public (text "public ") (empty)) 
+                   (text "class ~a" (upper-camel name))
+                   (if parent (hcat (text " extends ") (text "~a" (upper-camel parent))))
+                   (if interfaces (hcat (text " implements ") 
+                                        (punctuate (comma) nil (mapcar (lambda (int) (text "~a" (upper-camel int)))
+                                                                       interfaces))))) 
+                  (braces 
+                   (nest 4 (apply #'vcat (apply #'postpend (semi) t 
+                                                (synth-all :java fields))
+                                  (synth :java constructor)
+                                  (synth-all :java methods)))
+                   :newline t))))
+
+(defprim bb-interface (name &key public interfaces methods)
+  (:pretty () (list 'bb-interface (list :name name 
+                                        :public public
+                                        :interfaces interfaces 
+                                        :methods (synth-all :pretty methods))))
+  (:typescript () (error "not implemented yet"))
+  (:java () (vcat (hcat
+                   (if public (text "public ") (empty)) 
+                   (text "interface ~a" (upper-camel name))) 
+                  (braces 
+                   (nest 4 (apply #'vcat (synth-all :java methods)))
+                   :newline t))))
 
 ;; (defprim taglist (&rest tags)
 ;;   (:pretty () (list 'taglist (list :tags (synth-all :pretty tags))))
@@ -162,7 +185,7 @@
                                      :rtype rtype
                                      :statements (synth-all :pretty statements))))
   (:typescript () (vcat (hcat name
-                              (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters)))
+                              (parens (apply #'punctuate (comma) t (synth-all :typescript parameters)))
                               (text ": ") 
                               (synth :typescript rtype)) 
                         (braces 
@@ -171,8 +194,9 @@
                          :newline t)))
   (:java () (vcat (hcat (text "public ") 
                         (synth :java rtype)
-                        (text "~a" name)
-                        (parens (apply #'punctuate (comma) nil (synth-all :java parameters)))) 
+                        (blank)
+                        name
+                        (parens (apply #'punctuate (comma) t (synth-all :java parameters)))) 
                   (braces 
                    (nest 4 (apply #'postpend (semi) t 
                                   (synth-all :java statements)))
@@ -190,7 +214,8 @@
                         (semi)))
   (:java () (mapcar (lambda (elem)
                       (hcat (text "import ~a.~a" name (upper-camel elem))
-                            (semi))))))
+                            (semi)))
+                    elements)))
 
 (defprim bb-assign (lhs rhs &key as)
   (:pretty () (list 'bb-assign (list :lhs lhs :rhs rhs)))

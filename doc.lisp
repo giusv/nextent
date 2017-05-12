@@ -38,6 +38,9 @@
   (:extent () (let ((fdocs (flatten docs)))
 		     (synth :extent (car (last fdocs))))))
 
+(defun hcat+ (&rest docs)
+  (apply #'hcat (interleave docs (blank))))
+
 (defprim hcat (&rest docs)
   (:pretty () `(hcat (:docs ,(synth-all :pretty docs))))
   (:output (indent) (let ((fdocs (flatten docs)))
@@ -60,6 +63,9 @@
 
 (defmacro vcat-all (fn lst)
   `(apply #'vcat (mapcar #',fn ,lst)))
+
+(defun textify (sym)
+  (text "~a" sym))
 
 (defun wrap (doc start end &key newline (padding 0))
 (if newline 
@@ -93,6 +99,8 @@
   (text "/"))
 (defun equals () 
   (text "="))
+(defun blank () 
+  (text " "))
 
 (defun punctuate (p newline &rest docs)
   (cond ((null docs) nil)
