@@ -19,7 +19,8 @@
                         :serial t
                         :components ((:file "data")
                                      (:file "json")
-                                     (:file "jsonschema"))) 
+                                     (:file "jsonschema")
+                                     (:file "entity"))) 
                (:module "gui"
                         :serial t
                         :components ((:file "input")

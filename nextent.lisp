@@ -21,8 +21,13 @@
                                                                                     (server:rest-dynamic 'city (city) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))
                                                                                                          (server:rest-static 'places (list (server:rest-get () (bb-empty)) (server:rest-post (bb-empty)))
                                                                                                                              (server:rest-dynamic 'place (place) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))))))))))
+(defparameter trip-entity
+  (data:entity 'trip 
+               :primary (data:attribute 'id 'int)
+               :fields (list (data:attribute 'name 'string))))
 
-(synth :output (synth :java (synth :class server)) 0)
+(synth :output (synth :java (synth :java trip-entity)) 0)
+;; (synth :output (synth :java (synth :class server)) 0)
 
 (defparameter place-format
   (data:jsobject 'place "aaa"

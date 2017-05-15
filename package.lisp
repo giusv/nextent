@@ -85,7 +85,8 @@
            :rand
            :jnull :jbool :jnumber :jstring :jobject :jarray
            :jsbool :jsnumber :jsstring :jsprop :jsobject :jsarray
-           :filter :ident :prop :elem :comp))
+           :filter :ident :prop :elem :comp
+           :attribute :primary-key :foreign-key :entity))
 
 (defpackage :gui
   (:use :cl :lol :utils :grammar :lang)

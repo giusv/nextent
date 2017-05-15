@@ -104,12 +104,11 @@
   (:typescript () (vcat (text "@~a" (upper-camel name)) 
                         (parens
                          (braces 
-                          (nest 4 (apply #'punctuate (comma) t 
+                          (nest 4 (apply #'punctuate (comma) nil
                                          (synth-plist-merge 
                                           #'(lambda (pair) (hcat (text "~a: " (string-downcase (first pair)))
                                                                  (synth :typescript (second pair)))) 
-                                          props)))
-                          :newline t))))
+                                          props)))))))
   (:java () (hcat (text "@~a" name) 
                   (cond ((null props) (empty))
                         ((plist-p props) (parens
