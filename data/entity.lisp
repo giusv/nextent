@@ -3,19 +3,26 @@
 (defprim attribute (name type &optional desc)
   (:pretty () (list 'attribute (list :name name :type type :desc desc))) 
   (:java (&rest annotations) (bb-with-annotations 
-                              (cons (bb-annotation '|Column| :name (doc:textify  name))
+                              (cons (bb-annotation '|Column| :name (doc:double-quotes (doc:textify name)))
                                     annotations)
-                              (bb-pair name (bb-type type) :private t)))
+                              (bb-pair name (bb-type type) :private t)
+                              :newline t))
+  (:accessors () (list (bb-method (doc:text "get~a" (doc:upper-camel name)) nil (bb-type type)
+                                  (bb-return (bb-dynamic name)))
+                       (bb-method (doc:text "set~a" (doc:upper-camel name)) (list (bb-pair name (bb-type type))) (bb-type 'void :primitive t)
+                                  (bb-assign (bb-chain (bb-dynamic 'this) 
+                                                       (bb-dynamic name))
+                                             (bb-dynamic name)))))
   ;; (:html () (text "Attributo ~a (~a): ~a" (lower-camel name) (lower-camel type) desc))
   )
 
-(defprim foreign-key (attributes reference cardinality)
-  (:pretty () (list 'foreign-key (list :attributes attributes :reference reference :cardinality cardinality))) 
-  (:java () (bb-list (synth :java attributes (list (bb-annotation cardinality)))))
-  ;; (:attributes () (synth-all name attributes))
-  ;; (:html () (text "Foreign key verso ~a costituita dai seguenti attributi:  ~{~a~^, ~}" (lower-camel reference)
-  ;;                 (mapcar #'lower-camel attributes)))
-  )
+;; (defprim foreign-key (attributes reference cardinality)
+;;   (:pretty () (list 'foreign-key (list :attributes attributes :reference reference :cardinality cardinality))) 
+;;   (:java () (bb-list (synth :java attributes (list (bb-annotation cardinality)))))
+;;   ;; (:attributes () (synth-all name attributes))
+;;   ;; (:html () (text "Foreign key verso ~a costituita dai seguenti attributi:  ~{~a~^, ~}" (lower-camel reference)
+;;   ;;                 (mapcar #'lower-camel attributes)))
+;;   (:accessors () (synth-all :accessors attributes)))
 
 (defprim primary-key (attribute)
   (:pretty () (list 'primary-key (list :attribute (synth :pretty attribute)))) 
@@ -25,48 +32,91 @@
   ;;              (text "Primary key costituita dai seguenti attributi:")
   ;;              (apply #'ul nil
   ;;                     (mapcar #'listify (synth-all :html attributes)))))
-  )
+  (:accessors () (synth :accessors attribute)))
 
-(defprim entity (name &key desc primary fields foreigns)
-  (:java () (bb-class name
-                      :fields (doc:append*
-                               (synth :java primary)
-                               (synth-all :java fields)
-                               (synth-all :java foreigns))))
-  (:pretty () (list 'entity :name name 
+(defun get-sources (entity)
+  (loop for rel being the hash-values of *relationships*
+     ;; do (pprint (synth :name (synth :owner rel)))
+     ;; (pprint (synth :name entity))
+     ;; (pprint (eq  (synth :name (synth :owner rel)) (synth :name entity)))
+     collect (if (eq (synth :name (synth :owner rel)) (synth :name entity)) rel)))
+
+(defun get-targets (entity)
+  (loop for rel being the hash-values of *relationships*
+     ;; do (pprint (synth :name (synth :owner rel)))
+     ;; (pprint (synth :name entity))
+     ;; (pprint (eq  (synth :name (synth :owner rel)) (synth :name entity)))
+     collect (if (eq (synth :name (synth :subordinate rel)) (synth :name entity)) rel)))
+
+
+(defprim entity (name &key desc primary fields ;; foreigns
+                      )
+  (:pretty () (list 'entity :name name
                     :desc desc
                     :primary (synth :pretty primary)
                     :fields (synth-all :pretty fields)
-                    :foreigns (synth-all :pretty foreigns)))
-  ;; (:attributes () (apply #'append (synth attributes primary) (synth-all name fields) (synth-all attributes foreigns)))
-  ;; (:html () (section nil 
-  ;;                    ;; (h5 nil (text "~a" (upper-camel name)))
-                       
-  ;;                    (text "~a. Essa è costituita da:" desc)
-  ;;                    (apply #'ul nil
-  ;;                           (mapcar #'listify (synth-all :html (append (list primary) fields foreigns))))
-  ;;                    ;; (p nil (synth :html primary))
-  ;;                    ;; (append (synth-all :html fields)
-  ;;                    ;;         (synth-all :html foreigns))
-  ;;                    ))
-  )
+                    ;; :foreigns (synth-all :pretty foreigns)
+                    ))
+  (:java () (bb-with-annotations 
+             (list (bb-annotation '|Entity|)
+                   (bb-annotation '|Table| :name (doc:double-quotes (doc:textify name))))
+             (bb-class name
+                       :fields (doc:append*
+                                (synth :java primary)
+                                (synth-all :java fields)
+                                (synth-all :source (get-sources this))
+                                (synth-all :target (get-targets this)))
+                       :methods nil ;; (append (synth :accessors primary)
+                                    ;;     (apply #'append (synth-all :accessors fields)) 
+                                    ;;     ;; (apply #'append (synth-all :accessors foreigns))
+                                    ;;     )
+                       ))))
 
-;; (defun pretty-java (entity)
-;;   (synth pretty (synth java entity) 0))
+(defprim relationship (name owner subordinate cardinality &optional (participation t))
+  (:pretty () (list 'relationship (list :name name
+                                        :owner (synth :pretty owner)
+                                        :subordinate (synth :pretty subordinate)
+                                        :cardinality cardinality
+                                        :participation participation)))
+  (:source () (case cardinality
+                (:one-to-one (bb-with-annotations (list (bb-annotation '|OneToOne|))
+                                                  (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)) :private t)))
+                (:many-to-one (bb-with-annotations (list (bb-annotation '|ManyToOne|))
+                                                   (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)) :private t)))
+                (:one-to-many (bb-with-annotations (list (bb-annotation '|OneToMany|
+                                                                        :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (synth :name owner))))))
+                                                   (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t)))
+                (:many-to-many (bb-with-annotations (list (bb-annotation '|ManyToMany|))
+                                   (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t))))) 
+  (:target () (case cardinality
+                (:one-to-one (if participation (bb-with-annotations 
+                                                (list (bb-annotation '|OneToOne|
+                                                                     :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (synth :name owner))))
+                                                                     :|optional| (doc:textify '|false|))) 
+                                                (bb-pair (synth :name owner) (bb-type (synth :name owner)) :private t))))
+                (:many-to-one (bb-with-annotations 
+                               (list (bb-annotation '|OneToMany|
+                                                    :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (synth :name owner)))))) 
+                               (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t)))
+                (:one-to-many (bb-with-annotations 
+                               (list (bb-annotation '|ManyToOne|)) 
+                               (bb-pair (synth :name owner) (bb-type (synth :name owner)) :private t)))
+                (:many-to-many (bb-with-annotations 
+                               (list (bb-annotation '|ManyToMany|
+                                                    :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (symb (synth :name subordinate) "-SET")))))) 
+                               (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t))))))
+
+(defparameter *entities* (make-hash-table))
+(defparameter *relationships* (make-hash-table))
+
+(defmacro defent (name entity)
+  `(progn (defparameter ,name ,entity) 
+         (setf (gethash ',name *entities*) ,name)))
+
+(defmacro defrel (name relationship)
+  `(progn (defparameter ,name ,relationship) 
+          (setf (gethash ',name *relationships*) ,name)))
 
 
 
-;; (defparameter *people* (entity 'people 
-;; 			       (primary-key 
-;; 				(attribute 'id 'string))
-;; 			       (list (attribute 'name 'string)
-;; 				     (attribute 'city 'string))
-;; 			       (foreign-key
-;; 				'cities
-;; 				(attribute 'city-id1 'string)
-;; 				(attribute 'city-id2 'string))
-;; 			       (foreign-key
-;; 				'cars
-;; 				(attribute 'car-id1 'string))))
 
-;; (synth attributes *people*)

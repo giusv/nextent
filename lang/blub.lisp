@@ -112,12 +112,11 @@
   (:java () (hcat (text "@~a" name) 
                   (cond ((null props) (empty))
                         ((plist-p props) (parens
-                                          (nest 4 (apply #'punctuate (comma) t 
-                                                         (synth-plist-merge 
-                                                          #'(lambda (pair) (hcat (text "~a = " (string-downcase (first pair)))
-                                                                                 (second pair))) 
-                                                          props)))
-                                          :newline t))
+                                          (apply #'punctuate (comma) nil 
+                                                 (synth-plist-merge 
+                                                  #'(lambda (pair) (hcat (text "~a = " (string-downcase (first pair)))
+                                                                         (second pair))) 
+                                                  props))))
                         ((and (listp props) (= (length props) 1)) (parens (car props)))
                         (listp props) (parens (braces (punctuate (comma) nil props)))
                         (t (error "case not allowed"))))))

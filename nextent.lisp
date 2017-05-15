@@ -21,12 +21,28 @@
                                                                                     (server:rest-dynamic 'city (city) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))
                                                                                                          (server:rest-static 'places (list (server:rest-get () (bb-empty)) (server:rest-post (bb-empty)))
                                                                                                                              (server:rest-dynamic 'place (place) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))))))))))
-(defparameter trip-entity
+
+(data:defent trip-entity
   (data:entity 'trip 
                :primary (data:attribute 'id 'int)
                :fields (list (data:attribute 'name 'string))))
 
-(synth :output (synth :java (synth :java trip-entity)) 0)
+(data:defent city-entity
+  (data:entity 'city 
+               :primary (data:attribute 'id 'int)
+               :fields (list (data:attribute 'name 'string))))
+
+(data:defrel trip-city
+    (data:relationship 'trip-city trip-entity city-entity :many-to-many))
+
+;; (pprint (synth-all :pretty (synth :source (car (data::get-sources trip-entity)))))
+;; (pprint (synth-all :pretty (data::get-sources trip-entity)))
+
+;; (pprint (synth :pretty trip-entity))
+;; (pprint trip-entity)
+
+(synth-all :output (synth-all :java (synth-all :java 
+                                               (loop for value being the hash-values of data:*entities* collect value))) 0)
 ;; (synth :output (synth :java (synth :class server)) 0)
 
 (defparameter place-format

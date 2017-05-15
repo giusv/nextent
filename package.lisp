@@ -86,7 +86,9 @@
            :jnull :jbool :jnumber :jstring :jobject :jarray
            :jsbool :jsnumber :jsstring :jsprop :jsobject :jsarray
            :filter :ident :prop :elem :comp
-           :attribute :primary-key :foreign-key :entity))
+           :attribute :primary-key :foreign-key :entity :relationship
+           :defent :defrel
+           :*entities* :*relationships*))
 
 (defpackage :gui
   (:use :cl :lol :utils :grammar :lang)
