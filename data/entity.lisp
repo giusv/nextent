@@ -13,6 +13,7 @@
                                   (bb-assign (bb-chain (bb-dynamic 'this) 
                                                        (bb-dynamic name))
                                              (bb-dynamic name)))))
+  (:paramdecl () (bb-pair name (bb-type type)))
   ;; (:html () (text "Attributo ~a (~a): ~a" (lower-camel name) (lower-camel type) desc))
   )
 
@@ -32,7 +33,8 @@
   ;;              (text "Primary key costituita dai seguenti attributi:")
   ;;              (apply #'ul nil
   ;;                     (mapcar #'listify (synth-all :html attributes)))))
-  (:accessors () (synth :accessors attribute)))
+  (:accessors () (synth :accessors attribute))
+  (:paramdecl () (synth :paramdecl attribute)))
 
 (defun get-sources (entity)
   (loop for rel being the hash-values of *relationships*
@@ -67,7 +69,14 @@
                                           (apply #'append (synth-all :accessors fields))))))
   (:eao-interface () (bb-interface (symb name "-EAO")
                                    :public t
-                                   :methods (list (bb-method (doc:textify (doc:lower-camel (symb "ADD-" name))) nil (bb-type name))))))
+                                   :methods (list (bb-method (doc:textify (doc:lower-camel (symb "ADD-" name))) 
+                                                             (remove nil (append (synth-all :paramdecl fields)
+                                                                                (synth-all :target-paramdecl (get-sources this))
+                                                                                (synth-all :source-paramdecl (get-targets this))))
+                                                             (bb-type name)) 
+                                                  (bb-method (doc:textify (doc:lower-camel (symb "CANCEL-" name)))
+                                                             (list (synth :paramdecl primary)) 
+                                                             (bb-type name))))))
 
 (defprim relationship (name owner subordinate cardinality &optional (participation t))
   (:pretty () (list 'relationship (list :name name
@@ -84,7 +93,7 @@
                                                                         :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (synth :name owner))))))
                                                    (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t)))
                 (:many-to-many (bb-with-annotations (list (bb-annotation '|ManyToMany|))
-                                   (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t))))) 
+                                                    (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t))))) 
   (:target () (case cardinality
                 (:one-to-one (if participation (bb-with-annotations 
                                                 (list (bb-annotation '|OneToOne|
@@ -99,9 +108,19 @@
                                (list (bb-annotation '|ManyToOne|)) 
                                (bb-pair (synth :name owner) (bb-type (synth :name owner)) :private t)))
                 (:many-to-many (bb-with-annotations 
-                               (list (bb-annotation '|ManyToMany|
-                                                    :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (symb (synth :name subordinate) "-SET")))))) 
-                               (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t))))))
+                                (list (bb-annotation '|ManyToMany|
+                                                     :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (symb (synth :name subordinate) "-SET")))))) 
+                                (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t)))))
+  (:target-paramdecl () (case cardinality
+                   (:one-to-one (if participation (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)))))
+                   (:many-to-one (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate))))
+                   (:one-to-many (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate)))))
+                   (:many-to-many (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate)))))))
+  (:source-paramdecl () (case cardinality
+                   (:one-to-one (bb-pair (synth :name owner) (bb-type (synth :name owner))))
+                   (:many-to-one (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))
+                   (:one-to-many (bb-pair (synth :name owner) (bb-type (synth :name owner))))
+                   (:many-to-many (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))))))))
 
 (defparameter *entities* (make-hash-table))
 (defparameter *relationships* (make-hash-table))

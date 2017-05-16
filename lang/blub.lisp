@@ -147,8 +147,8 @@
                                         (punctuate (comma) nil (mapcar (lambda (int) (text "~a" (upper-camel int)))
                                                                        interfaces))))) 
                   (braces 
-                   (nest 4 (apply #'vcat (apply #'postpend (semi) t 
-                                                (synth-all :java fields))
+                   (nest 4 (apply #'vcat 
+                                  (apply #'postpend (semi) t (synth-all :java fields))
                                   (synth :java constructor)
                                   (synth-all :java methods)))
                    :newline t))))
@@ -163,7 +163,8 @@
                    (if public (text "public ") (empty)) 
                    (text "interface ~a" (upper-camel name))) 
                   (braces 
-                   (nest 4 (apply #'vcat (synth-all :java methods)))
+                   (nest 4 (apply #'postpend (semi) t 
+                                  (synth-all :java methods)))
                    :newline t))))
 
 ;; (defprim taglist (&rest tags)
@@ -190,16 +191,28 @@
                          (nest 4 (apply #'postpend (semi) t 
                                         (synth-all :typescript statements)))
                          :newline t)))
-  (:java () (vcat (hcat (text "public ") 
+  (:java ()  (vcat (hcat (text "public ") 
                         (synth :java rtype)
                         (blank)
                         name
                         (parens (apply #'punctuate (comma) t (synth-all :java parameters)))) 
-                  (if statements 
-                      (braces 
-                       (nest 4 (apply #'postpend (semi) t 
-                                      (synth-all :java statements)))
-                       :newline t)))))
+                  (braces 
+                   (nest 4 (apply #'postpend (semi) t 
+                                  (synth-all :java statements)))
+                   :newline t)
+                  (semi))))
+
+(defprim bb-signature (name parameters rtype)
+  (:pretty () (list 'bb-method (list :name name 
+                                     :parameters (synth-all :pretty parameters) 
+                                     :rtype rtype)))
+  (:typescript () (error "not implemented"))
+  (:java ()  (hcat (text "public ") 
+                  (synth :java rtype)
+                  (blank)
+                  name
+                  (parens (apply #'punctuate (comma) t (synth-all :java parameters))) 
+                  (semi))))
 
 (defprim bb-import (name &rest elements)
   (:pretty () (list 'bb-import (list :name (synth :pretty name) 
@@ -285,8 +298,9 @@
                                       chain))
                         chain))))
 
-(defprim bb-constructor (parameters &rest statements)
-  (:pretty () (list 'bb-constructor (list :parameters (synth-all :pretty parameters) 
+(defprim bb-constructor (name parameters &rest statements)
+  (:pretty () (list 'bb-constructor (list :name name
+                                          :parameters (synth-all :pretty parameters) 
                                           :statements (synth-all :pretty statements))))
   (:typescript () (vcat (hcat (text "constructor") 
                               (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters)))) 
@@ -294,7 +308,7 @@
                          (nest 4 (apply #'postpend (semi) t 
                                         (synth-all :typescript statements)))
                          :newline t)))
-  (:java () (vcat (hcat (text "~a" (upper-camel name)) 
+  (:java () (vcat (hcat (text "public ~a" (upper-camel name)) 
                               (parens (apply #'punctuate (comma) nil (synth-all :java parameters)))) 
                         (braces 
                          (nest 4 (apply #'postpend (semi) t 
