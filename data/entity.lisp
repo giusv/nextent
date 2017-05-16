@@ -2,7 +2,7 @@
 
 (defprim attribute (name type &optional desc)
   (:pretty () (list 'attribute (list :name name :type type :desc desc))) 
-  (:java (&rest annotations) (bb-with-annotations 
+  (:entity (&rest annotations) (bb-with-annotations 
                               (cons (bb-annotation '|Column| :name (doc:double-quotes (doc:textify name)))
                                     annotations)
                               (bb-pair name (bb-type type) :private t)
@@ -18,7 +18,7 @@
 
 ;; (defprim foreign-key (attributes reference cardinality)
 ;;   (:pretty () (list 'foreign-key (list :attributes attributes :reference reference :cardinality cardinality))) 
-;;   (:java () (bb-list (synth :java attributes (list (bb-annotation cardinality)))))
+;;   (:entity () (bb-list (synth :entity attributes (list (bb-annotation cardinality)))))
 ;;   ;; (:attributes () (synth-all name attributes))
 ;;   ;; (:html () (text "Foreign key verso ~a costituita dai seguenti attributi:  ~{~a~^, ~}" (lower-camel reference)
 ;;   ;;                 (mapcar #'lower-camel attributes)))
@@ -26,7 +26,7 @@
 
 (defprim primary-key (attribute)
   (:pretty () (list 'primary-key (list :attribute (synth :pretty attribute)))) 
-  (:java () (synth :java attribute (list (bb-annotation '|Id|))))
+  (:entity () (synth :entity attribute (list (bb-annotation '|Id|))))
   ;; (:attributes () (synth-all name attributes))
   ;; (:html () (multitags 
   ;;              (text "Primary key costituita dai seguenti attributi:")
@@ -49,28 +49,25 @@
      collect (if (eq (synth :name (synth :subordinate rel)) (synth :name entity)) rel)))
 
 
-(defprim entity (name &key desc primary fields ;; foreigns
-                      )
+(defprim entity (name &key desc primary fields)
   (:pretty () (list 'entity :name name
                     :desc desc
                     :primary (synth :pretty primary)
-                    :fields (synth-all :pretty fields)
-                    ;; :foreigns (synth-all :pretty foreigns)
-                    ))
-  (:java () (bb-with-annotations 
-             (list (bb-annotation '|Entity|)
-                   (bb-annotation '|Table| :name (doc:double-quotes (doc:textify name))))
-             (bb-class name
-                       :fields (doc:append*
-                                (synth :java primary)
-                                (synth-all :java fields)
-                                (synth-all :source (get-sources this))
-                                (synth-all :target (get-targets this)))
-                       :methods nil ;; (append (synth :accessors primary)
-                                    ;;     (apply #'append (synth-all :accessors fields)) 
-                                    ;;     ;; (apply #'append (synth-all :accessors foreigns))
-                                    ;;     )
-                       ))))
+                    :fields (synth-all :pretty fields)))
+  (:entity () (bb-with-annotations 
+               (list (bb-annotation '|Entity|)
+                     (bb-annotation '|Table| :name (doc:double-quotes (doc:textify name))))
+               (bb-class name
+                         :fields (doc:append*
+                                  (synth :entity primary)
+                                  (synth-all :entity fields)
+                                  (synth-all :source (get-sources this))
+                                  (synth-all :target (get-targets this)))
+                         :methods (append (synth :accessors primary)
+                                          (apply #'append (synth-all :accessors fields))))))
+  (:eao-interface () (bb-interface (symb name "-EAO")
+                                   :public t
+                                   :methods (list (bb-method (doc:textify (doc:lower-camel (symb "ADD-" name))) nil (bb-type name))))))
 
 (defprim relationship (name owner subordinate cardinality &optional (participation t))
   (:pretty () (list 'relationship (list :name name

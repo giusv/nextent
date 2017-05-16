@@ -195,10 +195,11 @@
                         (blank)
                         name
                         (parens (apply #'punctuate (comma) t (synth-all :java parameters)))) 
-                  (braces 
-                   (nest 4 (apply #'postpend (semi) t 
-                                  (synth-all :java statements)))
-                   :newline t))))
+                  (if statements 
+                      (braces 
+                       (nest 4 (apply #'postpend (semi) t 
+                                      (synth-all :java statements)))
+                       :newline t)))))
 
 (defprim bb-import (name &rest elements)
   (:pretty () (list 'bb-import (list :name (synth :pretty name) 
