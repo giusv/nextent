@@ -37,3 +37,18 @@
 
 (defun plist-values (plst)
   (loop for (key value . rest) on plst by #'cddr collect value))
+
+(defun singular (sym)
+  (labels ((ends-with (s end)
+             (equal (subseq s (- (length s) (length end))) end)))
+    (let ((s (symbol-name sym)))
+      ;; (pprint (subseq s (- (length s) 2)))
+      ;; (pprint (equal (subseq s (- (length s) 2)) "ES"))
+      (cond ((ends-with s "IES") (concatenate 'string (subseq s 0 (- (length s) 3)) "y")) 
+            ((ends-with s "SES") (subseq s 0 (- (length s) 2)))
+            ((ends-with s "XES") (subseq s 0 (- (length s) 2)))
+            ((ends-with s "ZES") (subseq s 0 (- (length s) 2)))
+            ((ends-with s "CHES") (subseq s 0 (- (length s) 2)))
+            ((ends-with s "SHES") (subseq s 0 (- (length s) 2)))
+            ((ends-with s "S") (subseq s 0 (- (length s) 1)))
+            (t (error "not a plural"))))))

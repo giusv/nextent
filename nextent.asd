@@ -12,6 +12,9 @@
                (:file "grammar")
                (:file "doc")
                (:file "html")
+               (:module "lang"
+                        :serial t
+                        :components ((:file "blub")))
                (:file "expression")
                (:file "url")
                
@@ -39,12 +42,11 @@
                                      (:file "dynamic")
                                      (:file "alt")
                                      (:file "form")))
-               (:module "lang"
-                        :serial t
-                        :components ((:file "blub")))
+              
                (:module "server"
                         :serial t
-                        :components ((:file "rest")))
+                        :components ((:file "rest")
+                                     (:file "actions")))
                (:file "nextent")))
 
 

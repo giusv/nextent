@@ -17,7 +17,8 @@
   (:req () (html:taglist (html:span-color (doc:lower-camel name)) 
                          (doc:text "!~a"  (doc:lower-camel exp))))
   (:string () (doc:text "~a!~a" (doc:lower-camel (synth :name name)) (doc:lower-camel exp)))
-  (:template () (doc:text "{{~a.~a}}" (doc:lower-camel name) (doc:lower-camel exp))))
+  (:template () (doc:text "{{~a.~a}}" (doc:lower-camel name) (doc:lower-camel exp)))
+  (:blub () (lang:bb-chain (lang:bb-dynamic (synth :name name)) (lang:bb-call (symb "GET-" exp)))))
 
 (defprim value (exp)
   (:pretty () (list 'value (list :exp exp)))

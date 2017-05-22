@@ -11,7 +11,8 @@
   (:export :random-number :random-string :random-boolean
            :rest-key :rest-plain
            :plist-keys :plist-values
-           :plist-p))
+           :plist-p
+           :singular))
 
 (defpackage :parser
   (:use :cl :lol :utils)
@@ -72,10 +73,13 @@
 
 (defpackage :server
   (:use :cl :lol :utils :grammar :lang)
-  (:export :rest-service :rest-static 
-           :rest-dynamic% :rest-dynamic
+  (:export :rest-service :rest-collection :rest-singleton
+           :rest-item% :rest-item
            :rest-get% :rest-get
-           :rest-post :rest-put :rest-delete))
+           :rest-post% :rest-post
+           :rest-put :rest-delete
+           :with-fields
+           :empty :create-instance% :create-instance))
 
 
 (defpackage :data

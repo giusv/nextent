@@ -10,20 +10,23 @@
   (write-file name (to-string code)))
 
 
-(defparameter server
-  (server:rest-service 'trip-service (url:void)
-                       (server:rest-static 'trips (list (server:rest-get (query1 query2) ;; (bb-empty)
-                                                                         (bb-list (bb-comment (text "TEST"))
-                                                                                  (bb-import "test" query1 query2))) 
-                                                        (server:rest-post (bb-empty)))
-                                           (server:rest-dynamic 'trip (trip) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))
-                                                                (server:rest-static 'cities (list (server:rest-get () (bb-empty)) (server:rest-post (bb-empty)))
-                                                                                    (server:rest-dynamic 'city (city) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))
-                                                                                                         (server:rest-static 'places (list (server:rest-get () (bb-empty)) (server:rest-post (bb-empty)))
-                                                                                                                             (server:rest-dynamic 'place (place) (list (server:rest-get () (bb-empty)) (server:rest-put (bb-empty)))))))))))
+
+(defparameter place-format
+  (data:jsobject 'place "aaa"
+                 (data:jsprop 'name t (data:jsstring 'name "aaa"))))
+
+(defparameter city-format
+  (data:jsobject 'city "aaa"
+                 (data:jsprop 'name t (data:jsstring 'name "aaa"))
+                 (data:jsprop 'places t (data:jsarray 'places "aaa" place-format))))
+
+(defparameter trip-format
+  (data:jsobject 'trip "aaa"
+                 (data:jsprop 'name t (data:jsstring 'name "aaa"))
+                 (data:jsprop 'cities t (data:jsarray 'cities "aaa" city-format))))
 
 (data:defent trip-entity
-  (data:entity 'trip 
+  (data:entity 'trip
                :primary (data:attribute 'id 'int)
                :fields (list (data:attribute 'name 'string)
                              (data:attribute 'date 'string))))
@@ -45,6 +48,19 @@
 (data:defrel city-place
     (data:relationship 'city-place city-entity place-entity :one-to-many))
 
+(defparameter server
+  (server:rest-service 'trip-service (url:void)
+                       (server:rest-collection 'trips (list (server:rest-get (query1 query2) (server:empty)) 
+                                                            (server:rest-post trip-format (name place)
+                                                             (server:create-instance trip-entity
+                                                                                     :name name
+                                                                                     :place place)))
+                                               (server:rest-item 'trip (trip) (list (server:rest-get () (server:empty)) (server:rest-put trip-format (server:empty)))
+                                                                 (server:rest-collection 'cities (list (server:rest-get () (server:empty)) (server:rest-post city-format nil (server:empty)))
+                                                                                         (server:rest-item 'city (city) (list (server:rest-get () (server:empty)) (server:rest-put city-format (server:empty)))
+                                                                                                           (server:rest-collection 'places (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty)))
+                                                                                                                                   (server:rest-item 'place (place) (list (server:rest-get () (server:empty)) (server:rest-put place-format (server:empty)))))))))))
+
 ;; (pprint (synth-all :pretty (synth :source (car (data::get-sources trip-entity)))))
 ;; (pprint (synth-all :pretty (data::get-sources trip-entity)))
 
@@ -53,12 +69,13 @@
 
 ;; (synth-all :output (synth-all :java (synth-all :entity 
 ;;                                                (loop for value being the hash-values of data:*entities* collect value))) 0)
-(synth-all :output (synth-all :java (synth-all :eao-interface 
-                                               (loop for value being the hash-values of data:*entities* collect value))) 0)
-;; (synth :output (synth :java (synth :class server)) 0)
+
+;; (synth-all :output (synth-all :java (synth-all :eao-interface 
+;;                                                (loop for value being the hash-values of data:*entities* collect value))) 0)
+;; (synth :output (synth :java (synth :jax-class server)) 0)
 
 ;; (pprint (synth-all :pretty (synth :bean-classes server)))
-(synth-all :output (synth-all :java (synth :bean-classes server)) 0)
+(synth :output (synth :java (synth :bean-class server)) 0)
 
 ;; (defparameter place-format
 ;;   (data:jsobject 'place "aaa"
