@@ -11,7 +11,8 @@
   (:export :random-number :random-string :random-boolean
            :rest-key :rest-plain
            :plist-keys :plist-values
-           :plist-p))
+           :plist-p
+           :singular))
 
 (defpackage :parser
   (:use :cl :lol :utils)

@@ -37,3 +37,9 @@
 
 (defun plist-values (plst)
   (loop for (key value . rest) on plst by #'cddr collect value))
+
+(defun singular (sym)
+  (let ((s (symbol-name sym)))
+    (if (eql (car (last s)) \#S)
+        (symb (butlast s))
+        (error "not plural"))))

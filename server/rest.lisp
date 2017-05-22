@@ -7,7 +7,18 @@
                        (list (bb-annotation '|Path| (doc:double-quotes (synth :url url))))
                        (bb-class name :public t
                                  :methods (apply #'append (synth-all :endpoints resources url))))))
-  (:bean-classes () (apply #'append (synth-all :bean-classes resources url))))
+  (:bean-class () (bb-unit (symb name "-BEAN-IMPL")
+                           (bb-with-annotations 
+                            (list (bb-annotation '|PersistenceContext|))
+                            (bb-class (symb name "-BEAN-IMPL") 
+                                      :public t
+                                      :interfaces (list (symb name "-BEAN"))
+                                      :constructor (bb-constructor name nil)
+                                      :methods (apply #'append (synth-all :bean-methods resources url))
+                                      ;; (synth-all :bean-method actions newpath chunk)
+                                      )))
+               ;; (apply #'append (synth-all :bean-classes resources url))
+               ))
 
 (defprim rest-static (name actions &rest resources)
   (:pretty () (list 'rest-static (list :name name :resources (synth-all :pretty resources) 
@@ -16,17 +27,10 @@
                              (newpath (url:backward-chain chunk path)))
                         (apply #'append (synth-all :interface actions newpath chunk)
                                (synth-all :endpoints resources newpath))))
-  (:bean-classes (path) (let* ((chunk (url:static-chunk name))
+  (:bean-methods (path) (let* ((chunk (url:static-chunk name))
                                (newpath (url:backward-chain chunk path)))
-                          (cons (bb-unit (symb name "-BEAN-IMPL")
-                                         (bb-with-annotations 
-                                          (list (bb-annotation '|PersistenceContext|))
-                                          (bb-class (symb name "-BEAN-IMPL") 
-                                                    :public t
-                                                    :interfaces (list (symb name "-BEAN"))
-                                                    :constructor (bb-constructor name nil)
-                                                    :methods (synth-all :bean-method actions newpath chunk))))
-                                (apply #'append (synth-all :bean-classes resources newpath))))))
+                          (append (synth-all :bean-method actions newpath chunk)
+                                  (apply #'append (synth-all :bean-methods resources newpath))))))
 
 
 (defprim rest-dynamic% (name param actions &rest resources)
@@ -36,17 +40,10 @@
                             (newpath (url:backward-chain chunk path)))
                        (apply #'append (synth-all :interface actions newpath chunk)
                               (synth-all :endpoints resources newpath))))
-  (:bean-classes (path) (let* ((chunk (url:dynamic-chunk name))
-                               (newpath (url:backward-chain chunk path))) 
-                          (cons (bb-unit (symb name "-BEAN-IMPL")
-                                         (bb-with-annotations 
-                                          (list (bb-annotation '|PersistenceContext|))
-                                          (bb-class (symb name "-BEAN-IMPL") 
-                                                    :public t
-                                                    :interfaces (list (symb name "-BEAN"))
-                                                    :constructor (bb-constructor name nil)
-                                                    :methods (synth-all :bean-method actions newpath chunk))))
-                                (apply #'append (synth-all :bean-classes resources newpath))))))
+  (:bean-methods (path) (let* ((chunk (url:dynamic-chunk name))
+                               (newpath (url:backward-chain chunk path)))
+                          (append (synth-all :bean-method actions newpath chunk)
+                                  (apply #'append (synth-all :bean-methods resources newpath))))))
 
 (defmacro rest-dynamic (name (param) actions &rest resources)
   `(let ((,param (url:path-parameter ',param)))
@@ -77,10 +74,16 @@
                                   (bb-annotation '|Path| (doc:double-quotes (synth :url path)))
                                   (if mtypes (apply #'bb-annotation '|Produces| 
                                                     (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
-                            (bb-signature (doc:text "get~a" (doc:upper-camel (synth :name chunk)))
-                                       (append (parlist '|PathParam| (synth :path-parameters path))
-                                               (parlist '|QueryParam| queries)) 
-                                       (bb-type 'response))))
+                            ;; (bb-signature (doc:text "get~a" (doc:upper-camel (synth :name chunk)))
+                            ;;            (append (parlist '|PathParam| (synth :path-parameters path))
+                            ;;                    (parlist '|QueryParam| queries)) 
+                            ;;            (bb-type 'response))
+                            (bb-method (doc:text "get~a" (doc:upper-camel (synth :name chunk)))
+                                       (doc:append* (parlist '|PathParam| (synth :path-parameters path))
+                                                    (parlist '|QueryParam| queries)) 
+                                       (bb-type 'response)
+                                       (bb-chain (bb-dynamic 'this) (bb-call 'validate))
+                                       (bb-chain (bb-dynamic (symb (synth :name chunk) "-BEAN-IMPL")) (bb-call 'retrieve)))))
   (:bean-method (path chunk) (bb-method (doc:text "retrieve~a" (doc:upper-camel (synth :name chunk)))
                                         (mapcar (lambda (par)
                                                   (bb-pair (doc:lower-camel par) (bb-type 'String)))
@@ -98,8 +101,11 @@
                                                       (bb-annotation '|Path| (doc:double-quotes (synth :url path)))
                                                       (if mtypes 
                                                           (apply #'bb-annotation '|Consumes|  (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
-                                                (bb-signature (doc:text "post~a" (doc:upper-camel (synth :name chunk))) 
-                                                           (parlist '|PathParam| (synth :path-parameters path))
+                                                (bb-method (doc:text "post~a" (doc:upper-camel (synth :name chunk))) 
+                                                           (doc:append* (parlist '|PathParam| (synth :path-parameters path))
+                                                                        (let ((name (symb (singular (synth :name chunk)) "-J-T-O")))
+                                                                          (bb-pair name (bb-type name))))
+                                                           
                                                            (bb-type 'response))))
   (:bean-method (path chunk) (bb-method (doc:text "add~a" (doc:upper-camel (synth :name chunk)))
                                         (mapcar (lambda (par)
@@ -113,8 +119,11 @@
                                                       (bb-annotation '|Path| (doc:double-quotes (synth :url path)))
                                                       (if mtypes 
                                                           (apply #'bb-annotation '|Consumes|  (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
-                                                (bb-signature (doc:text "put~a" (doc:upper-camel (synth :name chunk))) 
-                                                           (parlist '|PathParam| (synth :path-parameters path))
+                                                (bb-method (doc:text "put~a" (doc:upper-camel (synth :name chunk))) 
+                                                           (doc:append* 
+                                                            (parlist '|PathParam| (synth :path-parameters path))
+                                                            (let ((name (symb (synth :name chunk) "-J-T-O")))
+                                                              (bb-pair name (bb-type name))))
                                                            (bb-type 'response))))
   (:bean-method (path chunk) (bb-method (doc:text "update~a" (doc:upper-camel (synth :name chunk)))
                                         (mapcar (lambda (par)
