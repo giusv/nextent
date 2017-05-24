@@ -332,7 +332,8 @@
                         (synth :typescript expression)))
   (:java () (hcat (parens (apply #'punctuate (comma) nil (synth-all :java parameters)))
                   (text " -> ") 
-                  (synth :java expression))))
+                  (braces (nest 4 (synth :java expression))
+                          :newline t))))
 
 
 (defprim bb-unit (name &rest elements)
@@ -346,6 +347,39 @@
                         (synth :typescript expression)))
   (:java () (hcat (text "return ")
                         (synth :java expression))))
+
+(defprim bb-if (expression success failure)
+  (:pretty () (list 'bb-if (list :expression expression :success success :failure failure)))
+  (:typescript () (error "not implemented yet"))
+  (:java () (vcat (hcat (text "if") 
+                        (parens (synth :java expression)))
+                  (braces 
+                   (nest 4 (synth :java success))
+                   :newline t)
+                  (text "else")
+                  (braces 
+                   (nest 4 (synth :java failure))
+                   :newline t))))
+
+(defmacro defop (name)
+  `(defprim ,(symb "BB-" name) (op1 op2)
+     (:pretty () (list ',(symb "BB-" name) (list :op1 op1 :op2 op2)))
+     (:typescript () (error "not implemented yet"))
+     (:java () (hcat (synth :java op1)
+                     (text " ~a " ',name)
+                     (synth :java op2)))))
+
+
+(defop +)
+
+(defprim bb-equal (op1 op2)
+     (:pretty () (list 'bb-equal (list :op1 op1 :op2 op2)))
+     (:typescript () (error "not implemented yet"))
+     (:java () (hcat (synth :java op1)
+                     (text " == ")
+                     (synth :java op2))))
+
+
 
 
 

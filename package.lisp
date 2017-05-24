@@ -56,7 +56,8 @@
   (:use :cl :lol :utils :grammar)
   (:export :const 
            :attr
-           :value))
+           :value
+           :+true+ :+false+ :+and+ :+or+ :+not+ :+equal+ :+less-than+ :+greater-than+ :+null+))
 
 
 (defpackage :url
@@ -70,7 +71,10 @@
   (:export :bb-empty :bb-comment :bb-const :bb-type :bb-pair :bb-array :bb-element
            :bb-object :bb-annotation :bb-with-annotations :bb-class :bb-interface :bb-method :bb-signature 
            :bb-import :bb-new :bb-call :bb-static :bb-dynamic :bb-chain :bb-constructor :bb-arrow 
-           :bb-list :bb-unit :bb-template :bb-assign :bb-return))
+           :bb-list :bb-unit :bb-template :bb-assign :bb-return
+           :bb-if
+           :bb-+
+           :bb-equal))
 
 (defpackage :server
   (:use :cl :lol :utils :grammar :lang)
@@ -82,7 +86,7 @@
            :with-fields
            :concat% :concat
            :empty :create-instance% :create-instance
-           :mu% :mu :mapcomm))
+           :mu% :mu :mapcomm :fork))
 
 
 (defpackage :data

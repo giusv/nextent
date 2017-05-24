@@ -11,7 +11,7 @@
   (pprint (list x y)))
 
 (defmacro with-fields ((&rest names) format &body actions)
-  `(symbol-macrolet ,(mapcar #`(,a1 (expr:attr ,format ',a1)) names)
+  `(symbol-macrolet ,(mapcar #`(,(car a1) (expr:attr ,format ',(cadr a1))) names)
      ,@actions))
 
 
@@ -59,4 +59,10 @@
   (:pretty () (list 'mapcomm (list :command command :collection collection)))
   (:logic () (bb-chain (synth :blub collection) 
                        (bb-call 'map (synth :logic command)))))
+
+(defprim fork (condition success failure)
+  (:pretty () (list 'fork (list :condition condition :success success :failure failure)))
+  (:logic () (bb-if (synth :blub condition) 
+                    (synth :logic success) 
+                    (synth :logic failure))))
 

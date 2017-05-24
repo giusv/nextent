@@ -69,20 +69,22 @@
    'trips
    (list (server:rest-get (query1 query2) (server:empty)) 
          (server:rest-post% trip-format 
-                            (server:with-fields (trip-name cities) trip-format
-                              (server:concat
-                               (inst (server:create-instance 
-                                      trip-entity
-                                      :name trip-name
-                                      :cities cities))
-                               (test (server:with-fields (city-name places) city-format
-                                       (server:mapcomm 
-                                        (server:mu city
-                                                   (server:create-instance 
-                                                    city-entity
-                                                    :name trip-name
-                                                    :places places))
-                                        cities)))))))
+                            (server:with-fields ((trip-name name) (cities cities)) trip-format
+                              (server:fork (expr:+equal+ (expr:const 1) (expr:const 2))
+                                           (server:concat
+                                            (inst (server:create-instance 
+                                                   trip-entity
+                                                   :name trip-name
+                                                   :cities cities))
+                                            (test (server:with-fields ((city-name name) (places places)) city-format
+                                                    (server:mapcomm 
+                                                     (server:mu city
+                                                                (server:create-instance 
+                                                                 city-entity
+                                                                 :name trip-name
+                                                                 :places places))
+                                                     cities))))
+                                           (server:empty)))))
    trip-item))
 (defparameter server (server:rest-service 'trip-service (url:void) trip-collection))
 
@@ -100,7 +102,10 @@
 ;; (synth :output (synth :java (synth :jax-class server)) 0)
 
 ;; (pprint (synth-all :pretty (synth :bean-classes server)))
+
 (synth :output (synth :java (synth :bean-class server)) 0)
+
+(synth :output (synth :java (synth :model trip-format)) 0)
 
 ;; (defparameter place-format
 ;;   (data:jsobject 'place "aaa"
