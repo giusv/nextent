@@ -12,7 +12,8 @@
            :rest-key :rest-plain
            :plist-keys :plist-values
            :plist-p
-           :singular))
+           :singular
+           :bindall))
 
 (defpackage :parser
   (:use :cl :lol :utils)
@@ -79,7 +80,9 @@
            :rest-post% :rest-post
            :rest-put :rest-delete
            :with-fields
-           :empty :create-instance% :create-instance))
+           :concat% :concat
+           :empty :create-instance% :create-instance
+           :mu% :mu :mapcomm))
 
 
 (defpackage :data

@@ -330,7 +330,9 @@
   (:typescript () (hcat (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters)))
                         (text " => ") 
                         (synth :typescript expression)))
-  (:java () (error "not implemented yet")))
+  (:java () (hcat (parens (apply #'punctuate (comma) nil (synth-all :java parameters)))
+                  (text " -> ") 
+                  (synth :java expression))))
 
 
 (defprim bb-unit (name &rest elements)

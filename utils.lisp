@@ -52,3 +52,10 @@
             ((ends-with s "SHES") (subseq s 0 (- (length s) 2)))
             ((ends-with s "S") (subseq s 0 (- (length s) 1)))
             (t (error "not a plural"))))))
+
+(defmacro bindall (bindings form)
+  (if (null bindings)
+      form
+      (let ((binding (car bindings)))
+	`(multiple-value-bind ,(butlast binding) ,@(last binding)
+	   (bindall ,(cdr bindings) ,form)))))

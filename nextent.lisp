@@ -48,18 +48,43 @@
 (data:defrel city-place
     (data:relationship 'city-place city-entity place-entity :one-to-many))
 
-(defparameter server
-  (server:rest-service 'trip-service (url:void)
-                       (server:rest-collection 'trips (list (server:rest-get (query1 query2) (server:empty)) 
-                                                            (server:rest-post trip-format (name place)
-                                                             (server:create-instance trip-entity
-                                                                                     :name name
-                                                                                     :place place)))
-                                               (server:rest-item 'trip (trip) (list (server:rest-get () (server:empty)) (server:rest-put trip-format (server:empty)))
-                                                                 (server:rest-collection 'cities (list (server:rest-get () (server:empty)) (server:rest-post city-format nil (server:empty)))
-                                                                                         (server:rest-item 'city (city) (list (server:rest-get () (server:empty)) (server:rest-put city-format (server:empty)))
-                                                                                                           (server:rest-collection 'places (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty)))
-                                                                                                                                   (server:rest-item 'place (place) (list (server:rest-get () (server:empty)) (server:rest-put place-format (server:empty)))))))))))
+(defparameter place-item
+  (server:rest-item 'place (place) (list (server:rest-get () (server:empty)) (server:rest-put place-format (server:empty)))))
+
+(defparameter place-collection 
+  (server:rest-collection 'places (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty))) place-item))
+
+(defparameter city-item
+  (server:rest-item 'city (city) (list (server:rest-get () (server:empty)) (server:rest-put city-format (server:empty))) place-collection))
+
+(defparameter city-collection 
+  (server:rest-collection 'cities (list (server:rest-get () (server:empty)) (server:rest-post city-format nil (server:empty))) city-item))
+
+(defparameter trip-item 
+  (server:rest-item 'trip (trip) (list (server:rest-get () (server:empty)) (server:rest-put trip-format
+ (server:empty))) city-collection))
+
+(defparameter trip-collection
+  (server:rest-collection 
+   'trips
+   (list (server:rest-get (query1 query2) (server:empty)) 
+         (server:rest-post% trip-format 
+                            (server:with-fields (trip-name cities) trip-format
+                              (server:concat
+                               (inst (server:create-instance 
+                                      trip-entity
+                                      :name trip-name
+                                      :cities cities))
+                               (test (server:with-fields (city-name places) city-format
+                                       (server:mapcomm 
+                                        (server:mu city
+                                                   (server:create-instance 
+                                                    city-entity
+                                                    :name trip-name
+                                                    :places places))
+                                        cities)))))))
+   trip-item))
+(defparameter server (server:rest-service 'trip-service (url:void) trip-collection))
 
 ;; (pprint (synth-all :pretty (synth :source (car (data::get-sources trip-entity)))))
 ;; (pprint (synth-all :pretty (data::get-sources trip-entity)))
