@@ -51,12 +51,22 @@
 
 (defprim bb-type (name &key primitive array template)
   (:pretty () (list 'bb-type (list :name name :primitive primitive :array array :template template)))
-  (:typescript () (hcat (text "~a" (if primitive (lower-camel name) (upper-camel name)))
+  (:typescript () (hcat (text "~a" (if (or (eq name 'string)
+                                           (eq name 'number)
+                                           (eq name 'any)
+                                           (eq name 'void)) 
+                                       (lower-camel name)
+                                       (upper-camel name)))
                         (if array (brackets (empty)) (empty))
                         (if template (angular (synth :typescript template)))))
-  (:java () (hcat (text "~a" (if primitive (lower-camel name) (upper-camel name)))
-                        (if array (brackets (empty)) (empty))
-                        (if template (angular (synth :java template))))))
+  (:java () (hcat (text "~a" (if (or (eq name 'int)
+                                     (eq name 'float)
+                                     (eq name 'double)
+                                     (eq name 'void)) 
+                                 (lower-camel name)
+                                 (upper-camel name)))
+                  (if array (brackets (empty)) (empty))
+                  (if template (angular (synth :java template))))))
 
 
 ;; (defprim bb-bool (value)
@@ -228,6 +238,11 @@
                       (hcat (text "import ~a.~a" name (upper-camel elem))
                             (semi)))
                     elements)))
+
+(defprim bb-package (name)
+  (:pretty () (list 'bb-package (list :name name)))
+  (:typescript () (error "not foreseen"))
+  (:java () (text "package ~a" name)))
 
 (defprim bb-assign (lhs rhs &key as)
   (:pretty () (list 'bb-assign (list :lhs lhs :rhs rhs)))

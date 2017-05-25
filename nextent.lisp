@@ -103,9 +103,9 @@
 
 ;; (pprint (synth-all :pretty (synth :bean-classes server)))
 
-(synth :output (synth :java (synth :bean-class server)) 0)
+;; (synth :output (synth :java (synth :bean-class server)) 0)
 
-(synth :output (synth :java (synth :model trip-format)) 0)
+(synth-all :output (synth-all :java (synth-all :model (list trip-format city-format place-format) :java '|com.example.json|)) 0)
 
 ;; (defparameter place-format
 ;;   (data:jsobject 'place "aaa"

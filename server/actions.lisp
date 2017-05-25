@@ -6,9 +6,9 @@
   (:logic () ()))
 
 
-(symbol-macrolet ((x '(value x))
-                  (y '(value y)))
-  (pprint (list x y)))
+;; (symbol-macrolet ((x '(value x))
+;;                   (y '(value y)))
+;;   (pprint (list x y)))
 
 (defmacro with-fields ((&rest names) format &body actions)
   `(symbol-macrolet ,(mapcar #`(,(car a1) (expr:attr ,format ',(cadr a1))) names)
