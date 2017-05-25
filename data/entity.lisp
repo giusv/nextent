@@ -2,14 +2,15 @@
 
 (defprim attribute (name type &optional desc)
   (:pretty () (list 'attribute (list :name name :type type :desc desc))) 
-  (:entity (&rest annotations) (bb-with-annotations 
-                              (cons (bb-annotation '|Column| :name (doc:double-quotes (doc:textify name)))
-                                    annotations)
-                              (bb-pair name (bb-type type) :private t)
-                              :newline t))
+  (:entity (&rest annotations) (progn (pprint annotations)
+                                      (bb-with-annotations 
+                                       (cons (bb-annotation '|Column| :name (doc:double-quotes (doc:textify name)))
+                                             annotations)
+                                       (bb-pair name (bb-type type) :private t)
+                                       :newline t)))
   (:accessors () (list (bb-method (doc:text "get~a" (doc:upper-camel name)) nil (bb-type type)
                                   (bb-return (bb-dynamic name)))
-                       (bb-method (doc:text "set~a" (doc:upper-camel name)) (list (bb-pair name (bb-type type))) (bb-type 'void :primitive t)
+                       (bb-method (doc:text "set~a" (doc:upper-camel name)) (list (bb-pair name (bb-type type))) (bb-type :void)
                                   (bb-assign (bb-chain (bb-dynamic 'this) 
                                                        (bb-dynamic name))
                                              (bb-dynamic name)))))
@@ -27,7 +28,7 @@
 
 (defprim primary-key (attribute)
   (:pretty () (list 'primary-key (list :attribute (synth :pretty attribute)))) 
-  (:entity () (synth :entity attribute (list (bb-annotation '|Id|))))
+  (:entity () (synth :entity attribute (bb-annotation '|Id|)))
   ;; (:attributes () (synth-all name attributes))
   ;; (:html () (multitags 
   ;;              (text "Primary key costituita dai seguenti attributi:")
@@ -61,7 +62,7 @@
                      (bb-annotation '|Table| :name (doc:double-quotes (doc:textify name))))
                (bb-class name
                          :fields (doc:append*
-                                  (synth :entity primary)
+                                  (synth :entity (primary-key primary))
                                   (synth-all :entity fields)
                                   (synth-all :source (get-sources this))
                                   (synth-all :target (get-targets this)))

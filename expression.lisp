@@ -34,12 +34,11 @@
   (:blub () (reduce #'bb-+ exps)))
 
 
-;; (defprim (variab ((name string)))
-;;   (:pretty () `(attr (:name ,name)))
-;;   (:string () (textify name))
-;;   (:req () (text "~a" name))
-;;   (:html () (span-color (lower-camel name))))
-;;   ;; (:html () (span (list :class "label label-danger") (text "~a" name))))
+(defprim variab (name)
+  (:pretty () (list 'variab (list :name name)))
+  (:string () (textify name))
+  (:blub () (lang:bb-dynamic name)))
+  ;; (:html () (span (list :class "label label-danger") (text "~a" name))))
 
 ;; (defprim (value ((elem element)))
 ;;   (:pretty () `(value (:elem ,elem)))

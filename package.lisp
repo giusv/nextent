@@ -56,7 +56,7 @@
   (:use :cl :lol :utils :grammar)
   (:export :const 
            :attr
-           :value
+           :variab
            :+true+ :+false+ :+and+ :+or+ :+not+ :+equal+ :+less-than+ :+greater-than+ :+null+))
 
 
@@ -85,7 +85,9 @@
            :rest-put :rest-delete
            :with-fields
            :concat% :concat
-           :empty :create-instance% :create-instance
+           :empty :create-entity% :create-entity
+           :find-entity% :find-entity
+           :create-transfer% :create-transfer
            :mu% :mu :mapcomm :fork))
 
 

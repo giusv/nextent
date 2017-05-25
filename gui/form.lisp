@@ -167,7 +167,7 @@
                                             (bb-pair (car index) (bb-type 'number :primitive t)))
                                           (remove-if-not (lambda (elem) (eq 'form-group (cdr elem)))
                                                          (cdr newpath)))
-                                  (bb-type 'void :primitive t)
+                                  (bb-type :void)
                                   (bb-chain (reduce (lambda (acc elem)
                                                       (bb-chain acc 
                                                                 (bb-element 'controls (bb-const (car elem))) 
@@ -186,7 +186,7 @@
                                             (bb-pair (car index) (bb-type 'number :primitive t)))
                                           (append (remove-if-not (lambda (elem) (eq 'form-group (cdr elem)))
                                                                  (cdr newpath)) (list (list* newindex nil))))
-                                  (bb-type 'void :primitive t)
+                                  (bb-type :void)
                                   (bb-chain (reduce (lambda (acc elem)
                                                       (bb-chain acc 
                                                                 (bb-element 'controls (bb-const (car elem))) 

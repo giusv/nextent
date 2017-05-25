@@ -16,7 +16,7 @@
   (:schema () this)
   (:model (*) (error "no model for jsbool"))
   (:imports () nil)
-  (:type () (bb-type 'bool :primitive t))
+  (:type () (bb-type :bool))
   (:init () (bb-const 'true)))
 
 (defprim jsstring (name desc)
@@ -27,7 +27,7 @@
   (:schema () this)
   (:model (*) (error "no model for jsstring"))
   (:imports () nil)
-  (:type () (bb-type 'string))
+  (:type () (bb-type :string))
   (:init () (bb-const "")))
 
 (defprim jsnumber (name desc)
@@ -39,7 +39,7 @@
   (:schema () this)
   (:model (*) (error "no model for jsnumber"))
   (:imports () nil)
-  (:type () (bb-type 'integer :primitive t))
+  (:type () (bb-type :number))
   (:init () (bb-const 0)))
 
 ;; handle choice in instantiation
@@ -61,11 +61,13 @@
           (bb-unit name 
                    (if (eq lang 'typescript) (synth-all :imports props)) 
                    (if package (bb-package package)) 
-                   (bb-class (cond 
-                               ((eq lang :typescript) name)
-                               ((eq lang :java) (symb name "-J-T-O"))
-                               (t (error "not supported")))
-                             :fields (synth-all :type props))))
+                   (cond 
+                     ((eq lang :gui) (bb-class name
+                                               :fields (synth-all :type props)))
+                     ((eq lang :server) (bb-class (symb name "-J-T-O")
+                                                  :fields (synth-all :type props)
+                                                  :methods (apply #'append (synth-all :accessors props))))
+                     (t (error "not supported")))))
   (:imports ()  (bb-import (mkstr "./" (string-downcase name)) name)) 
   (:type () (bb-type name))
   (:init () nil))
@@ -81,7 +83,13 @@
   (:model (*) (error "no model for jsprop"))
   (:imports () (synth :imports content))
   (:type () (bb-pair name (synth :type content) :init (synth :init content)))
-  (:init () (error "should not be reachable")))
+  (:init () (error "should not be reachable"))
+  (:accessors () (list (bb-method (doc:text "get~a" (doc:upper-camel name)) nil (synth :type content)
+                                  (bb-return (bb-dynamic name)))
+                       (bb-method (doc:text "set~a" (doc:upper-camel name)) (list (bb-pair name (synth :type content))) (bb-type :void)
+                                  (bb-assign (bb-chain (bb-dynamic 'this) 
+                                                       (bb-dynamic name))
+                                             (bb-dynamic name))))))
 
 (defprim jsarray (name desc element)
   (:pretty () (list 'jsarray (list :name (doc:lower-camel name) :desc desc :element (synth :pretty element)))) 

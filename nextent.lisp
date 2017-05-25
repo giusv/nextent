@@ -26,21 +26,21 @@
                  (data:jsprop 'cities t (data:jsarray 'cities "aaa" city-format))))
 
 (data:defent trip-entity
-  (data:entity 'trip
-               :primary (data:attribute 'id 'int)
-               :fields (list (data:attribute 'name 'string)
-                             (data:attribute 'date 'string))))
+    (data:entity 'trip
+                 :primary (data:attribute 'id 'int)
+                 :fields (list (data:attribute 'name 'string)
+                               (data:attribute 'date 'string))))
 
 (data:defent city-entity
-  (data:entity 'city 
-               :primary (data:attribute 'id 'int)
-               :fields (list (data:attribute 'name 'string))))
+    (data:entity 'city 
+                 :primary (data:attribute 'id 'int)
+                 :fields (list (data:attribute 'name 'string))))
 
 (data:defent place-entity
-  (data:entity 'place 
-               :primary (data:attribute 'id 'int)
-               :fields (list (data:attribute 'name 'string)
-                             (data:attribute 'view 'string))))
+    (data:entity 'place 
+                 :primary (data:attribute 'id 'int)
+                 :fields (list (data:attribute 'name 'string)
+                               (data:attribute 'view 'string))))
 
 (data:defrel trip-city
     (data:relationship 'trip-city trip-entity city-entity :one-to-many))
@@ -49,7 +49,15 @@
     (data:relationship 'city-place city-entity place-entity :one-to-many))
 
 (defparameter place-item
-  (server:rest-item 'place (place) (list (server:rest-get () (server:empty)) (server:rest-put place-format (server:empty)))))
+  (server:rest-item 'place (place) 
+                    (list 
+                     (server:rest-get () 
+                                      (server:concat
+                                       (inst (server:find-entity place-entity (synth :name place)))
+                                       (ret (server:with-fields ((name name)) inst
+                                              (server:create-transfer place-format 
+                                                                      :name name)))))
+                     (server:rest-put place-format (server:empty)))))
 
 (defparameter place-collection 
   (server:rest-collection 'places (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty))) place-item))
@@ -72,14 +80,14 @@
                             (server:with-fields ((trip-name name) (cities cities)) trip-format
                               (server:fork (expr:+equal+ (expr:const 1) (expr:const 2))
                                            (server:concat
-                                            (inst (server:create-instance 
+                                            (inst (server:create-entity 
                                                    trip-entity
                                                    :name trip-name
                                                    :cities cities))
                                             (test (server:with-fields ((city-name name) (places places)) city-format
                                                     (server:mapcomm 
                                                      (server:mu city
-                                                                (server:create-instance 
+                                                                (server:create-entity 
                                                                  city-entity
                                                                  :name trip-name
                                                                  :places places))
@@ -101,11 +109,9 @@
 ;;                                                (loop for value being the hash-values of data:*entities* collect value))) 0)
 ;; (synth :output (synth :java (synth :jax-class server)) 0)
 
-;; (pprint (synth-all :pretty (synth :bean-classes server)))
+(synth :output (synth :java (synth :bean-class server)) 0)
 
-;; (synth :output (synth :java (synth :bean-class server)) 0)
-
-(synth-all :output (synth-all :java (synth-all :model (list trip-format city-format place-format) :java '|com.example.json|)) 0)
+;; (synth-all :output (synth-all :java (synth-all :model (list trip-format city-format place-format) :server '|com.example.json|)) 0)
 
 ;; (defparameter place-format
 ;;   (data:jsobject 'place "aaa"

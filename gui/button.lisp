@@ -25,7 +25,7 @@
 
   (:controller () (lang:bb-method (doc:text "~aClick" (doc:lower-camel name)) 
                                  nil
-                                 (bb-type 'void :primitive t)))
+                                 (bb-type :void)))
   (:components (*) nil)
   (:routes (father) nil)
   (:imports () nil)

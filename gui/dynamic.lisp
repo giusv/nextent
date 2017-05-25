@@ -46,7 +46,7 @@
                                                    (bb-pair param (bb-type 'any :primitive t))
                                                    (synth :controller element))
                                           :methods (list (bb-method (doc:text "~a" (doc:lower-camel 'bb-on-init))
-                                                                    nil (bb-type 'void :primitive t)
+                                                                    nil (bb-type :void)
                                                                     (bb-chain (bb-dynamic 'this)
                                                                               (bb-dynamic 'route)
                                                                               (bb-dynamic 'params)
