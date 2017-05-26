@@ -393,6 +393,19 @@
      (:java () (hcat (synth :java op1)
                      (text " == ")
                      (synth :java op2))))
+(defun bb-null (item)
+  (bb-equal item (bb-nil)))
+
+(defprim bb-nil ()
+     (:pretty () (list 'bb-null))
+     (:typescript () (error "not implemented yet"))
+     (:java () (text "null")))
+
+(defprim bb-throw (exception)
+     (:pretty () (list 'bb-throw (list :exception exception)))
+     (:typescript () (error "not implemented yet"))
+     (:java () (hcat (text "throw ")
+                     (synth :java exception))))
 
 
 

@@ -53,10 +53,14 @@
                     (list 
                      (server:rest-get () 
                                       (server:concat
-                                       (inst (server:find-entity place-entity (synth :name place)))
-                                       (ret (server:with-fields ((name name)) inst
-                                              (server:create-transfer place-format 
-                                                                      :name name)))))
+                                       (inst (server:find-entity place-entity place)) 
+                                       ((server:fork (expr:+null+ inst)
+                                                     (server:respond :not-found)
+                                                     (server:concat 
+                                                      (ret (server:with-fields ((name name)) inst
+                                                             (server:create-transfer place-format 
+                                                                                     :name name))) 
+                                                      ((server:respond :ok ret)))))))
                      (server:rest-put place-format (server:empty)))))
 
 (defparameter place-collection 

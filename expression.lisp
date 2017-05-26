@@ -38,6 +38,13 @@
   (:pretty () (list 'variab (list :name name)))
   (:string () (textify name))
   (:blub () (lang:bb-dynamic name)))
+
+(defprim value (name)
+  (:pretty () (list 'value (list :name name)))
+  (:string () (textify name))
+  (:blub () (lang:bb-dynamic name)))
+
+
   ;; (:html () (span (list :class "label label-danger") (text "~a" name))))
 
 ;; (defprim (value ((elem element)))

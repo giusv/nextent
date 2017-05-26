@@ -53,8 +53,9 @@
                                   (apply #'append (synth-all :bean-methods resources newpath))))))
 
 (defmacro rest-item (name (param) actions &rest resources)
-  `(let ((,param (url:path-parameter ',param)))
+  `(symbol-macrolet ((,param (expr:value ',param)))
      (rest-item% ,name ',param ,actions ,@resources)))
+
 
 (defun parlist (type pars)
   (mapcar (lambda (par)
