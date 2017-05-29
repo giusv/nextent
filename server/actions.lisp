@@ -20,14 +20,14 @@
   
   (:logic () (let ((new-entity (bb-dynamic (gensym (symbol-name (synth :name entity))))))
                (bb-list
-                (bb-assign new-entity (bb-new (synth :name entity)))
+                (bb-statement (bb-assign new-entity (bb-new (synth :name entity))))
                 (synth-plist-merge
                  (lambda (binding)
-                   (bb-chain new-entity
-                             (bb-call (symb "SET-" (car binding)) (synth :blub (cadr binding)))))
+                   (bb-statement (bb-chain new-entity
+                                           (bb-call (symb "SET-" (car binding)) (synth :blub (cadr binding))))))
                  bindings)
-                (bb-chain (bb-dynamic 'entity-manager)
-                          (bb-call 'persist new-entity))
+                (bb-statement (bb-chain (bb-dynamic 'entity-manager)
+                                        (bb-call 'persist new-entity)))
                 ;; (bb-return (bb-chain new-entity (bb-call (symb "GET-" (synth :name (synth :primary entity))))))
                 ))))
 (defmacro create-entity (entity &rest bindings)
@@ -36,10 +36,10 @@
 
 (defprim find-entity% (entity result id)
   (:pretty () (list 'find-entity (list :entity entity :result result :id id)))
-  (:logic () (bb-pair result (bb-type (synth :name entity)) 
-                      :init (bb-chain (bb-dynamic 'entity-manager)
-                                (bb-call 'find (bb-chain (bb-static (synth :name entity)) (bb-dynamic 'class)) 
-                                         (bb-dynamic (synth :name id)))))))
+  (:logic () (bb-statement (bb-pair result (bb-type (synth :name entity)) 
+                                    :init (bb-chain (bb-dynamic 'entity-manager)
+                                                    (bb-call 'find (bb-chain (bb-static (synth :name entity)) (bb-dynamic 'class)) 
+                                                             (bb-dynamic (synth :name id))))))))
 
 (defmacro find-entity (entity id)
   `(let ((result (gensym (symbol-name (synth :name ,entity)))))
@@ -69,8 +69,8 @@
 
 (defprim mapcomm (command collection)
   (:pretty () (list 'mapcomm (list :command command :collection collection)))
-  (:logic () (bb-chain (synth :blub collection) 
-                       (bb-call 'map (synth :logic command)))))
+  (:logic () (bb-statement (bb-chain (synth :blub collection) 
+                                     (bb-call 'map (synth :logic command))))))
 
 (defprim fork (condition success failure)
   (:pretty () (list 'fork (list :condition condition :success success :failure failure)))
@@ -82,12 +82,12 @@
   (:pretty () (list 'create-transfer (list :target target :result result :bindings (synth-plist :pretty bindings)))) 
   (:logic () (let* ((new-class (symb (synth :name target) "-J-T-O")))
                (bb-list
-                (bb-pair result (bb-type new-class)
-                         :init (bb-new new-class))
+                (bb-statement (bb-pair result (bb-type new-class)
+                                       :init (bb-new new-class)))
                 (synth-plist-merge
                  (lambda (binding)
-                   (bb-chain (bb-dynamic result)
-                             (bb-call (symb "SET-" (car binding)) (synth :blub (cadr binding)))))
+                   (bb-statement (bb-chain (bb-dynamic result)
+                                           (bb-call (symb "SET-" (car binding)) (synth :blub (cadr binding))))))
                  bindings)))))
 
 (defmacro create-transfer (target &rest bindings)

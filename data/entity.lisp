@@ -15,8 +15,7 @@
                                                        (bb-dynamic name))
                                              (bb-dynamic name)))))
   (:paramdecl () (bb-pair name (bb-type type)))
-  ;; (:html () (text "Attributo ~a (~a): ~a" (lower-camel name) (lower-camel type) desc))
-  )
+  (:ddl () (doc:vcat (doc:text "~20a~a" name type))))
 
 ;; (defprim foreign-key (attributes reference cardinality)
 ;;   (:pretty () (list 'foreign-key (list :attributes attributes :reference reference :cardinality cardinality))) 
@@ -35,7 +34,8 @@
   ;;              (apply #'ul nil
   ;;                     (mapcar #'listify (synth-all :html attributes)))))
   (:accessors () (synth :accessors attribute))
-  (:paramdecl () (synth :paramdecl attribute)))
+  (:paramdecl () (synth :paramdecl attribute))
+  (:ddl () (doc:hcat (synth :ddl attribute) (doc:text " PRIMARY KEY"))))
 
 (defun get-sources (entity)
   (loop for rel being the hash-values of *relationships*
@@ -72,12 +72,14 @@
                                    :public t
                                    :methods (list (bb-method (doc:textify (doc:lower-camel (symb "ADD-" name))) 
                                                              (remove nil (append (synth-all :paramdecl fields)
-                                                                                (synth-all :target-paramdecl (get-sources this))
-                                                                                (synth-all :source-paramdecl (get-targets this))))
+                                                                                 (synth-all :target-paramdecl (get-sources this))
+                                                                                 (synth-all :source-paramdecl (get-targets this))))
                                                              (bb-type name)) 
                                                   (bb-method (doc:textify (doc:lower-camel (symb "CANCEL-" name)))
                                                              (list (synth :paramdecl primary)) 
-                                                             (bb-type name))))))
+                                                             (bb-type name)))))
+  (:ddl () (doc:vcat (doc:text "CREATE TABLE ~a" name)
+                     (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t (synth-all :ddl (cons (primary-key primary) fields)))) :newline t))))
 
 (defprim relationship (name owner subordinate cardinality &optional (participation t))
   (:pretty () (list 'relationship (list :name name

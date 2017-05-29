@@ -158,9 +158,10 @@
                                                                        interfaces))))) 
                   (braces 
                    (nest 4 (apply #'vcat 
-                                  (apply #'postpend (semi) t (synth-all :java fields))
-                                  (synth :java constructor)
-                                  (synth-all :java methods)))
+                                  (doc:append* 
+                                   (synth-all :java fields)
+                                   (synth :java constructor)
+                                   (synth-all :java methods))))
                    :newline t))))
 
 (defprim bb-interface (name &key public interfaces methods)
@@ -173,8 +174,7 @@
                    (if public (text "public ") (empty)) 
                    (text "interface ~a" (upper-camel name))) 
                   (braces 
-                   (nest 4 (apply #'postpend (semi) t 
-                                  (synth-all :java methods)))
+                   (nest 4 (apply #'vcat (synth-all :java methods)))
                    :newline t))))
 
 ;; (defprim taglist (&rest tags)
@@ -183,10 +183,15 @@
 
 
 
+(defprim bb-statement (expression)
+  (:pretty () (list 'bb-statement (list :expression expression)))
+  (:typescript () (hcat (synth :typescript expression) (semi)))
+  (:java () (hcat (synth :java expression) (semi))))
+
 (defprim bb-list (&rest statements)
   (:pretty () (list 'bb-list (list :statements (synth-all :pretty (apply #'append* statements)))))
   (:typescript () (apply #'punctuate (semi) t (synth-all :typescript (apply #'append* statements))))
-  (:java () (apply #'punctuate (semi) t (synth-all :java (apply #'append* statements)))))
+  (:java () (apply #'vcat (synth-all :java (apply #'append* statements)))))
 
 (defprim bb-method (name parameters rtype &rest statements)
   (:pretty () (list 'bb-method (list :name name 
@@ -207,13 +212,11 @@
                         name
                         (parens (apply #'punctuate (comma) t (synth-all :java parameters)))) 
                   (braces 
-                   (nest 4 (apply #'postpend (semi) t 
-                                  (synth-all :java statements)))
-                   :newline t)
-                  (semi))))
+                   (nest 4 (apply #'vcat (synth-all :java statements)))
+                   :newline t))))
 
 (defprim bb-signature (name parameters rtype)
-  (:pretty () (list 'bb-method (list :name name 
+  (:pretty () (list 'bb-signature (list :name name 
                                      :parameters (synth-all :pretty parameters) 
                                      :rtype rtype)))
   (:typescript () (error "not implemented"))
@@ -326,8 +329,7 @@
   (:java () (vcat (hcat (text "public ~a" (upper-camel name)) 
                               (parens (apply #'punctuate (comma) nil (synth-all :java parameters)))) 
                         (braces 
-                         (nest 4 (apply #'postpend (semi) t 
-                                        (synth-all :java statements)))
+                         (nest 4 (apply #'vcat (synth-all :java statements)))
                          :newline t))))
 
 ;; (defprim bb-arrow (parameters &rest statements)
@@ -361,7 +363,8 @@
   (:typescript () (hcat (text "return ")
                         (synth :typescript expression)))
   (:java () (hcat (text "return ")
-                        (synth :java expression))))
+                        (synth :java expression)
+                        (semi))))
 
 (defprim bb-if (expression success failure)
   (:pretty () (list 'bb-if (list :expression expression :success success :failure failure)))
@@ -405,7 +408,8 @@
      (:pretty () (list 'bb-throw (list :exception exception)))
      (:typescript () (error "not implemented yet"))
      (:java () (hcat (text "throw ")
-                     (synth :java exception))))
+                     (synth :java exception)
+                     (semi))))
 
 
 

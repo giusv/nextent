@@ -114,6 +114,7 @@
 ;; (synth :output (synth :java (synth :jax-class server)) 0)
 
 (synth :output (synth :java (synth :bean-class server)) 0)
+(synth-all :output (synth-all :ddl (list trip-entity city-entity place-entity)) 0)
 
 ;; (synth-all :output (synth-all :java (synth-all :model (list trip-format city-format place-format) :server '|com.example.json|)) 0)
 
