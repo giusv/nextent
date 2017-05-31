@@ -73,13 +73,16 @@
            :bb-object :bb-annotation :bb-with-annotations :bb-class :bb-interface :bb-method :bb-signature 
            :bb-import :bb-package :bb-new :bb-call :bb-static :bb-dynamic :bb-chain :bb-constructor :bb-arrow 
            :bb-list :bb-unit :bb-template :bb-assign :bb-return :bb-throw :bb-statement
-           :bb-null :bb-nil
+           :bb-null :bb-nil 
+           :bb-try :bb-catch% :bb-catch
            :bb-if
            :bb-+
            :bb-equal))
 (defpackage :server
   (:use :cl :lol :utils :grammar :lang)
-  (:export :rest-service :rest-collection :rest-singleton
+  (:export :rest-service 
+           :rest-collection% :rest-collection
+           :rest-singleton
            :rest-item% :rest-item
            :rest-get% :rest-get
            :rest-post% :rest-post

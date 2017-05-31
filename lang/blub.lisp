@@ -37,6 +37,8 @@
                             (empty)))))
 
 
+
+
 (defprim bb-const (lit)
   (:pretty () (list 'bb-const (list :lit lit)))
   (:typescript () (cond ((stringp lit) (single-quotes (text "~a" lit)))
@@ -48,6 +50,33 @@
                   ((symbolp lit) (text "~a" (lower-camel lit)))
                   (t (empty)))))
 
+
+
+
+(defprim bb-try (body catches &optional finally)
+  (:pretty () (list 'bb-try (list :body (synth :pretty body) :catches (synth-plist :pretty catches))))
+  (:typescript () (error "not implemented yet"))
+  (:java () (apply #'vcat (text "try")
+                   (braces 
+                    (nest 4 (synth :java body))
+                    :newline t)
+                   (synth-all :java catches))))
+
+(defprim bb-catch% (exceptions name body)
+  (:pretty () (list 'bb-catch (list :exceptions exceptions :name name :body (synth :pretty body))))
+  (:typescript () (error "not implemented yet"))
+  (:java () (vcat (hcat+ (text "catch")
+                         (parens (hcat+ (apply #'punctuate (text " | ") nil (mapcar (lambda (e)
+                                                                       (textify (upper-camel e)))
+                                                                     exceptions))
+                                        (textify (lower-camel name))))) 
+                  (braces 
+                   (nest 4 (synth :java body))
+                   :newline t))))
+
+(defmacro bb-catch (exceptions body)
+  `(let* ((,(car exceptions) ',(car exceptions))) 
+     (bb-catch% (list ,@(cdr exceptions)) ,(car exceptions) ,body)))
 
 (defprim bb-type (name &key primitive array template)
   (:pretty () (list 'bb-type (list :name name :primitive primitive :array array :template template)))
@@ -276,7 +305,7 @@
                              (text " as ~a" (doc:upper-camel it))
                              (empty))))
   (:java () (hcat (aif (getf (rest-key args) :as)
-                       (parens (text "~a" (doc:upper-camel as)))
+                       (hcat (parens (text "~a" (doc:upper-camel as))) (blank))
                        (empty))
                   (text "~a" (lower-camel name))
                   (parens (apply #'punctuate (comma) nil (synth-all :java (rest-plain args)))))))
@@ -312,7 +341,7 @@
                          (as (getf (rest-key args) :as))
                          (chain (hcat (car calls) (apply #'prepend (dot) t (cdr calls)))))
                     (if as 
-                        (parens (hcat (parens (text "~a" (doc:upper-camel as))) 
+                        (parens (hcat+ (parens (text "~a" (doc:upper-camel as))) 
                                       chain))
                         chain))))
 

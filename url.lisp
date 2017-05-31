@@ -23,31 +23,31 @@
 ;;   (:pretty () (list 'expression-chunk (list :exp exp)))
 ;;   (:last () (error "no last elements in expression chunks")))
 
-(defprim path-parameter (name)
-  (:pretty () (list 'path-parameter (list :name name)))
+(defprim path-parameter (name type)
+  (:pretty () (list 'path-parameter (list :name name :type type)))
   (:type () (doc:text "path"))
   (:req () (html:taglist 
                (html:span-color (string-downcase name))
                (doc:text "(parametro path)")))
   (:url () (dynamic-chunk name)))
 
-(defprim query-parameter (name &optional value)
+(defprim query-parameter (name type &optional value)
+  (:pretty () (list 'quey-parameter (list :name name :type type :value (synth :pretty value))))
   (:url () (doc:hcat (doc:text "~a" (string-downcase name)) 
-		   (if value 
-		       (doc:hcat (equals) (synth :url value))
-		       (empty))))
+                     (if value 
+                         (doc:hcat (equals) (synth :url value))
+                         (empty))))
   (:req () (html:taglist 
-               (html:span-color (string-downcase name))
-               (doc:text "(parametro query)")))
-  (:type () (doc:text "query"))
-  (:pretty () (list 'query-parameter (list :name name :value (synth :pretty value)))))
+            (html:span-color (string-downcase name))
+            (doc:text "(parametro query)")))
+  (:type () (doc:text "query")))
 
-(defprim login-parameter (name)
-  (:req () (html:taglist 
-               (html:span-color (string-downcase name))
-               (doc:text "(parametro login)")))
-  (:type () (doc:text "login"))
-  (:pretty () (list 'login-parameter (list :name name))))
+;; (defprim login-parameter (name)
+;;   (:req () (html:taglist 
+;;                (html:span-color (string-downcase name))
+;;                (doc:text "(parametro login)")))
+;;   (:type () (doc:text "login"))
+;;   (:pretty () (list 'login-parameter (list :name name))))
 
 ;; backward-chain holds reversed path
 (defprim backward-chain (segment pose)

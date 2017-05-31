@@ -29,24 +29,24 @@
     (data:entity 'trip
                  :primary (data:attribute 'id (data:atype :integer))
                  :fields (list (data:attribute 'name (data:atype :string :size 20))
-                               (data:attribute 'date (data:atype :string :size 20)))))
+                               (data:attribute 'when (data:atype :string :size 20)))))
 
 (data:defent city-entity
     (data:entity 'city 
-                 :primary (data:attribute 'id (data:atype :integer :size 5))
+                 :primary (data:attribute 'id (data:atype :integer))
                  :fields (list (data:attribute 'name (data:atype :string :size 20)))))
 
 (data:defent place-entity
     (data:entity 'place 
-                 :primary (data:attribute 'id (data:atype :integer :size 5))
+                 :primary (data:attribute 'id (data:atype :integer))
                  :fields (list (data:attribute 'name (data:atype :string :size 20))
-                               (data:attribute 'view (data:atype :string :size 20)))))
+                               (data:attribute 'sights (data:atype :string :size 20)))))
 
 (data:defrel trip-city
     (data:relationship 'trip-city trip-entity city-entity :one-to-many))
 
 (data:defrel city-place
-    (data:relationship 'city-place city-entity place-entity :one-to-many))
+    (data:relationship 'city-place city-entity place-entity :many-to-many))
 
 (defparameter place-item
   (server:rest-item 'place (place) 
@@ -64,13 +64,13 @@
                      (server:rest-put place-format (server:empty)))))
 
 (defparameter place-collection 
-  (server:rest-collection 'places (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty))) place-item))
+  (server:rest-collection 'places ((name string)) (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty))) place-item))
 
 (defparameter city-item
   (server:rest-item 'city (city) (list (server:rest-get () (server:empty)) (server:rest-put city-format (server:empty))) place-collection))
 
 (defparameter city-collection 
-  (server:rest-collection 'cities (list (server:rest-get () (server:empty)) (server:rest-post city-format nil (server:empty))) city-item))
+  (server:rest-collection 'cities ((name string)) (list (server:rest-get () (server:empty)) (server:rest-post city-format nil (server:empty))) city-item))
 
 (defparameter trip-item 
   (server:rest-item 'trip (trip) (list (server:rest-get () (server:empty)) (server:rest-put trip-format
@@ -79,6 +79,7 @@
 (defparameter trip-collection
   (server:rest-collection 
    'trips
+   ((name string)) 
    (list (server:rest-get (query1 query2) (server:empty)) 
          (server:rest-post% trip-format 
                             (server:with-fields ((trip-name name) (cities cities)) trip-format
@@ -111,10 +112,11 @@
 
 ;; (synth-all :output (synth-all :java (synth-all :eao-interface 
 ;;                                                (loop for value being the hash-values of data:*entities* collect value))) 0)
-;; (synth :output (synth :java (synth :jax-class server)) 0)
+(synth :output (synth :java (synth :jax-class server)) 0)
 
 (synth :output (synth :java (synth :bean-class server)) 0)
-(synth-all :output (synth-all :ddl (list trip-entity city-entity place-entity)) 0)
+;; (synth :output  (apply #'doc:postpend (doc:semi) t
+                           ;; (remove nil (synth-all :ddl (list trip-entity city-entity place-entity trip-city city-place)))) 0)
 
 ;; (synth-all :output (synth-all :java (synth-all :model (list trip-format city-format place-format) :server '|com.example.json|)) 0)
 

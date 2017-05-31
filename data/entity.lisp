@@ -6,23 +6,26 @@
                        (:string (doc:text "VARCHAR2"))
                        (:integer (doc:text "INTEGER")))
                      (if size-supplied-p (doc:parens (doc:text "~a" size)))
-                     (if (not nullable) (doc:text " NOT NULL")))))
+                     (if (not nullable) (doc:text " NOT NULL"))))
+  (:entity () (case name
+                       (:string (bb-type :string))
+                       (:integer (bb-type :integer)))))
 
 (defprim attribute (name type &optional desc)
-  (:pretty () (list 'attribute (list :name name :type (synth pretty type) :desc desc))) 
+  (:pretty () (list 'attribute (list :name name :type (synth :pretty type) :desc desc))) 
   (:entity (&rest annotations) (progn (pprint annotations)
                                       (bb-with-annotations 
                                        (cons (bb-annotation '|Column| :name (doc:double-quotes (doc:textify name)))
                                              annotations)
-                                       (bb-pair name (bb-type (synth pretty type)) :private t)
+                                       (bb-pair name (synth :entity type) :private t)
                                        :newline t)))
-  (:accessors () (list (bb-method (doc:text "get~a" (doc:upper-camel name)) nil (bb-type type)
+  (:accessors () (list (bb-method (doc:text "get~a" (doc:upper-camel name)) nil (synth :entity type)
                                   (bb-return (bb-dynamic name)))
-                       (bb-method (doc:text "set~a" (doc:upper-camel name)) (list (bb-pair name (bb-type type))) (bb-type :void)
+                       (bb-method (doc:text "set~a" (doc:upper-camel name)) (list (bb-pair name (synth :entity type))) (bb-type :void)
                                   (bb-assign (bb-chain (bb-dynamic 'this) 
                                                        (bb-dynamic name))
                                              (bb-dynamic name)))))
-  (:paramdecl () (bb-pair name (bb-type type)))
+  (:paramdecl () (bb-pair name (synth :entity type)))
   (:ddl () (doc:hcat (doc:text "~20a" name)
                      (synth :ddl type))))
 
@@ -31,11 +34,15 @@
   (:entity () (synth :entity attribute (bb-annotation '|Id|)))
   (:accessors () (synth :accessors attribute))
   (:paramdecl () (synth :paramdecl attribute))
-  (:ddl () (doc:hcat (synth :ddl attribute) (doc:text " PRIMARY KEY"))))
+  (:ddl () (doc:hcat (synth :ddl attribute) (doc:text " NOT NULL PRIMARY KEY"))))
 
-(defprim foreign-key (name reference)
-  (:pretty () (list 'foreign-key (list :name ))) 
-  (:ddl () (doc:hcat (doc:text "FOREIGN KEY ~a REFERENCES ~a" name reference))))
+(defprim foreign-key (attribute reference)
+  (:pretty () (list 'foreign-key (list :attribute (synth :pretty attribute) :reference (synth :pretty reference)))) 
+  (:ddl () (let ((new-attribute (attribute (symb (synth :name reference) "_" (synth :name attribute)) (synth :type attribute)))) 
+             ;; (synth :pandoric-set attribute 'name (symb (synth :name reference) "-" (synth :name attribute)))
+             
+             (doc:hcat (synth :ddl new-attribute)
+                       (doc:text " REFERENCES ~a(~a)" (synth :name reference) (synth :name (synth :primary reference)))))))
 
 (defun get-sources (entity)
   (loop for rel being the hash-values of *relationships*
@@ -79,9 +86,9 @@
                                                              (list (synth :paramdecl primary)) 
                                                              (bb-type name)))))
   (:ddl () (doc:vcat (doc:text "CREATE TABLE ~a" name)
-                     (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t (synth-all :ddl (doc:append* (primary-key primary) fields
-                                                                                                               (synth-all :foreign-key (get-sources this))
-                                                                                                               )))) :newline t))))
+                     (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t (synth-all :ddl (remove nil (doc:append* (primary-key primary) fields
+                                                                                                                           (synth-all :target-foreign-key (get-sources this))
+                                                                                                                           (synth-all :source-foreign-key (get-targets this))))))) :newline t))))
 
 (defprim relationship (name owner subordinate cardinality &optional (participation t))
   (:pretty () (list 'relationship (list :name name
@@ -117,20 +124,34 @@
                                                      :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (symb (synth :name subordinate) "-SET")))))) 
                                 (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t)))))
   (:target-paramdecl () (case cardinality
-                   (:one-to-one (if participation (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)))))
-                   (:many-to-one (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate))))
-                   (:one-to-many (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate)))))
-                   (:many-to-many (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate)))))))
+                          (:one-to-one (if participation (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)))))
+                          (:many-to-one (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate))))
+                          (:one-to-many (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate)))))
+                          (:many-to-many (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate)))))))
   (:source-paramdecl () (case cardinality
-                   (:one-to-one (bb-pair (synth :name owner) (bb-type (synth :name owner))))
-                   (:many-to-one (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))
-                   (:one-to-many (bb-pair (synth :name owner) (bb-type (synth :name owner))))
-                   (:many-to-many (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))))
-  (:foreign-key () (case cardinality
-                   (:one-to-one (foreign-key (synth :name owner) (synth :name owner)))
-                   (:many-to-one (foreign-key (synth :name owner) (synth :name owner)))
-                   (:one-to-many (foreign-key (synth :name owner) (synth :name owner)))
-                   (:many-to-many ()))))
+                          (:one-to-one (bb-pair (synth :name owner) (bb-type (synth :name owner))))
+                          (:many-to-one (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))
+                          (:one-to-many (bb-pair (synth :name owner) (bb-type (synth :name owner))))
+                          (:many-to-many (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))))
+  (:target-foreign-key () (case cardinality
+                            (:one-to-one (foreign-key (synth :primary owner) subordinate))
+                            (:many-to-one (foreign-key (synth :primary owner) subordinate))
+                            (:one-to-many ())
+                            (:many-to-many ())))
+  (:source-foreign-key () (case cardinality
+                            (:one-to-one ())
+                            (:many-to-one ())
+                            (:one-to-many (foreign-key (synth :primary owner) owner))
+                            (:many-to-many ())))
+  (:ddl () (case cardinality
+             (:many-to-many (doc:vcat (doc:text "CREATE TABLE ~a" (symb (synth :name owner) "_" (synth :name subordinate)))
+                                      (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t 
+                                                                     (cons (synth :ddl (primary-key (attribute 'id (atype :integer))))
+                                                                           (synth-all :ddl (list (foreign-key (synth :primary owner) owner)
+                                                                                                 (foreign-key (synth :primary subordinate) subordinate)))))) :newline t)))
+             (:one-to-one ())
+             (:one-to-many ())
+             (:many-to-one ()))))
 
 (defparameter *entities* (make-hash-table))
 (defparameter *relationships* (make-hash-table))
