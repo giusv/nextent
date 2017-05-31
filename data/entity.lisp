@@ -1,12 +1,20 @@
 (in-package :data)
 
+(defprim atype (name &key (size 0 size-supplied-p) (nullable t))
+  (:pretty () (list 'atype (list :name name :size size :nullable nullable))) 
+  (:ddl () (doc:hcat (case name
+                       (:string (doc:text "VARCHAR2"))
+                       (:integer (doc:text "INTEGER")))
+                     (if size-supplied-p (doc:parens (doc:text "~a" size)))
+                     (if (not nullable) (doc:text " NOT NULL")))))
+
 (defprim attribute (name type &optional desc)
-  (:pretty () (list 'attribute (list :name name :type type :desc desc))) 
+  (:pretty () (list 'attribute (list :name name :type (synth pretty type) :desc desc))) 
   (:entity (&rest annotations) (progn (pprint annotations)
                                       (bb-with-annotations 
                                        (cons (bb-annotation '|Column| :name (doc:double-quotes (doc:textify name)))
                                              annotations)
-                                       (bb-pair name (bb-type type) :private t)
+                                       (bb-pair name (bb-type (synth pretty type)) :private t)
                                        :newline t)))
   (:accessors () (list (bb-method (doc:text "get~a" (doc:upper-camel name)) nil (bb-type type)
                                   (bb-return (bb-dynamic name)))
@@ -15,27 +23,19 @@
                                                        (bb-dynamic name))
                                              (bb-dynamic name)))))
   (:paramdecl () (bb-pair name (bb-type type)))
-  (:ddl () (doc:vcat (doc:text "~20a~a" name type))))
-
-;; (defprim foreign-key (attributes reference cardinality)
-;;   (:pretty () (list 'foreign-key (list :attributes attributes :reference reference :cardinality cardinality))) 
-;;   (:entity () (bb-list (synth :entity attributes (list (bb-annotation cardinality)))))
-;;   ;; (:attributes () (synth-all name attributes))
-;;   ;; (:html () (text "Foreign key verso ~a costituita dai seguenti attributi:  ~{~a~^, ~}" (lower-camel reference)
-;;   ;;                 (mapcar #'lower-camel attributes)))
-;;   (:accessors () (synth-all :accessors attributes)))
+  (:ddl () (doc:hcat (doc:text "~20a" name)
+                     (synth :ddl type))))
 
 (defprim primary-key (attribute)
   (:pretty () (list 'primary-key (list :attribute (synth :pretty attribute)))) 
   (:entity () (synth :entity attribute (bb-annotation '|Id|)))
-  ;; (:attributes () (synth-all name attributes))
-  ;; (:html () (multitags 
-  ;;              (text "Primary key costituita dai seguenti attributi:")
-  ;;              (apply #'ul nil
-  ;;                     (mapcar #'listify (synth-all :html attributes)))))
   (:accessors () (synth :accessors attribute))
   (:paramdecl () (synth :paramdecl attribute))
   (:ddl () (doc:hcat (synth :ddl attribute) (doc:text " PRIMARY KEY"))))
+
+(defprim foreign-key (name reference)
+  (:pretty () (list 'foreign-key (list :name ))) 
+  (:ddl () (doc:hcat (doc:text "FOREIGN KEY ~a REFERENCES ~a" name reference))))
 
 (defun get-sources (entity)
   (loop for rel being the hash-values of *relationships*
@@ -79,7 +79,9 @@
                                                              (list (synth :paramdecl primary)) 
                                                              (bb-type name)))))
   (:ddl () (doc:vcat (doc:text "CREATE TABLE ~a" name)
-                     (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t (synth-all :ddl (cons (primary-key primary) fields)))) :newline t))))
+                     (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t (synth-all :ddl (doc:append* (primary-key primary) fields
+                                                                                                               (synth-all :foreign-key (get-sources this))
+                                                                                                               )))) :newline t))))
 
 (defprim relationship (name owner subordinate cardinality &optional (participation t))
   (:pretty () (list 'relationship (list :name name
@@ -123,7 +125,12 @@
                    (:one-to-one (bb-pair (synth :name owner) (bb-type (synth :name owner))))
                    (:many-to-one (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))
                    (:one-to-many (bb-pair (synth :name owner) (bb-type (synth :name owner))))
-                   (:many-to-many (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))))))))
+                   (:many-to-many (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))))
+  (:foreign-key () (case cardinality
+                   (:one-to-one (foreign-key (synth :name owner) (synth :name owner)))
+                   (:many-to-one (foreign-key (synth :name owner) (synth :name owner)))
+                   (:one-to-many (foreign-key (synth :name owner) (synth :name owner)))
+                   (:many-to-many ()))))
 
 (defparameter *entities* (make-hash-table))
 (defparameter *relationships* (make-hash-table))

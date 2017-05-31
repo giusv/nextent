@@ -101,7 +101,7 @@
            :jnull :jbool :jnumber :jstring :jobject :jarray
            :jsbool :jsnumber :jsstring :jsprop :jsobject :jsarray
            :filter :ident :prop :elem :comp
-           :attribute :primary-key :foreign-key :entity :relationship
+           :atype :attribute :primary-key :entity :relationship
            :defent :defrel
            :*entities* :*relationships*))
 

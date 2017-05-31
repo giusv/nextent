@@ -27,20 +27,20 @@
 
 (data:defent trip-entity
     (data:entity 'trip
-                 :primary (data:attribute 'id 'int)
-                 :fields (list (data:attribute 'name 'string)
-                               (data:attribute 'date 'string))))
+                 :primary (data:attribute 'id (data:atype :integer))
+                 :fields (list (data:attribute 'name (data:atype :string :size 20))
+                               (data:attribute 'date (data:atype :string :size 20)))))
 
 (data:defent city-entity
     (data:entity 'city 
-                 :primary (data:attribute 'id 'int)
-                 :fields (list (data:attribute 'name 'string))))
+                 :primary (data:attribute 'id (data:atype :integer :size 5))
+                 :fields (list (data:attribute 'name (data:atype :string :size 20)))))
 
 (data:defent place-entity
     (data:entity 'place 
-                 :primary (data:attribute 'id 'int)
-                 :fields (list (data:attribute 'name 'string)
-                               (data:attribute 'view 'string))))
+                 :primary (data:attribute 'id (data:atype :integer :size 5))
+                 :fields (list (data:attribute 'name (data:atype :string :size 20))
+                               (data:attribute 'view (data:atype :string :size 20)))))
 
 (data:defrel trip-city
     (data:relationship 'trip-city trip-entity city-entity :one-to-many))
