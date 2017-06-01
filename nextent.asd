@@ -16,6 +16,7 @@
                         :serial t
                         :components ((:file "blub")))
                (:file "expression")
+               (:file "validator") 
                (:file "url")
                
                (:module "data"

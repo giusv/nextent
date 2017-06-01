@@ -60,7 +60,6 @@
            :value
            :+true+ :+false+ :+and+ :+or+ :+not+ :+equal+ :+less-than+ :+greater-than+ :+null+))
 
-
 (defpackage :url
   (:use :cl :lol :utils :parser :grammar :doc)
   (:export :void :static-chunk :dynamic-chunk :expression-chunk :path-parameter :query-parameter :login-parameter 
@@ -107,6 +106,10 @@
            :atype :attribute :primary-key :entity :relationship
            :defent :defrel
            :*entities* :*relationships*))
+
+(defpackage :validator
+  (:use :cl :lol :utils :grammar :lang)
+  (:export :required))
 
 (defpackage :gui
   (:use :cl :lol :utils :grammar :lang)

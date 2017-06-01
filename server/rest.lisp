@@ -27,8 +27,8 @@
                                (newpath (url:backward-chain chunk path)))
                           (synth-all :bean-method actions newpath chunk 'single))))
 
-(defprim rest-collection% (name queries actions &rest resources)
-  (:pretty () (list 'rest-collection (list :name name :queries (synth-all :pretty queries) :resources (synth-all :pretty resources) 
+(defprim rest-collection (name actions &rest resources)
+  (:pretty () (list 'rest-collection (list :name name :resources (synth-all :pretty resources) 
                                            :actions (synth-all :pretty actions))))
   (:jax-methods (bean path)  (let* ((chunk (url:static-chunk name))
                                     (newpath (url:backward-chain chunk path)))
@@ -38,9 +38,9 @@
                                (newpath (url:backward-chain chunk path)))
                           (append (synth-all :bean-method actions newpath chunk 'collection)
                                   (apply #'append (synth-all :bean-methods resources newpath))))))
-(defmacro rest-collection (name (&rest queries) actions &rest resources)
-  `(let ,(mapcar #`(,(car a1) ,(cadr a1)) queries)
-     (rest-collection% ,name (list ,@(mapcar #'car queries)) ,actions ,@resources)))
+
+;; (defmacro rest-collection (name actions &rest resources)
+;;   `(rest-collection% ,name ,actions ,@resources))
 
 (defprim rest-item% (name param actions &rest resources)
   (:pretty () (list 'rest-item (list :name name :param (synth :pretty param) :resources (synth-all :pretty resources) 
@@ -105,11 +105,16 @@
                                            :template (bb-type (symb (singular (synth :name chunk)) "-J-T-O")))))
                            (synth :logic action))))
 
+;; (defmacro rest-get ((&rest queries) action &key mtypes)
+;;   `(let ,(mapcar #'(lambda (query) 
+;;                      `(,query ',query))
+;;                  queries)
+;;      (rest-get% (list ,@queries) ,action ,@(if mtypes `(:mtypes ,mtypes)))))
+
 (defmacro rest-get ((&rest queries) action &key mtypes)
-  `(let ,(mapcar #'(lambda (query) 
-                     `(,query ',query))
-                 queries)
-     (rest-get% (list ,@queries) ,action ,@(if mtypes `(:mtypes ,mtypes)))))
+  `(let ,(mapcar #`(,(car a1) ,(cadr a1)) queries)
+     (rest-get% (list ,@(mapcar #'car queries)) ,action ,@(if mtypes `(:mtypes ,mtypes)))))
+
 
 (defprim rest-post% (format action &key (mtypes (list '|application/json|)))
   (:pretty () (list 'rest-post (list :format format :action (synth :pretty action) :mtypes mtypes)))
