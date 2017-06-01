@@ -28,7 +28,7 @@
                           (synth-all :bean-method actions newpath chunk 'single))))
 
 (defprim rest-collection% (name queries actions &rest resources)
-  (:pretty () (list 'rest-collection (list :name name :queries queries :resources (synth-all :pretty resources) 
+  (:pretty () (list 'rest-collection (list :name name :queries (synth-all :pretty queries) :resources (synth-all :pretty resources) 
                                            :actions (synth-all :pretty actions))))
   (:jax-methods (bean path)  (let* ((chunk (url:static-chunk name))
                                     (newpath (url:backward-chain chunk path)))
@@ -39,13 +39,13 @@
                           (append (synth-all :bean-method actions newpath chunk 'collection)
                                   (apply #'append (synth-all :bean-methods resources newpath))))))
 (defmacro rest-collection (name (&rest queries) actions &rest resources)
-  `(symbol-macrolet ,(mapcar #`(,(car a1) (url:query-parameter ,(car a1) ',(cadr a1))) queries)
-     (rest-collection% ,name (list ,@queries) ,actions ,@resources)))
+  `(let ,(mapcar #`(,(car a1) ,(cadr a1)) queries)
+     (rest-collection% ,name (list ,@(mapcar #'car queries)) ,actions ,@resources)))
 
 (defprim rest-item% (name param actions &rest resources)
-  (:pretty () (list 'rest-item (list :name name :param param :resources (synth-all :pretty resources) 
+  (:pretty () (list 'rest-item (list :name name :param (synth :pretty param) :resources (synth-all :pretty resources) 
                                      :actions (synth-all :pretty actions))))
-  (:jax-methods (bean path) (let* ((chunk (url:dynamic-chunk param))
+  (:jax-methods (bean path) (let* ((chunk (synth :url param))
                                    (newpath (url:backward-chain chunk path)))
                               (apply #'append (synth-all :jax-method actions bean newpath chunk)
                                      (synth-all :jax-methods resources bean newpath))))
@@ -55,8 +55,8 @@
                                   (apply #'append (synth-all :bean-methods resources newpath))))))
 
 (defmacro rest-item (name (param) actions &rest resources)
-  `(symbol-macrolet ((,param (expr:value ',param)))
-     (rest-item% ,name ',param ,actions ,@resources)))
+  `(let ((,(car param) ,(cadr param)))
+     (rest-item% ,name ,(car param) ,actions ,@resources)))
 
 
 

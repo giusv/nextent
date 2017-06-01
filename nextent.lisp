@@ -49,7 +49,7 @@
     (data:relationship 'city-place city-entity place-entity :many-to-many))
 
 (defparameter place-item
-  (server:rest-item 'place (place) 
+  (server:rest-item 'place ((place (url:path-parameter 'place :integer))) 
                     (list 
                      (server:rest-get () 
                                       (server:concat
@@ -64,22 +64,24 @@
                      (server:rest-put place-format (server:empty)))))
 
 (defparameter place-collection 
-  (server:rest-collection 'places ((name string)) (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty))) place-item))
+  (server:rest-collection 'places ((name (url:query-parameter 'name :string))) 
+                          (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty))) place-item))
 
 (defparameter city-item
-  (server:rest-item 'city (city) (list (server:rest-get () (server:empty)) (server:rest-put city-format (server:empty))) place-collection))
+  (server:rest-item 'city ((city (url:path-parameter 'city :integer))) (list (server:rest-get () (server:empty)) (server:rest-put city-format (server:empty))) place-collection))
 
 (defparameter city-collection 
-  (server:rest-collection 'cities ((name string)) (list (server:rest-get () (server:empty)) (server:rest-post city-format nil (server:empty))) city-item))
+  (server:rest-collection 'cities () (list (server:rest-get () (server:empty)) (server:rest-post city-format nil (server:empty))) city-item))
 
 (defparameter trip-item 
-  (server:rest-item 'trip (trip) (list (server:rest-get () (server:empty)) (server:rest-put trip-format
+  (server:rest-item 'trip ((trip (url:path-parameter 'trip :integer))) 
+                    (list (server:rest-get () (server:empty)) (server:rest-put trip-format
  (server:empty))) city-collection))
 
 (defparameter trip-collection
   (server:rest-collection 
    'trips
-   ((name string)) 
+   () 
    (list (server:rest-get (query1 query2) (server:empty)) 
          (server:rest-post% trip-format 
                             (server:with-fields ((trip-name name) (cities cities)) trip-format

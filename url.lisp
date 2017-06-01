@@ -23,16 +23,16 @@
 ;;   (:pretty () (list 'expression-chunk (list :exp exp)))
 ;;   (:last () (error "no last elements in expression chunks")))
 
-(defprim path-parameter (name type)
-  (:pretty () (list 'path-parameter (list :name name :type type)))
+(defprim path-parameter (name type &key validator)
+  (:pretty () (list 'path-parameter (list :name name :type type :validator (synth :pretty validator))))
   (:type () (doc:text "path"))
   (:req () (html:taglist 
                (html:span-color (string-downcase name))
                (doc:text "(parametro path)")))
   (:url () (dynamic-chunk name)))
 
-(defprim query-parameter (name type &optional value)
-  (:pretty () (list 'quey-parameter (list :name name :type type :value (synth :pretty value))))
+(defprim query-parameter (name type &key validator default)
+  (:pretty () (list 'quey-parameter (list :name name :type type :default (synth :pretty default) :validator (synth :pretty validator))))
   (:url () (doc:hcat (doc:text "~a" (string-downcase name)) 
                      (if value 
                          (doc:hcat (equals) (synth :url value))
