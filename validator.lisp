@@ -2,4 +2,4 @@
 
 (defprim required () 
   (:pretty () (list 'required))
-  (:valexp (name) (bb-null name)))
+  (:annotation () (bb-annotation '|NotNull|)))

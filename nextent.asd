@@ -18,7 +18,7 @@
                (:file "expression")
                (:file "validator") 
                (:file "url")
-               
+               (:file "query") 
                (:module "data"
                         :serial t
                         :components ((:file "data")

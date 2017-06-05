@@ -73,7 +73,7 @@
                     place-collection))
 
 (defparameter city-collection 
-  (server:rest-collection 'cities  (list (server:rest-get ((city (url:query-parameter 'city :integer))) (server:empty)) 
+  (server:rest-collection 'cities  (list (server:rest-get ((city (url:query-parameter 'city :integer :validators (list (validator:required))))) (server:empty)) 
                                          (server:rest-post city-format nil (server:empty)))
                           city-item))
 

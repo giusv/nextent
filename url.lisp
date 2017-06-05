@@ -11,28 +11,30 @@
   ;; (:last () name)
   (:path-parameters () nil))
 
-(defprim dynamic-chunk (name)
+(defprim dynamic-chunk (name type &key validators)
+  (:pretty () (list 'dynamic-chunk (list :name name :type type :validators (synth-all :pretty validators))))
   (:url () (doc:braces (doc:text "~a" (string-downcase name))))
-  (:pretty () (list 'dynamic-chunk (list :name name)))
   ;; (:last () name)
-  (:path-parameters () (list name))
-  )
+  (:path-parameters () (list (path-parameter name type :validators validators))))
 
 ;; (defprim expression-chunk (exp)
 ;;   (:url () (doc:braces (synth :chunk exp)))
 ;;   (:pretty () (list 'expression-chunk (list :exp exp)))
 ;;   (:last () (error "no last elements in expression chunks")))
 
-(defprim path-parameter (name type &key validator)
-  (:pretty () (list 'path-parameter (list :name name :type type :validator (synth :pretty validator))))
+(defprim path-parameter (name type &key validators)
+  (:pretty () (list 'path-parameter (list :name name :type type :validators (synth-all :pretty validators))))
   (:type () (doc:text "path"))
+  (:declaration () (bb-with-annotations (cons (bb-annotation '|PathParam|)
+                                              (synth-all :annotation validators))
+                                        (bb-pair (doc:lower-camel name) (bb-type type)) :newline nil))
   (:req () (html:taglist 
                (html:span-color (string-downcase name))
                (doc:text "(parametro path)")))
-  (:url () (dynamic-chunk name)))
+  (:url () (dynamic-chunk name type :validators validators)))
 
-(defprim query-parameter (name type &key validator default)
-  (:pretty () (list 'quey-parameter (list :name name :type type :default (synth :pretty default) :validator (synth :pretty validator))))
+(defprim query-parameter (name type &key validators default)
+  (:pretty () (list 'quey-parameter (list :name name :type type :default (synth :pretty default) :validators (synth-all :pretty validators))))
   (:url () (doc:hcat (doc:text "~a" (string-downcase name)) 
                      (if value 
                          (doc:hcat (equals) (synth :url value))
@@ -40,6 +42,9 @@
   (:req () (html:taglist 
             (html:span-color (string-downcase name))
             (doc:text "(parametro query)")))
+  (:declaration () (bb-with-annotations (cons (bb-annotation '|QueryParam|)
+                                              (synth-all :annotation validators))
+                                        (bb-pair (doc:lower-camel name) (bb-type type)) :newline nil))
   (:type () (doc:text "query")))
 
 ;; (defprim login-parameter (name)

@@ -61,10 +61,14 @@
            :+true+ :+false+ :+and+ :+or+ :+not+ :+equal+ :+less-than+ :+greater-than+ :+null+))
 
 (defpackage :url
-  (:use :cl :lol :utils :parser :grammar :doc)
+  (:use :cl :lol :utils :parser :grammar :doc :lang)
   (:export :void :static-chunk :dynamic-chunk :expression-chunk :path-parameter :query-parameter :login-parameter 
            :backward-chain :multi :forward-chain :queried
            :url))
+
+(defpackage :query
+  (:use :cl :lol :utils :parser :grammar :doc :lang)
+  (:export :relation :project :restrict :equijoin))
 
 (defpackage :lang
   (:use :cl :lol :utils :grammar :doc)

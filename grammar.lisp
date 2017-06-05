@@ -18,6 +18,22 @@
                              ,@attrs
                              (t (&rest *) ;; (apply lol:this args)
                                 (error "attribute not found")))))))
+(defmacro defprod (nonterm (name lambda-list &rest attrs))
+  `(defprim ,name ,(untype-lambdalist lambda-list)
+     ,@(cons `(:nonterm ()
+                        (if (and 
+                             ,@(mapcar (lambda (arg)
+                                         (if (atom (cadr arg)) 
+                                             `(eq (synth :nonterm ,(car arg)) ,(cadr arg))
+                                             `(every (lambda (nont)
+                                                       (eq (synth :nonterm nont) ,(cadadr arg)))
+                                                     ,(car arg))))
+                                       (args lambda-list)))
+                            ,nonterm
+                            (error "bbb")))
+             attrs)))
+
+(defprod :expression (and ((req :integer) &rest (expressions (list :expression)))))
 
 (defun synth (att box &rest args)
   (if box (apply box att args)))
@@ -33,6 +49,33 @@
 (defun synth-plist-merge (func plst &rest args)
   (mapcar (lambda (pair) (apply func pair args))
 	   (group plst 2)))
+
+
+(defun untype-lambdalist (tlist)
+  (mapcar (lambda (elem)
+            (cond ((or (eq elem '&optional)
+                       (eq elem '&rest)
+                       (eq elem '&key))
+                   elem)
+                  ((consp elem)
+                   (car elem))))
+          tlist))
+
+(defun args (tlist)
+  (mapcar (lambda (elem)
+            (if (atom (car elem))
+                elem
+                (list (caar elem) (cadr elem))))
+          (remove-if (lambda (elem)
+                             (or (eq elem '&optional)
+                                 (eq elem '&rest)
+                                 (eq elem '&key)))
+                        tlist)))
+
+;; (pprint (untype-lambdalist '((name :string) &rest ((types nil types-supplied-p) :integer))))
+
+(pprint (args '((name :string) &optional ((opt 0) :string) &rest ((types nil types-supplied-p) (list :integer)) &key (key1 :string) ((key2 8 key2-supplied-p) :string))))
+
 
 ;; (defprim text (template &rest args)
 ;;   (:pretty () `(text (:template ,template :args ,args))))
