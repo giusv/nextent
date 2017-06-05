@@ -87,7 +87,6 @@
 (defparameter trip-collection
   (server:rest-collection 
    'trips
-   () 
    (list (server:rest-get ((name (url:query-parameter 'name :string))) (server:empty)) 
          (server:rest-post% trip-format 
                             (server:with-fields ((trip-name name) (cities cities)) trip-format

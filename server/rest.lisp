@@ -76,7 +76,7 @@
                            (bb-statement (bb-chain (bb-dynamic e)
                                                    (bb-call 'print-stack-trace)))))))
 (defprim rest-get% (queries action &key (mtypes (list '|application/json|)))
-  (:pretty () (list 'rest-get (list :queries queries :action (synth :pretty action) :mtypes mtypes)))
+  (:pretty () (list 'rest-get (list :queries (synth-all :pretty queries) :action (synth :pretty action) :mtypes mtypes)))
   (:jax-method (bean path chunk) 
                (bb-with-annotations 
                 (list (bb-annotation '|GET|)
