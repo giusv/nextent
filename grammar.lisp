@@ -33,7 +33,7 @@
                             (error "bbb")))
              attrs)))
 
-(defprod :expression (and ((req :integer) &rest (expressions (list :expression)))))
+;; (defprod :expression (and ((req :integer) &rest (expressions (list :expression)))))
 
 (defun synth (att box &rest args)
   (if box (apply box att args)))
