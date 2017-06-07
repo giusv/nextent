@@ -25,12 +25,16 @@
 (defprim path-parameter (name type &key validators)
   (:pretty () (list 'path-parameter (list :name name :type type :validators (synth-all :pretty validators))))
   (:type () (doc:text "path"))
-  (:declaration () (bb-with-annotations (cons (bb-annotation '|PathParam|)
-                                              (synth-all :annotation validators))
-                                        (bb-pair (doc:lower-camel name) (bb-type type)) :newline nil))
+  (:declaration (&optional full) 
+                (let ((pair (bb-pair (doc:lower-camel name) (bb-type type)) :newline nil)) 
+                  (if full
+                      (bb-with-annotations (cons (bb-annotation '|PathParam| :|value| (doc:double-quotes (doc:textify name)))
+                                                 (synth-all :annotation validators))
+                                           pair)
+                      pair)))
   (:req () (html:taglist 
-               (html:span-color (string-downcase name))
-               (doc:text "(parametro path)")))
+            (html:span-color (string-downcase name))
+            (doc:text "(parametro path)")))
   (:url () (dynamic-chunk name type :validators validators)))
 
 (defprim query-parameter (name type &key validators default)
@@ -42,9 +46,13 @@
   (:req () (html:taglist 
             (html:span-color (string-downcase name))
             (doc:text "(parametro query)")))
-  (:declaration () (bb-with-annotations (cons (bb-annotation '|QueryParam|)
-                                              (synth-all :annotation validators))
-                                        (bb-pair (doc:lower-camel name) (bb-type type)) :newline nil))
+  (:declaration (&optional full) 
+                (let ((pair (bb-pair (doc:lower-camel name) (bb-type type)) :newline nil)) 
+                  (if full
+                      (bb-with-annotations (cons (bb-annotation '|QueryParam| :|value| (doc:double-quotes (doc:textify name)))
+                                                 (synth-all :annotation validators))
+                                           pair)
+                      pair)))
   (:type () (doc:text "query")))
 
 ;; (defprim login-parameter (name)

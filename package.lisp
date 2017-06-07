@@ -84,7 +84,9 @@
 
 (defpackage :server
   (:use :cl :lol :utils :grammar :lang)
-  (:export :rest-service 
+  (:export :defservice
+           :*services*
+           :rest-service 
            :rest-collection
            :rest-singleton
            :rest-item% :rest-item
@@ -109,8 +111,8 @@
            :jsbool :jsnumber :jsstring :jsprop :jsobject :jsarray
            :filter :ident :prop :elem :comp
            :atype :attribute :primary-key :entity :relationship
-           :defent :defrel
-           :*entities* :*relationships*))
+           :defent :defrel :deformat
+           :*entities* :*relationships* :*formats*))
 
 (defpackage :validator
   (:use :cl :lol :utils :grammar :lang)

@@ -11,7 +11,8 @@
                       ((eq nil lit) (doc:text "false"))
                       ((eq t lit) (doc:text "true"))
                       (t (error "unknown constant type"))))
-  (:blub () (lang:bb-const lit)))
+  (:blub () (lang:bb-const lit))
+  (:sql () (doc:text "~a" lit)))
 
 (defprim attr (name exp)
   (:pretty () (list 'attr (list :name name :exp exp)))
@@ -19,7 +20,8 @@
                          (doc:text "!~a"  (doc:lower-camel exp))))
   (:string () (doc:text "~a!~a" (doc:lower-camel (synth :name name)) (doc:lower-camel exp)))
   (:template () (doc:text "{{~a.~a}}" (doc:lower-camel name) (doc:lower-camel exp)))
-  (:blub () (lang:bb-chain (lang:bb-dynamic (synth :name name)) (lang:bb-call (symb "GET-" exp)))))
+  (:blub () (lang:bb-chain (lang:bb-dynamic (synth :name name)) (lang:bb-call (symb "GET-" exp))))
+  (:sql () (doc:hcat (doc:text "~a" (synth :name name)) (doc:text ".~a" exp))))
 
 (defprim value (exp)
   (:pretty () (list 'value (list :exp exp)))
@@ -73,7 +75,7 @@
 ;;   (:pretty () `(current-date))
 ;;   (:html () (text "Data odierna")))
 
-(defmacro defbexp (operator &optional (arity 0))
+(defmacro defbexp (operator &optional representation (arity 0))
   (let ((name (symb "+" operator "+")))
     `(defprim ,name 
          ,(if (eq arity 'unbounded)
@@ -85,7 +87,10 @@
 			      `(list ,@(apply #'append (loop for i from 1 to arity collect (list (keyw "EXP" i) `(synth :pretty ,(symb "EXP" i)))))))))
        (:blub () ,(if (eq arity 'unbounded)
                       `(,(intern (mkstr "BB-" operator) "LANG") (synth-all :blub exps))
-                      `(,(intern (mkstr "BB-" operator) "LANG") ,@(loop for i from 1 to arity collect `(synth :blub ,(symb "EXP" i)))))))))
+                      `(,(intern (mkstr "BB-" operator) "LANG") ,@(loop for i from 1 to arity collect `(synth :blub ,(symb "EXP" i))))))
+       (:sql () ,(if (eq arity 'unbounded)
+                     `(apply #'doc:punctuate (doc:text " ~a " ',representation) nil (synth-all :sql exps))
+                     `(doc:punctuate (doc:text " ~a " ',representation) nil ,@(loop for i from 1 to arity collect `(synth :sql ,(symb "EXP" i)))))))))
 
 
 (defmacro defbexps (&rest bexps)
@@ -97,5 +102,5 @@
 ;;(def-bexp true)
 ;; (def-bexp equal 2)
 
-(defbexps (true) (false) (and unbounded) (or unbounded) (not 1) (equal 2) (less-than 2) (greater-than 2) (null 1))
+(defbexps (true) (false) (and and unbounded) (or or unbounded) (not not 1) (equal = 2) (less-than < 2) (greater-than > 2) (null null 1))
 

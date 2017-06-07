@@ -8,7 +8,7 @@
 (defprim query (name value)
   (:pretty () (list 'query (list :name name :value value)))
   (:schema () (synth :attributes value))
-  (:sql () (doc:hcat+ (doc:text "~a" name) (doc:parens (synth :sql value)))))
+  (:sql () (doc:hcat+ (doc:parens (synth :sql value)) (doc:text "~a" name))))
 
 (defprim relation (name)
   (:pretty () (list 'relation (list :name name)))
@@ -18,7 +18,7 @@
 (defprim product (&rest queries) 
   (:pretty () (list 'product (list :queries (synth-all :pretty queries))))
   (:schema () (apply #'append (synth-all :schema queries)))
-  (:sql ()  (doc:punctuate (comma) t (mapcar #'doc:parens (synth-all :sql queries)))))
+  (:sql ()  (apply #'doc:punctuate (comma) nil (synth-all :sql queries))))
 
 (defprim project (query &rest attributes) 
   (:pretty () (list 'project (list :attributes attributes :query (synth :pretty query))))
@@ -36,7 +36,7 @@
   (:sql () (doc:hcat+
             (synth :sql query)
             (doc:text "WHERE")
-            (synth :java (synth :blub expression)))))
+            (synth :sql expression))))
 
 (defprim equijoin (query1 query2 &rest attributes) 
   (:pretty () (list 'equijoin (list :query1 (synth :pretty query1) :query2 (synth :pretty query2) :attributes (synth-all :pretty attributes))))
@@ -57,8 +57,7 @@
                         (ct (relation 'cities)))
            (project (restrict (product tr ct)
                               (expr:+equal+ (expr:attr tr 'id)
-                                            (expr:attr ct 'id)))))))
-  (pprint (synth :pretty q))
+                                            (expr:attr ct 'id))))))) 
   (synth :output (synth :sql q) 0))
 
 

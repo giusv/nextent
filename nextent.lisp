@@ -9,18 +9,16 @@
   ;; (format t "~%~%~a~%--------------------------------------------------~%~%~a~%--------------------------------------------------~%" name (to-string code))
   (write-file name (to-string code)))
 
-
-
-(defparameter place-format
+(data:deformat place-format
   (data:jsobject 'place "aaa"
                  (data:jsprop 'name t (data:jsstring 'name "aaa"))))
 
-(defparameter city-format
+(data:deformat city-format
   (data:jsobject 'city "aaa"
                  (data:jsprop 'name t (data:jsstring 'name "aaa"))
                  (data:jsprop 'places t (data:jsarray 'places "aaa" place-format))))
 
-(defparameter trip-format
+(data:deformat trip-format
   (data:jsobject 'trip "aaa"
                  (data:jsprop 'name t (data:jsstring 'name "aaa"))
                  (data:jsprop 'cities t (data:jsarray 'cities "aaa" city-format))))
@@ -106,7 +104,51 @@
                                                      cities))))
                                            (server:empty)))))
    trip-item))
-(defparameter server (server:rest-service 'trip-service (url:void) trip-collection))
+(server:defservice server (server:rest-service 'trip-service (url:void) trip-collection))
+
+
+
+(let* ((package '|it.bancaditalia.nextent|)
+       (model-package (symb package '|.model|))
+       (jto-package (symb package '|.jto|))
+       (service-package (symb package '|.service|))
+       (ejb-package (symb package '|.ejb|))
+       (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
+       (app-entities (loop for value being the hash-values of data:*entities* collect value))
+       (app-formats (loop for value being the hash-values of data:*formats* collect value))
+       (app-services (loop for value being the hash-values of server:*services* collect value))) 
+  ;; (process (mkstr basedir (string-downcase (synth :name app-module)) ".module.ts") app-module)
+  ;; (process (mkstr basedir (string-downcase (synth :name app)) ".component.ts") app )
+  ;; (mapcar (lambda (component) 
+  ;;           (process (mkstr basedir (string-downcase (synth :name component)) ".component.ts") component))
+  ;;         app-components)
+  (mapcar (lambda (entity) 
+            (let ((filename (mkstr basedir "model/" (doc:upper-camel (synth :name entity)) ".java"))) 
+              (pprint filename)
+              (write-file filename
+                          (synth :string (synth :doc (synth :java (synth :entity entity package)))))))
+          app-entities) 
+  (mapcar (lambda (format) 
+            (let ((filename (mkstr basedir "jto/" (doc:upper-camel (symb (synth :name format) '|-J-T-O|)) ".java"))) 
+              (pprint filename)
+              (write-file filename
+                          (synth :string (synth :doc (synth :java (synth :jto format package)))))))
+          app-formats) 
+  (mapcar (lambda (service) 
+            (let ((filename (mkstr basedir "service/" (doc:upper-camel (synth :name service)) ".java"))) 
+              (pprint filename)
+              (write-file filename
+                          (synth :string (synth :doc (synth :java (synth :jax-class service package)))))))
+          app-services)
+  (mapcar (lambda (service) 
+            (let ((filename (mkstr basedir "ejb/" (doc:upper-camel (symb (synth :name service) '|-Bean-Impl|)) ".java"))) 
+              (pprint filename)
+              (write-file filename
+                          (synth :string (synth :doc (synth :java (synth :bean-class service package)))))))
+          app-services))
+
+
+
 
 ;; (pprint (synth-all :pretty (synth :source (car (data::get-sources trip-entity)))))
 ;; (pprint (synth-all :pretty (data::get-sources trip-entity)))
@@ -119,9 +161,9 @@
 
 ;; (synth-all :output (synth-all :java (synth-all :eao-interface 
 ;;                                                (loop for value being the hash-values of data:*entities* collect value))) 0)
-(synth :output (synth :java (synth :jax-class server)) 0)
+;; (synth :output (synth :java (synth :jax-class server)) 0)
 
-(synth :output (synth :java (synth :bean-class server)) 0)
+;; (synth :output (synth :java (synth :bean-class server)) 0)
 ;; (synth :output  (apply #'doc:postpend (doc:semi) t
                            ;; (remove nil (synth-all :ddl (list trip-entity city-entity place-entity trip-city city-place)))) 0)
 

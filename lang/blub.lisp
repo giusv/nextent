@@ -153,7 +153,7 @@
                         ((plist-p props) (parens
                                           (apply #'punctuate (comma) nil 
                                                  (synth-plist-merge 
-                                                  #'(lambda (pair) (hcat (text "~a = " (string-downcase (first pair)))
+                                                  #'(lambda (pair) (hcat (text "~a = " (first pair))
                                                                          (second pair))) 
                                                   props))))
                         ((and (listp props) (= (length props) 1)) (parens (car props)))
@@ -267,14 +267,14 @@
                         (text "'~a'" name)
                         (semi)))
   (:java () (mapcar (lambda (elem)
-                      (hcat (text "import ~a.~a" name (upper-camel elem))
+                      (hcat (text "import ~a.~a" name elem)
                             (semi)))
                     elements)))
 
 (defprim bb-package (name)
   (:pretty () (list 'bb-package (list :name name)))
   (:typescript () (error "not foreseen"))
-  (:java () (text "package ~a" name)))
+  (:java () (text "package ~a;" name)))
 
 (defprim bb-assign (lhs rhs &key as)
   (:pretty () (list 'bb-assign (list :lhs lhs :rhs rhs)))

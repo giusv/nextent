@@ -1,22 +1,37 @@
 (in-package :server)
 
+(defparameter *services* (make-hash-table))
+(defmacro defservice (name service)
+  `(progn (defparameter ,name ,service) 
+         (setf (gethash ',name *services*) ,name)))
+
 (defprim rest-service (name url &rest resources)
   (:pretty () (list 'rest-service (list :name name :url (synth :pretty url) :resources (synth-all :pretty resources))))
-  (:jax-class () (bb-unit name
-                      (bb-with-annotations 
-                       (list (bb-annotation '|Path| (doc:double-quotes (synth :url url))))
-                       (bb-class name :public t
-                                 :methods (apply #'append (synth-all :jax-methods resources name url))))))
-  (:bean-class () (bb-unit (symb name "-BEAN-IMPL")
-                           (bb-with-annotations 
-                            (list (bb-annotation '|Stateless|))
-                            (bb-class (symb name "-BEAN-IMPL") 
-                                      :public t
-                                      :interfaces (list (symb name "-BEAN"))
-                                      :constructor (bb-constructor name nil)
-                                      :fields (list (bb-with-annotations (list (bb-annotation '|PersistenceContext|))
-                                                                         (bb-pair 'entity-manager (bb-type 'entity-manager) :private t)))
-                                      :methods (apply #'append (synth-all :bean-methods resources url)))))))
+  (:jax-class (package) (bb-unit name
+                                 (bb-package (symb package '|.service|))
+                                 (bb-import '|javax.ws.rs| '|Path| '|Consumes| '|Produces| '|GET| '|POST| '|PUT| '|DELETE| '|PathParam| '|QueryParam|)
+                                 (bb-import '|javax.naming| '|Context| '|InitialContext| '|NamingException|)
+                                 (bb-import '|javax.ws.rs.core| '|Response|)
+                                 (bb-import '|javax.ws.rs.core.Response| '|ResponseBuilder|)
+                                 (bb-with-annotations 
+                                  (list (bb-annotation '|Path| (doc:double-quotes (synth :url url))))
+                                  (bb-class name :public t
+                                            :methods (apply #'append (synth-all :jax-methods resources name url))))))
+  (:bean-class (package) (bb-unit (symb name "-BEAN-IMPL")
+                                  (bb-package (symb package '|.ejb|))
+                                  (bb-import '|javax.ejb| '|EJB| '|Stateless|)
+                                  (bb-import '|javax.persistence| '|EntityManager| '|PersistenceContext|)
+                                  (bb-import (symb package '|.jto|) '|*|)
+                                  (bb-import '|java.util| '|List|)
+                                  (bb-with-annotations 
+                                   (list (bb-annotation '|Stateless|))
+                                   (bb-class (symb name "-BEAN-IMPL") 
+                                             :public t
+                                             ;; :interfaces (list (symb name "-BEAN"))
+                                             ;; :constructor (bb-constructor name nil)
+                                             :fields (list (bb-with-annotations (list (bb-annotation '|PersistenceContext|))
+                                                                                (bb-statement (bb-pair 'entity-manager (bb-type 'entity-manager) :private t))))
+                                             :methods (apply #'append (synth-all :bean-methods resources url)))))))
 
 (defprim rest-singleton (name actions)
   (:pretty () (list 'rest-singleton (list :name name :actions (synth-all :pretty actions))))
@@ -127,7 +142,7 @@
                                  (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
                 (let ((name (symb (synth :name format) "-J-T-O"))) 
                   (bb-method (doc:text "post~a" (doc:upper-camel (singular (synth :name chunk)))) 
-                             (doc:append* (synth-all :declaration (synth :path-parameters path))
+                             (doc:append* (synth-all :declaration (synth :path-parameters path) t)
                                           (bb-pair name (bb-type name)))
                              (bb-type :void)
                              (let* ((bean-name (symb bean "-BEAN")))
@@ -158,7 +173,7 @@
                                                      (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
                                     (let ((name (symb (synth :name format) "-J-T-O"))) 
                                       (bb-method (doc:text "put~a" (doc:upper-camel (synth :name chunk))) 
-                                                 (doc:append* (synth-all :declaration (synth :path-parameters path))
+                                                 (doc:append* (synth-all :declaration (synth :path-parameters path) t)
                                                               (bb-pair name (bb-type name)))
                                                  (bb-type (synth :name chunk))
                                                  (let* ((bean-name (symb bean "-BEAN")))
