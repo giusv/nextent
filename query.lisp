@@ -1,14 +1,19 @@
 (in-package :query)
 
-(defmacro with-relations (bindings query)
-  `(let ,(mapcar #`(,(car a1) (relation ',(cadr a1) ',(car a1)))
+(defmacro with-queries (bindings query)
+  `(let ,(mapcar #`(,(car a1) (query ',(car a1) ,(cadr a1)))
                 bindings)
      ,query))
 
-(defprim relation (name range)
-  (:pretty () (list 'relation (list :name name :range range)))
+(defprim query (name value)
+  (:pretty () (list 'query (list :name name :value value)))
+  (:schema () (synth :attributes value))
+  (:sql () (doc:hcat+ (doc:text "~a" name) (doc:parens (synth :sql value)))))
+
+(defprim relation (name)
+  (:pretty () (list 'relation (list :name name)))
   (:schema () (synth :attributes name))
-  (:sql () (doc:text "~a ~a" name range) ))
+  (:sql () (doc:text "~a" name)))
 
 (defprim product (&rest queries) 
   (:pretty () (list 'product (list :queries (synth-all :pretty queries))))
@@ -31,7 +36,7 @@
   (:sql () (doc:hcat+
             (synth :sql query)
             (doc:text "WHERE")
-            (synth :sql expression))))
+            (synth :java (synth :blub expression)))))
 
 (defprim equijoin (query1 query2 &rest attributes) 
   (:pretty () (list 'equijoin (list :query1 (synth :pretty query1) :query2 (synth :pretty query2) :attributes (synth-all :pretty attributes))))
@@ -48,12 +53,11 @@
 ;;                                     (expr:+true+))
 ;;                           'id 'name))))
 
-(let ((q (with-relations ((tr trips)
-                          (ct cities))
+(let ((q (with-queries ((tr (relation 'trips))
+                        (ct (relation 'cities)))
            (project (restrict (product tr ct)
                               (expr:+equal+ (expr:attr tr 'id)
-                                            (expr:attr ct 'id)))
-                    'id 'name))))
+                                            (expr:attr ct 'id)))))))
   (pprint (synth :pretty q))
   (synth :output (synth :sql q) 0))
 
