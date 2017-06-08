@@ -124,34 +124,3 @@
 	       (hcat (car docs) p (apply #'postpend newline (cdr docs)))))))
 
 
-(defun split-str-1 (string &optional (separator "-") (r nil))
-  (let ((n (position separator string
-		     :from-end t
-		     :test #'(lambda (x y)
-			       (find y x :test #'string=)))))
-    (if n
-	(split-str-1 (subseq string 0 n) separator (cons (subseq string (1+ n)) r))
-      (cons string r))))
-
-(defun split-str (string &optional (separator "-"))
-  (split-str-1 string separator))
-
-(defun interleave (lst sep)
-  (if (equal 1 (length lst))
-      lst
-      (cons (car lst) (cons sep (interleave (cdr lst) sep)))))
-
-(defun lower-camel (item &optional (separator ""))
-  (let ((words (interleave (mapcar #'string-capitalize (split-str (mkstr item))) separator)))
-    (format nil "~(~a~)~{~a~}" (car words) (cdr words))))
-
-(defun upper-camel (item &optional (separator ""))
-  (let ((words (interleave (mapcar #'string-capitalize (split-str (mkstr item))) separator)))
-    (format nil "~{~a~}" words)))
-
-(defun write-file (name content)
-    (with-open-file (stream name
-        :direction :output
-        :if-exists :supersede
-        :if-does-not-exist :create)
-    (format stream content)))

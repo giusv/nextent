@@ -5,11 +5,11 @@
   (:html ()  (html:taglist
               (doc:text "Sorgente dati remota identificata come ")
               (html:span-color (string-downcase name))
-              (doc:text ", istanza dello schema dati ~a " (doc:lower-camel (synth :name schema)))
+              (doc:text ", istanza dello schema dati ~a " (lower-camel (synth :name schema)))
               (doc:text "e popolata al caricamento dell'elemento tramite richiesta HTTP GET verso l'URL ")
               (html:p (html:code (synth :url url)))))
   (:template () ())
-  (:controller () (bb-method (doc:text "get~a" (doc:upper-camel name))
+  (:controller () (bb-method (doc:text "get~a" (upper-camel name))
                              nil
                              (bb-type 'observable :template (bb-type 'any :primitive t
                                                                      ;; (synth :name schema)
@@ -38,7 +38,7 @@
   (:html ()  (html:taglist
               (doc:text "Sorgente dati identificata come ")
               (html:span-color (string-downcase name))
-              (doc:text ", istanza dello schema dati ~a " (doc:lower-camel (synth :name schema)))
+              (doc:text ", istanza dello schema dati ~a " (lower-camel (synth :name schema)))
               (doc:text "e popolata al caricamento dell'elemento tramite generazione casuale")))
   (:template () ())
   (:controller () (bb-pair name (bb-type 'any :primitive t) :init (synth :model (synth :random schema))))

@@ -133,9 +133,9 @@
 
 (defprim bb-with-annotations (annotations expr &key (newline t))
   (:pretty () (list 'bb-with-annotation (list :annotations (synth-all :pretty annotations) :expr (synth :pretty expr))))
-  (:typescript () (apply (if newline #'vcat #'hcat) (doc:append* (synth-all :typescript annotations)
+  (:typescript () (apply (if newline #'vcat #'hcat) (append* (synth-all :typescript annotations)
                                                                  (synth :typescript expr))))
-  (:java () (apply (if newline #'vcat #'hcat+) (doc:append* (synth-all :java annotations)
+  (:java () (apply (if newline #'vcat #'hcat+) (append* (synth-all :java annotations)
                                                            (synth :java expr)))))
 
 (defprim bb-annotation (name &rest props)
@@ -187,7 +187,7 @@
                                                                        interfaces))))) 
                   (braces 
                    (nest 4 (apply #'vcat 
-                                  (doc:append* 
+                                  (append* 
                                    (synth-all :java fields)
                                    (synth :java constructor)
                                    (synth-all :java methods))))
@@ -281,10 +281,10 @@
   (:typescript () (hcat (synth :typescript lhs)
                         (text " = ")
                         (synth :typescript rhs)
-                        (if as (text " as ~a" (doc:upper-camel as)))))
+                        (if as (text " as ~a" (upper-camel as)))))
   (:java () (hcat (synth :java lhs)
                         (text " = ")
-                        (if as (parens (text "~a" (doc:upper-camel as))))
+                        (if as (parens (text "~a" (upper-camel as))))
                         (synth :java rhs))))
 
 (defprim bb-new (name &rest parameters)
@@ -302,10 +302,10 @@
   (:typescript () (hcat (text "~a" (lower-camel name))
                         (parens (apply #'punctuate (comma) nil (synth-all :typescript (rest-plain args))))
                         (aif (getf (rest-key args) :as)
-                             (text " as ~a" (doc:upper-camel it))
+                             (text " as ~a" (upper-camel it))
                              (empty))))
   (:java () (hcat (aif (getf (rest-key args) :as)
-                       (hcat (parens (text "~a" (doc:upper-camel as))) (blank))
+                       (hcat (parens (text "~a" (upper-camel as))) (blank))
                        (empty))
                   (text "~a" (lower-camel name))
                   (parens (apply #'punctuate (comma) nil (synth-all :java (rest-plain args)))))))
@@ -334,14 +334,14 @@
                          (as (getf (rest-key args) :as))
                          (chain (hcat (car calls) (apply #'prepend (dot) t (cdr calls)))))
                     (if as 
-                        (parens (hcat (text "<~a>" (doc:upper-camel as)) 
+                        (parens (hcat (text "<~a>" (upper-camel as)) 
                                       chain))
                         chain)))
   (:java () (let* ((calls (synth-all :java (apply #'append* (rest-plain args))))
                          (as (getf (rest-key args) :as))
                          (chain (hcat (car calls) (apply #'prepend (dot) t (cdr calls)))))
                     (if as 
-                        (parens (hcat+ (parens (text "~a" (doc:upper-camel as))) 
+                        (parens (hcat+ (parens (text "~a" (upper-camel as))) 
                                       chain))
                         chain))))
 

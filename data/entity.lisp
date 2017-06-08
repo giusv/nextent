@@ -19,9 +19,9 @@
                                              annotations)
                                        (bb-statement (bb-pair name (synth :entity type) :private t))
                                        :newline t)))
-  (:accessors () (list (bb-method (doc:text "get~a" (doc:upper-camel name)) nil (synth :entity type)
+  (:accessors () (list (bb-method (doc:text "get~a" (upper-camel name)) nil (synth :entity type)
                                   (bb-return (bb-dynamic name)))
-                       (bb-method (doc:text "set~a" (doc:upper-camel name)) (list (bb-pair name (synth :entity type))) (bb-type :void)
+                       (bb-method (doc:text "set~a" (upper-camel name)) (list (bb-pair name (synth :entity type))) (bb-type :void)
                                   (bb-statement (bb-assign (bb-chain (bb-dynamic 'this) 
                                                         (bb-dynamic name))
                                               (bb-dynamic name))))))
@@ -74,7 +74,7 @@
                                 (bb-annotation '|Entity|)
                                 (bb-annotation '|Table| :|name| (doc:double-quotes (doc:textify name))))
                                (bb-class name
-                                         :fields (doc:append*
+                                         :fields (append*
                                                   (synth :entity (primary-key primary))
                                                   (synth-all :entity fields)
                                                   (synth-all :source (get-sources this))
@@ -83,16 +83,16 @@
                                                           (apply #'append (synth-all :accessors fields)))))))
   (:eao-interface () (bb-interface (symb name "-EAO")
                                    :public t
-                                   :methods (list (bb-method (doc:textify (doc:lower-camel (symb "ADD-" name))) 
+                                   :methods (list (bb-method (doc:textify (lower-camel (symb "ADD-" name))) 
                                                              (remove nil (append (synth-all :paramdecl fields)
                                                                                  (synth-all :target-paramdecl (get-sources this))
                                                                                  (synth-all :source-paramdecl (get-targets this))))
                                                              (bb-type name)) 
-                                                  (bb-method (doc:textify (doc:lower-camel (symb "CANCEL-" name)))
+                                                  (bb-method (doc:textify (lower-camel (symb "CANCEL-" name)))
                                                              (list (synth :paramdecl primary)) 
                                                              (bb-type name)))))
   (:ddl () (doc:vcat (doc:text "CREATE TABLE ~a" name)
-                     (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t (synth-all :ddl (remove nil (doc:append* (primary-key primary) fields
+                     (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t (synth-all :ddl (remove nil (append* (primary-key primary) fields
                                                                                                                            (synth-all :target-foreign-key (get-sources this))
                                                                                                                            (synth-all :source-foreign-key (get-targets this))))))) :newline t))))
 
@@ -108,26 +108,26 @@
                 (:many-to-one (bb-with-annotations (list (bb-annotation '|ManyToOne|))
                                                    (bb-statement (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)) :private t))))
                 (:one-to-many (bb-with-annotations (list (bb-annotation '|OneToMany|
-                                                                        :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (synth :name owner))))))
+                                                                        :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))))
                                                    (bb-statement (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t))))
                 (:many-to-many (bb-with-annotations (list (bb-annotation '|ManyToMany|))
                                                     (bb-statement (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t)))))) 
   (:target () (case cardinality
                 (:one-to-one (if participation (bb-with-annotations 
                                                 (list (bb-annotation '|OneToOne|
-                                                                     :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (synth :name owner))))
+                                                                     :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))
                                                                      :|optional| (doc:textify '|false|))) 
                                                 (bb-statement (bb-pair (synth :name owner) (bb-type (synth :name owner)) :private t)))))
                 (:many-to-one (bb-with-annotations 
                                (list (bb-annotation '|OneToMany|
-                                                    :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (synth :name owner)))))) 
+                                                    :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner)))))) 
                                (bb-statement (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t))))
                 (:one-to-many (bb-with-annotations 
                                (list (bb-annotation '|ManyToOne|)) 
                                (bb-statement (bb-pair (synth :name owner) (bb-type (synth :name owner)) :private t))))
                 (:many-to-many (bb-with-annotations 
                                 (list (bb-annotation '|ManyToMany|
-                                                     :|mappedBy| (doc:double-quotes (doc:textify (doc:lower-camel (symb (synth :name subordinate) "-SET")))))) 
+                                                     :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (symb (synth :name subordinate) "-SET")))))) 
                                 (bb-statement (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t))))))
   (:target-paramdecl () (case cardinality
                           (:one-to-one (if participation (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)))))

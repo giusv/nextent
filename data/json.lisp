@@ -30,7 +30,7 @@
   (:string () (doc:braces 
                (doc:nest 4 (apply #'doc:punctuate (doc:comma) t 
                                   (synth-plist-merge 
-                                   #'(lambda (pair) (doc:hcat (doc:text "\"~a\": " (doc:lower-camel (first pair)))
+                                   #'(lambda (pair) (doc:hcat (doc:text "\"~a\": " (lower-camel (first pair)))
                                                           (synth :string (second pair)))) 
                                    values)))
                :newline t))

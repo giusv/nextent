@@ -14,7 +14,7 @@
          (setf (gethash ',name *formats*) ,name)))
 
 (defprim jsbool (name desc)
-  (:pretty () (list 'jsbool (list :name (doc:lower-camel name) :desc desc)))
+  (:pretty () (list 'jsbool (list :name (lower-camel name) :desc desc)))
   (:req () (doc:text "booleano. ~a" desc))
   (:brief () (doc:text "booleano. ~a" desc))
   (:random () (jbool (random-boolean)))
@@ -26,7 +26,7 @@
   (:init () (bb-const 'true)))
 
 (defprim jsstring (name desc)
-  (:pretty () (list 'jsstring (list :name (doc:lower-camel name) :desc desc)))
+  (:pretty () (list 'jsstring (list :name (lower-camel name) :desc desc)))
   (:req () (doc:text "stringa. ~a" desc))
   (:brief () (doc:text "stringa. ~a" desc))
   (:random () (jstring (random-string 10)))
@@ -38,8 +38,8 @@
   (:init () (bb-const "")))
 
 (defprim jsnumber (name desc)
-  (:pretty () (list 'jsnumber (list :name (doc:lower-camel name) :desc desc)))
-  ;; (:req () (doc:text "~a: numero" (doc:lower-camel name)))
+  (:pretty () (list 'jsnumber (list :name (lower-camel name) :desc desc)))
+  ;; (:req () (doc:text "~a: numero" (lower-camel name)))
   (:req () (doc:text "numero. ~a" desc))
   (:brief () (doc:text "numero. ~a" desc))
   (:random () (jnumber (random-number 0 100)))
@@ -57,9 +57,9 @@
 ;; 		   (nest 4 (apply #'vcat (synth-all :req schemas))))))
 
 (defprim jsobject (name desc &rest props)
-  (:pretty () (list 'jsobject (list :name (doc:lower-camel name) :desc desc :props (synth-all :pretty props))))
+  (:pretty () (list 'jsobject (list :name (lower-camel name) :desc desc :props (synth-all :pretty props))))
   (:req () (html:taglist 
-            (doc:text "~a:  ~a." (doc:lower-camel name) desc)
+            (doc:text "~a:  ~a." (lower-camel name) desc)
             (html:p (doc:text" Esso &egrave; costituito dalle seguenti propriet&agrave;:"))
             (html:ul (synth-all :req props))))
   (:brief () (doc:text "~a" (upper-camel name)))
@@ -83,7 +83,7 @@
 
 (defprim jsprop (name required content)
   (:pretty () (list 'jsprop (list :name name :required required :content (synth :pretty content))))
-  (:req () (li nil  (hcat (doc:text "~a" (doc:lower-camel name)) 
+  (:req () (li nil  (hcat (doc:text "~a" (lower-camel name)) 
                           (if required (doc:text " (obbligatoria)") 
                               (doc:text " (facoltativa)")) 
                           (doc:text ": ")) (synth :brief content)))
@@ -95,18 +95,18 @@
   ;; (:jto-type () (bb-pair name (synth :jto-type content)))
   (:init () (error "should not be reachable"))
   (:accessors (&optional suffix) 
-              (list (bb-method (doc:text "get~a" (doc:upper-camel name)) nil (synth :type content suffix)
+              (list (bb-method (doc:text "get~a" (upper-camel name)) nil (synth :type content suffix)
                                (bb-return (bb-dynamic name)))
-                    (bb-method (doc:text "set~a" (doc:upper-camel name)) (list (bb-pair name (synth :type content suffix))) 
+                    (bb-method (doc:text "set~a" (upper-camel name)) (list (bb-pair name (synth :type content suffix))) 
                                (bb-type :void)
                                (bb-statement (bb-assign (bb-chain (bb-dynamic 'this) 
                                                                   (bb-dynamic name))
                                                         (bb-dynamic name)))))))
 
 (defprim jsarray (name desc element)
-  (:pretty () (list 'jsarray (list :name (doc:lower-camel name) :desc desc :element (synth :pretty element)))) 
+  (:pretty () (list 'jsarray (list :name (lower-camel name) :desc desc :element (synth :pretty element)))) 
   (:req () (html:taglist
-            (doc:text "array (~a) denominato ~a costituito dal seguente elementento:" desc (doc:lower-camel name))
+            (doc:text "array (~a) denominato ~a costituito dal seguente elementento:" desc (lower-camel name))
             (synth :req element)))
   (:brief () (doc:text "~a" (upper-camel name)))
   (:random () (let* ((length (random-number 2 5))
@@ -157,8 +157,8 @@
 (defprim prop (name)
   (:pretty () (list 'prop (list :name name)))
   (:func () (get-prop name))
-  ;; (:req () (doc:text "~a" (doc:lower-camel name)))
-  (:req () (span nil (doc:text "~a" (doc:lower-camel name)))))
+  ;; (:req () (doc:text "~a" (lower-camel name)))
+  (:req () (span nil (doc:text "~a" (lower-camel name)))))
 
 (defprim elem ()
   (:pretty () (list 'elem))

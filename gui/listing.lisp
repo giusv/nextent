@@ -21,7 +21,7 @@
   (:template () (progn
                   ;; (pprint "in listing%")
                   ;; (pprint (synth :pretty element))
-                  (html:div :|*ngFor| (doc:hcat (doc:text "let ~a of ~a" (doc:lower-camel rowname) (doc:lower-camel (synth :name source))) )
+                  (html:div :|*ngFor| (doc:hcat (doc:text "let ~a of ~a" (lower-camel rowname) (lower-camel (synth :name source))) )
                             (synth :template element))))
 
   (:controller () (bb-empty))

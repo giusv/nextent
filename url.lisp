@@ -26,11 +26,12 @@
   (:pretty () (list 'path-parameter (list :name name :type type :validators (synth-all :pretty validators))))
   (:type () (doc:text "path"))
   (:declaration (&optional full) 
-                (let ((pair (bb-pair (doc:lower-camel name) (bb-type type)) :newline nil)) 
+                (let ((pair (bb-pair (lower-camel name) (bb-type type)))) 
                   (if full
                       (bb-with-annotations (cons (bb-annotation '|PathParam| :|value| (doc:double-quotes (doc:textify name)))
                                                  (synth-all :annotation validators))
-                                           pair)
+                                           pair
+                                           :newline nil)
                       pair)))
   (:req () (html:taglist 
             (html:span-color (string-downcase name))
@@ -47,11 +48,12 @@
             (html:span-color (string-downcase name))
             (doc:text "(parametro query)")))
   (:declaration (&optional full) 
-                (let ((pair (bb-pair (doc:lower-camel name) (bb-type type)) :newline nil)) 
+                (let ((pair (bb-pair (lower-camel name) (bb-type type)))) 
                   (if full
                       (bb-with-annotations (cons (bb-annotation '|QueryParam| :|value| (doc:double-quotes (doc:textify name)))
                                                  (synth-all :annotation validators))
-                                           pair)
+                                           pair
+                                           :newline nil)
                       pair)))
   (:type () (doc:text "query")))
 

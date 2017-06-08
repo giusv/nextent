@@ -13,7 +13,12 @@
            :plist-keys :plist-values
            :plist-p
            :singular
-           :bindall))
+           :bindall
+           :glue
+           :lower-camel :upper-camel
+           :split-str :interleave
+           :append* 
+           :write-file))
 
 (defpackage :parser
   (:use :cl :lol :utils)
@@ -32,11 +37,7 @@
            :parens :brackets :braces :single-quotes :double-quotes :back-quotes :angular
            :comma :dot :semi :colon :forward-slash :equals :blank
            :punctuate :prepend :postpend
-           :lower-camel :upper-camel
-           :split-str :interleave
-           :append*
-           :textify
-           :write-file))
+           :textify))
 
 (defpackage :html
   (:use :cl :lol :utils :grammar)

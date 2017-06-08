@@ -27,7 +27,7 @@
                     (mapcar (lambda (name) (html:th (doc:text "~a" (symbol-name name)))) 
                             (plist-keys bindings))))
                   (html:tbody
-                   :|*ngFor| (doc:hcat (doc:text "let ~a of ~a" (doc:lower-camel rowname) (doc:lower-camel (synth :name source))))
+                   :|*ngFor| (doc:hcat (doc:text "let ~a of ~a" (lower-camel rowname) (lower-camel (synth :name source))))
                    (html:tr
                     (mapcar (lambda (element) (html:td (synth :template element))) 
                             (plist-values bindings))))))

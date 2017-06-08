@@ -18,7 +18,7 @@
                                       (synth :template label)
                                       (html:input ;; :|type| "text"
                                        :|class| "form-control" 
-                                       :|formControlName| (doc:lower-camel name)))))
+                                       :|formControlName| (lower-camel name)))))
   (:template () (html:div :|class| "form-group" 
                           (html:input 
                            :|type| "text"

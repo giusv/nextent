@@ -2,7 +2,7 @@
 
 (defmacro evnames (&rest actions)
   `(append ,@(mapcar #'(lambda (action) 
-                         `(if ,action (list ,(keyw "(" action ")") (concatenate 'string (doc:lower-camel ',action) (doc:upper-camel name) "()"))))
+                         `(if ,action (list ,(keyw "(" action ")") (concatenate 'string (lower-camel ',action) (upper-camel name) "()"))))
                      actions)))
 
 
@@ -20,10 +20,10 @@
              ))
   (:brief (path) (synth :req this path))
   (:reqlist (*) nil) 
-  (:template () (html:button :|(click)| (doc:text "~aClick()" (doc:lower-camel name))
+  (:template () (html:button :|(click)| (doc:text "~aClick()" (lower-camel name))
                                         expr))
 
-  (:controller () (lang:bb-method (doc:text "~aClick" (doc:lower-camel name)) 
+  (:controller () (lang:bb-method (doc:text "~aClick" (lower-camel name)) 
                                  nil
                                  (bb-type :void)))
   (:components (*) nil)

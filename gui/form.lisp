@@ -22,8 +22,8 @@
                      (template 
                       (bb-template 
                        (html:form 
-                        ;; (keyw (synth :string (doc:brackets (doc:text "~a" (doc:lower-camel (synth :type element))))))
-                        :|[formGroup]| (doc:lower-camel name)
+                        ;; (keyw (synth :string (doc:brackets (doc:text "~a" (lower-camel (synth :type element))))))
+                        :|[formGroup]| (lower-camel name)
                         (synth :form-template element name nil))))
                      (controller 
                       (list (bb-pair name (synth :type element))
@@ -116,7 +116,7 @@
                                :schema (synth :pretty schema) 
                                :element (synth :pretty element))))
   (:req (path) (html:taglist 
-                (doc:text "Sezione dinamica identificata con ~a collegata al seguente formato dati:" (doc:lower-camel name)) 
+                (doc:text "Sezione dinamica identificata con ~a collegata al seguente formato dati:" (lower-camel name)) 
                 (html:p (synth :brief schema)) 
                 (synth :req element path)
                 (html:p (doc:text "Essa produce il seguente oggetto JSON:")
@@ -125,44 +125,44 @@
   (:model () (jarray (synth :model element)))
   (:reqlist (*) nil)
   (:form-template (loopvar indexes) 
-                  (let ((new-loopvar (doc:lower-camel (gensym "v")))
-                        (new-index (doc:lower-camel (gensym "i"))))
+                  (let ((new-loopvar (lower-camel (gensym "v")))
+                        (new-index (lower-camel (gensym "i"))))
                     (html:div 
-                     :|formArrayName| (doc:lower-camel name)
+                     :|formArrayName| (lower-camel name)
                      (html:div :|*ngFor| (doc:text "let ~a of ~a.controls['~a'].controls; let ~a=index" 
                                                    new-loopvar 
-                                                   (doc:lower-camel loopvar)
-                                                   (doc:lower-camel name)
-                                                   ;; (mapcar #'doc:lower-camel (doc:append* (cdr path) name))
+                                                   (lower-camel loopvar)
+                                                   (lower-camel name)
+                                                   ;; (mapcar #'lower-camel (append* (cdr path) name))
                                                    new-index)
                                :|class| "panel panel-primary" 
                                (html:div 
                                 :|class| "panel-heading" 
                                 (html:span (doc:text "~a" name))
                                 (html:span :|class| "glyphicon glyphicon-remove pull-right"
-                                           :|(click)| (doc:hcat (doc:text "remove~aElement" (doc:upper-camel name))
+                                           :|(click)| (doc:hcat (doc:text "remove~aElement" (upper-camel name))
                                                                 (doc:parens (apply #'doc:punctuate (doc:comma) nil
                                                                                    (mapcar (lambda (index)
-                                                                                             (doc:text "~a" (doc:lower-camel index)))
+                                                                                             (doc:text "~a" (lower-camel index)))
                                                                                            (append indexes (list new-index)))))) (doc:empty))) 
                                (html:div 
                                 :|class| "panel-body"
                                 :|[formGroupName]| new-index
                                 (synth :form-template element new-loopvar (append indexes (list new-index)))))
-                     (html:button :|(click)| (doc:hcat (doc:text "add~aElement" (doc:upper-camel name))
+                     (html:button :|(click)| (doc:hcat (doc:text "add~aElement" (upper-camel name))
                                                        (doc:parens (apply #'doc:punctuate (doc:comma) nil
                                                                           (mapcar (lambda (index)
-                                                                                    (doc:text "~a" (doc:lower-camel index)))
+                                                                                    (doc:text "~a" (lower-camel index)))
                                                                                   indexes)))) 
                                   :|type| "button"
                                   (doc:text "+" ))
                      )))
   (:form-controller (path) 
-                    (let ((newpath (append path (list (list* (doc:lower-camel (mkstr name)) 'form-array))) )
+                    (let ((newpath (append path (list (list* (lower-camel (mkstr name)) 'form-array))) )
                           (newindex (gensym "i") ))
                       (bb-list 
                        ;; (bb-comment (doc:text "~{~a ~^->~}" newpath))
-                       (bb-method (doc:text "add~aElement" (doc:upper-camel name)) 
+                       (bb-method (doc:text "add~aElement" (upper-camel name)) 
                                   (mapcar (lambda (index)
                                             (bb-pair (car index) (bb-type 'number :primitive t)))
                                           (remove-if-not (lambda (elem) (eq 'form-group (cdr elem)))
@@ -181,7 +181,7 @@
                                                      ;;           (bb-call 'group (bb-new (synth :name element))))
                                                      ))
                                   )
-                       (bb-method (doc:text "remove~aElement" (doc:upper-camel name)) 
+                       (bb-method (doc:text "remove~aElement" (upper-camel name)) 
                                   (mapcar (lambda (index)
                                             (bb-pair (car index) (bb-type 'number :primitive t)))
                                           (append (remove-if-not (lambda (elem) (eq 'form-group (cdr elem)))
@@ -197,7 +197,7 @@
                                             (bb-call 'remove-at (bb-dynamic newindex)))
 
                                   )
-                       (synth :form-controller element (append path (list (list* (doc:lower-camel (mkstr name)) 'form-array)
+                       (synth :form-controller element (append path (list (list* (lower-camel (mkstr name)) 'form-array)
                                                                           (list* (gensym) 'form-group))) ))))
   (:components (*) nil)
   (:routes (*) nil)
