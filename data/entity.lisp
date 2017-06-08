@@ -67,13 +67,14 @@
   (:entity (package) (bb-unit name
                               (bb-package (symb package '|.model|))
                               (bb-import '|javax.persistence| '|Column| '|Entity| '|Id| '|Table| '|ManyToOne| '|OneToMany| '|OneToOne| '|ManyToMany|)
-                              (bb-import '|java.util| '|Set|)
+                              ;; (bb-import '|java.util| '|List|)
                               (bb-with-annotations 
                                (list 
                                 (bb-annotation '|SuppressWarnings| (doc:double-quotes (doc:text "unused")))
                                 (bb-annotation '|Entity|)
                                 (bb-annotation '|Table| :|name| (doc:double-quotes (doc:textify name))))
                                (bb-class name
+                                         :public t
                                          :fields (append*
                                                   (synth :entity (primary-key primary))
                                                   (synth-all :entity fields)
@@ -103,15 +104,33 @@
                                         :cardinality cardinality
                                         :participation participation)))
   (:source () (case cardinality
-                (:one-to-one (bb-with-annotations (list (bb-annotation '|OneToOne|))
-                                                  (bb-statement (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)) :private t))))
-                (:many-to-one (bb-with-annotations (list (bb-annotation '|ManyToOne|))
-                                                   (bb-statement (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)) :private t))))
+                (:one-to-one (let ((sub-name (synth :name subordinate))) 
+                               (bb-list (bb-with-annotations (list (bb-annotation '|OneToOne|))
+                                                             (bb-statement (bb-pair sub-name (bb-type sub-name) :private t)))
+                                        (bb-method (doc:text "get~a" (upper-camel sub-name)) 
+                                                   nil (bb-type sub-name)
+                                                   (bb-return (bb-dynamic sub-name)))
+                                        (bb-method (doc:text "set~a" (upper-camel sub-name))
+                                                   (list (bb-pair sub-name (bb-type sub-name))) (bb-type :void)
+                                                   (bb-statement (bb-assign (bb-chain (bb-dynamic 'this) 
+                                                                                      (bb-dynamic sub-name))
+                                                                            (bb-dynamic sub-name)))))))
+                (:many-to-one (let ((sub-name (synth :name subordinate))) 
+                                (bb-list (bb-with-annotations (list (bb-annotation '|ManyToOne|))
+                                                              (bb-statement (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)) :private t)))
+                                         (bb-method (doc:text "get~a" (upper-camel sub-name)) 
+                                                    nil (bb-type sub-name)
+                                                    (bb-return (bb-dynamic sub-name)))
+                                         (bb-method (doc:text "set~a" (upper-camel sub-name))
+                                                    (list (bb-pair sub-name (bb-type sub-name))) (bb-type :void)
+                                                    (bb-statement (bb-assign (bb-chain (bb-dynamic 'this) 
+                                                                                       (bb-dynamic sub-name))
+                                                                             (bb-dynamic sub-name)))))))
                 (:one-to-many (bb-with-annotations (list (bb-annotation '|OneToMany|
                                                                         :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))))
-                                                   (bb-statement (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t))))
+                                                   (bb-statement (bb-pair (symb (synth :name subordinate) "-LIST") (bb-type (synth :name subordinate) :array t) :private t))))
                 (:many-to-many (bb-with-annotations (list (bb-annotation '|ManyToMany|))
-                                                    (bb-statement (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate))) :private t)))))) 
+                                                    (bb-statement (bb-pair (symb (synth :name subordinate) "-LIST") (bb-type (synth :name subordinate) :array t) :private t)))))) 
   (:target () (case cardinality
                 (:one-to-one (if participation (bb-with-annotations 
                                                 (list (bb-annotation '|OneToOne|
@@ -121,24 +140,24 @@
                 (:many-to-one (bb-with-annotations 
                                (list (bb-annotation '|OneToMany|
                                                     :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner)))))) 
-                               (bb-statement (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t))))
+                               (bb-statement (bb-pair (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t) :private t))))
                 (:one-to-many (bb-with-annotations 
                                (list (bb-annotation '|ManyToOne|)) 
                                (bb-statement (bb-pair (synth :name owner) (bb-type (synth :name owner)) :private t))))
                 (:many-to-many (bb-with-annotations 
                                 (list (bb-annotation '|ManyToMany|
-                                                     :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (symb (synth :name subordinate) "-SET")))))) 
-                                (bb-statement (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner))) :private t))))))
+                                                     :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (symb (synth :name subordinate) "-LIST")))))) 
+                                (bb-statement (bb-pair (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t) :private t))))))
   (:target-paramdecl () (case cardinality
                           (:one-to-one (if participation (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)))))
                           (:many-to-one (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate))))
-                          (:one-to-many (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate)))))
-                          (:many-to-many (bb-pair (symb (synth :name subordinate) "-SET") (bb-type 'Set :template (bb-type (synth :name subordinate)))))))
+                          (:one-to-many (bb-pair (symb (synth :name subordinate) "-LIST") (bb-type (synth :name subordinate) :array t)))
+                          (:many-to-many (bb-pair (symb (synth :name subordinate) "-LIST") (bb-type (synth :name subordinate) :array t)))))
   (:source-paramdecl () (case cardinality
                           (:one-to-one (bb-pair (synth :name owner) (bb-type (synth :name owner))))
-                          (:many-to-one (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))
+                          (:many-to-one (bb-pair (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t)))
                           (:one-to-many (bb-pair (synth :name owner) (bb-type (synth :name owner))))
-                          (:many-to-many (bb-pair (symb (synth :name owner) "-SET") (bb-type 'Set :template (bb-type (synth :name owner)))))))
+                          (:many-to-many (bb-pair (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t)))))
   (:target-foreign-key () (case cardinality
                             (:one-to-one (foreign-key (synth :primary owner) subordinate))
                             (:many-to-one (foreign-key (synth :primary owner) subordinate))

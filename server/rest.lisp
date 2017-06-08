@@ -22,6 +22,7 @@
                                   (bb-import '|javax.ejb| '|EJB| '|Stateless|)
                                   (bb-import '|javax.persistence| '|EntityManager| '|PersistenceContext|)
                                   (bb-import (symb package '|.jto|) '|*|)
+                                  (bb-import (symb package '|.model|) '|*|)
                                   (bb-import '|java.util| '|List|)
                                   (bb-with-annotations 
                                    (list (bb-annotation '|Stateless|))
@@ -155,7 +156,7 @@
                 (let ((name (symb (synth :name format) "-J-T-O"))) 
                   (bb-method (doc:text "add~a" (upper-camel (singular (synth :name chunk))))
                              (append* (synth-all :declaration (synth :path-parameters path))
-                                          (bb-pair name (bb-type name)))
+                                          (bb-pair (synth :name format) (bb-type name)))
                              (bb-type 'string)
                              (synth :logic action)))))
 

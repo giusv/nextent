@@ -18,9 +18,11 @@
 (defprim create-entity% (entity result bindings)
   (:pretty () (list 'create-entity (list :entity entity :result result :bindings (synth-plist :pretty bindings))))
   
-  (:logic () (let ((new-entity (bb-dynamic (gensym (symbol-name (synth :name entity))))))
+  (:logic () (let* ((new-entity-name (gensym (symbol-name (synth :name entity)))) 
+                    (new-entity (bb-dynamic new-entity-name)))
                (bb-list
-                (bb-statement (bb-assign new-entity (bb-new (synth :name entity))))
+                (bb-statement (bb-pair new-entity-name (bb-type (synth :name entity)) 
+                                       :init (bb-new (synth :name entity))))
                 (synth-plist-merge
                  (lambda (binding)
                    (bb-statement (bb-chain new-entity

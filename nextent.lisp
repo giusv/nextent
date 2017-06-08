@@ -41,7 +41,7 @@
                                (data:attribute 'sights (data:atype :string :size 20)))))
 
 (data:defrel trip-city
-    (data:relationship 'trip-city trip-entity city-entity :one-to-many))
+    (data:relationship 'trip-city trip-entity city-entity :one-to-one))
 
 (data:defrel city-place
     (data:relationship 'city-place city-entity place-entity :many-to-many))
@@ -88,21 +88,20 @@
    (list (server:rest-get ((name (url:query-parameter 'name :string))) (server:empty)) 
          (server:rest-post% trip-format 
                             (server:with-fields ((trip-name name) (cities cities)) trip-format
-                              (server:fork (expr:+equal+ (expr:const 1) (expr:const 2))
-                                           (server:concat
-                                            (inst (server:create-entity 
-                                                   trip-entity
-                                                   :name trip-name
-                                                   :cities cities))
-                                            (test (server:with-fields ((city-name name) (places places)) city-format
-                                                    (server:mapcomm 
-                                                     (server:mu city
-                                                                (server:create-entity 
-                                                                 city-entity
-                                                                 :name trip-name
-                                                                 :places places))
-                                                     cities))))
-                                           (server:empty)))))
+                              (server:concat
+                               (inst (server:create-entity 
+                                      trip-entity
+                                      :name trip-name
+                                      :city-list cities))
+                               ;; (test (server:with-fields ((city-name name) (places places)) city-format
+                               ;;         (server:mapcomm 
+                               ;;          (server:mu city
+                               ;;                     (server:create-entity 
+                               ;;                      city-entity
+                               ;;                      :name trip-name
+                               ;;                      :places places))
+                               ;;          cities)))
+                               ))))
    trip-item))
 (server:defservice server (server:rest-service 'trip-service (url:void) trip-collection))
 
@@ -113,10 +112,6 @@
   (pprint (pathname-name basedir)))
 
 (let* ((package '|it.bancaditalia.nextent|)
-       ;; (model-package (symb package '|.model|))
-       ;; (jto-package (symb package '|.jto|))
-       ;; (service-package (symb package '|.service|))
-       ;; (ejb-package (symb package '|.ejb|))
        (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
