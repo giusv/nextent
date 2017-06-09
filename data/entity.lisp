@@ -97,6 +97,17 @@
                                                                                                                            (synth-all :target-foreign-key (get-sources this))
                                                                                                                            (synth-all :source-foreign-key (get-targets this))))))) :newline t))))
 
+(defun stuff (annotations name type)
+  (bb-list (bb-with-annotations annotations
+                                (bb-statement (bb-pair name type :private t)))
+           (bb-method (doc:text "get~a" (upper-camel name)) 
+                      nil type
+                      (bb-return (bb-dynamic name)))
+           (bb-method (doc:text "set~a" (upper-camel name))
+                      (list (bb-pair name type)) (bb-type :void)
+                      (bb-statement (bb-assign (bb-chain (bb-dynamic 'this) 
+                                                         (bb-dynamic name))
+                                               (bb-dynamic name))))))
 (defprim relationship (name owner subordinate cardinality &optional (participation t))
   (:pretty () (list 'relationship (list :name name
                                         :owner (synth :pretty owner)
@@ -104,33 +115,19 @@
                                         :cardinality cardinality
                                         :participation participation)))
   (:source () (case cardinality
-                (:one-to-one (let ((sub-name (synth :name subordinate))) 
-                               (bb-list (bb-with-annotations (list (bb-annotation '|OneToOne|))
-                                                             (bb-statement (bb-pair sub-name (bb-type sub-name) :private t)))
-                                        (bb-method (doc:text "get~a" (upper-camel sub-name)) 
-                                                   nil (bb-type sub-name)
-                                                   (bb-return (bb-dynamic sub-name)))
-                                        (bb-method (doc:text "set~a" (upper-camel sub-name))
-                                                   (list (bb-pair sub-name (bb-type sub-name))) (bb-type :void)
-                                                   (bb-statement (bb-assign (bb-chain (bb-dynamic 'this) 
-                                                                                      (bb-dynamic sub-name))
-                                                                            (bb-dynamic sub-name)))))))
-                (:many-to-one (let ((sub-name (synth :name subordinate))) 
-                                (bb-list (bb-with-annotations (list (bb-annotation '|ManyToOne|))
-                                                              (bb-statement (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)) :private t)))
-                                         (bb-method (doc:text "get~a" (upper-camel sub-name)) 
-                                                    nil (bb-type sub-name)
-                                                    (bb-return (bb-dynamic sub-name)))
-                                         (bb-method (doc:text "set~a" (upper-camel sub-name))
-                                                    (list (bb-pair sub-name (bb-type sub-name))) (bb-type :void)
-                                                    (bb-statement (bb-assign (bb-chain (bb-dynamic 'this) 
-                                                                                       (bb-dynamic sub-name))
-                                                                             (bb-dynamic sub-name)))))))
-                (:one-to-many (bb-with-annotations (list (bb-annotation '|OneToMany|
-                                                                        :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))))
-                                                   (bb-statement (bb-pair (symb (synth :name subordinate) "-LIST") (bb-type (synth :name subordinate) :array t) :private t))))
-                (:many-to-many (bb-with-annotations (list (bb-annotation '|ManyToMany|))
-                                                    (bb-statement (bb-pair (symb (synth :name subordinate) "-LIST") (bb-type (synth :name subordinate) :array t) :private t)))))) 
+                (:one-to-one (stuff (list (bb-annotation '|OneToOne|)) 
+                                     (synth :name subordinate)
+                                     (bb-type (synth :name subordinate))))
+                (:many-to-one (stuff (list (bb-annotation '|ManyToOne|)) 
+                                     (synth :name subordinate)
+                                     (bb-type (synth :name subordinate))))
+                (:one-to-many (stuff (list (bb-annotation '|OneToMany|
+                                                          :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))))
+                                     (symb (synth :name subordinate) "-LIST")
+                                     (bb-type (synth :name subordinate) :array t)))
+                (:many-to-many (stuff (list (bb-annotation '|ManyToMany|))
+                                      (symb (synth :name subordinate) "-LIST")
+                                      (bb-type (synth :name subordinate) :array t))))) 
   (:target () (case cardinality
                 (:one-to-one (if participation (bb-with-annotations 
                                                 (list (bb-annotation '|OneToOne|

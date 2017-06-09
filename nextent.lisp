@@ -41,10 +41,10 @@
                                (data:attribute 'sights (data:atype :string :size 20)))))
 
 (data:defrel trip-city
-    (data:relationship 'trip-city trip-entity city-entity :one-to-one))
+    (data:relationship 'trip-city trip-entity city-entity :one-to-many))
 
 (data:defrel city-place
-    (data:relationship 'city-place city-entity place-entity :many-to-many))
+    (data:relationship 'city-place city-entity place-entity :one-to-many))
 
 (defparameter place-item
   (server:rest-item 'place ((place (url:path-parameter 'place :integer))) 
@@ -113,6 +113,7 @@
 
 (let* ((package '|it.bancaditalia.nextent|)
        (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
+       (basedir "D:/giusv/temp/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
        (app-services (loop for value being the hash-values of server:*services* collect value))) 
