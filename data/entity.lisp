@@ -116,8 +116,8 @@
                                         :participation participation)))
   (:source () (case cardinality
                 (:one-to-one (stuff (list (bb-annotation '|OneToOne|)) 
-                                     (synth :name subordinate)
-                                     (bb-type (synth :name subordinate))))
+                                    (synth :name subordinate)
+                                    (bb-type (synth :name subordinate))))
                 (:many-to-one (stuff (list (bb-annotation '|ManyToOne|)) 
                                      (synth :name subordinate)
                                      (bb-type (synth :name subordinate))))
@@ -129,22 +129,22 @@
                                       (symb (synth :name subordinate) "-LIST")
                                       (bb-type (synth :name subordinate) :array t))))) 
   (:target () (case cardinality
-                (:one-to-one (if participation (bb-with-annotations 
-                                                (list (bb-annotation '|OneToOne|
-                                                                     :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))
-                                                                     :|optional| (doc:textify '|false|))) 
-                                                (bb-statement (bb-pair (synth :name owner) (bb-type (synth :name owner)) :private t)))))
-                (:many-to-one (bb-with-annotations 
+                (:one-to-one (if participation 
+                                 (stuff (list (bb-annotation '|OneToOne|
+                                                             :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))
+                                                             :|optional| (doc:textify '|false|))) 
+                                        (synth :name owner) (bb-type (synth :name owner)))))
+                (:many-to-one (stuff 
                                (list (bb-annotation '|OneToMany|
                                                     :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner)))))) 
-                               (bb-statement (bb-pair (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t) :private t))))
-                (:one-to-many (bb-with-annotations 
+                               (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t)))
+                (:one-to-many (stuff 
                                (list (bb-annotation '|ManyToOne|)) 
-                               (bb-statement (bb-pair (synth :name owner) (bb-type (synth :name owner)) :private t))))
-                (:many-to-many (bb-with-annotations 
+                               (synth :name owner) (bb-type (synth :name owner))))
+                (:many-to-many (stuff 
                                 (list (bb-annotation '|ManyToMany|
                                                      :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (symb (synth :name subordinate) "-LIST")))))) 
-                                (bb-statement (bb-pair (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t) :private t))))))
+                                (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t)))))
   (:target-paramdecl () (case cardinality
                           (:one-to-one (if participation (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)))))
                           (:many-to-one (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate))))
@@ -174,7 +174,6 @@
              (:one-to-one ())
              (:one-to-many ())
              (:many-to-one ()))))
-
 
 (defparameter *entities* (make-hash-table))
 (defparameter *relationships* (make-hash-table))

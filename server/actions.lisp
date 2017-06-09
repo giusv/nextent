@@ -2,7 +2,6 @@
 
 (defprim empty ()
   (:pretty () (list 'empty))
-  
   (:logic () ()))
 
 
@@ -31,7 +30,19 @@
                 (bb-statement (bb-chain (bb-dynamic 'entity-manager)
                                         (bb-call 'persist new-entity)))
                 ;; (bb-return (bb-chain new-entity (bb-call (symb "GET-" (synth :name (synth :primary entity))))))
-                ))))
+                )))
+  (:blub () (let* ((new-entity-name (gensym (symbol-name (synth :name entity)))) 
+                    (new-entity (bb-dynamic new-entity-name)))
+               (bb-list
+                (bb-statement (bb-pair new-entity-name (bb-type (synth :name entity)) 
+                                       :init (bb-new (synth :name entity))))
+                (synth-plist-merge
+                 (lambda (binding)
+                   (bb-statement (bb-chain new-entity
+                                           (bb-call (symb "SET-" (car binding)) (synth :blub (cadr binding)))))) 
+                 bindings)
+                (bb-return new-entity))))
+  (:type () (bb-type (synt :name entity))))
 (defmacro create-entity (entity &rest bindings)
   `(let ((result (gensym (symbol-name (symb (synth :name ,entity))))))
      (values (create-entity% ,entity result (list ,@bindings)) (expr:variab result))))
@@ -62,7 +73,9 @@
 
 (defprim mu% (input command)
   (:pretty () (list 'mu (list :input input :command command)))
-  (:logic () (bb-arrow (list (bb-dynamic input)) (synth :logic command))))
+  (:logic () (bb-arrow (list (bb-dynamic input)) (synth :logic command)))
+  (:blub () (bb-arrow (list (bb-dynamic input)) (synth :blub command)))
+  (:type () (synth :type command)))
 
 (defmacro mu (input command)
   `(let* ((,input ',input)) 
@@ -72,7 +85,11 @@
 (defprim mapcomm (command collection)
   (:pretty () (list 'mapcomm (list :command command :collection collection)))
   (:logic () (bb-statement (bb-chain (synth :blub collection) 
-                                     (bb-call 'map (synth :logic command))))))
+                                     (bb-call 'map (synth :logic command)))))
+  (:blub () (bb-chain (bb-static 'arrays)
+                      (bb-call 'stream (synth :blub collection))
+                      (bb-call 'map (synth :blub command))
+                      (bb-call 'to-array))))
 
 (defprim fork (condition success failure)
   (:pretty () (list 'fork (list :condition condition :success success :failure failure)))

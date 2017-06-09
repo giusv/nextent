@@ -92,16 +92,22 @@
                                (inst (server:create-entity 
                                       trip-entity
                                       :name trip-name
-                                      :city-list cities))
-                               ;; (test (server:with-fields ((city-name name) (places places)) city-format
-                               ;;         (server:mapcomm 
-                               ;;          (server:mu city
-                               ;;                     (server:create-entity 
-                               ;;                      city-entity
-                               ;;                      :name trip-name
-                               ;;                      :places places))
-                               ;;          cities)))
-                               ))))
+                                      :city-list (server:mapcomm 
+                                                  (server:mu city
+                                                             (server:with-fields ((city-name name) (places places)) city-format
+                                                               (server:create-entity 
+                                                                city-entity
+                                                                :name city-name
+                                                                :place-list (server:mapcomm 
+                                                                             (server:mu place
+                                                                                        (server:with-fields ((place-name name) (places places)) place-format
+                                                                                          (server:create-entity 
+                                                                                           place-entity
+                                                                                           :name place-name
+
+                                                                                           )))
+                                                                             places))))
+                                                  cities)))))))
    trip-item))
 (server:defservice server (server:rest-service 'trip-service (url:void) trip-collection))
 
@@ -113,7 +119,7 @@
 
 (let* ((package '|it.bancaditalia.nextent|)
        (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
-       (basedir "D:/giusv/temp/nextent/")
+       ;; (basedir "D:/giusv/temp/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
        (app-services (loop for value being the hash-values of server:*services* collect value))) 
@@ -141,7 +147,7 @@
                           (synth :string (synth :doc (synth :java (synth :jax-class service package)))))))
           app-services)
   (mapcar (lambda (service) 
-            (let ((filename (mkstr basedir "ejb/" (upper-camel (symb (synth :name service) '|-Bean-Impl|)) ".java"))) 
+            (let ((filename (mkstr basedir "ejb/" (upper-camel (symb (synth :name service) '|-Bean|)) ".java"))) 
               (pprint filename)
               (write-file filename
                           (synth :string (synth :doc (synth :java (synth :bean-class service package)))))))

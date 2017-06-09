@@ -33,6 +33,7 @@
                                            pair
                                            :newline nil)
                       pair)))
+  (:call () (lang:bb-dynamic name))
   (:req () (html:taglist 
             (html:span-color (string-downcase name))
             (doc:text "(parametro path)")))
@@ -55,6 +56,7 @@
                                            pair
                                            :newline nil)
                       pair)))
+  (:call () (lang:bb-dynamic name))
   (:type () (doc:text "query")))
 
 ;; (defprim login-parameter (name)
