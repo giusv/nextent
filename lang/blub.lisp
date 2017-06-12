@@ -78,6 +78,23 @@
   `(let* ((,(car exceptions) ',(car exceptions))) 
      (bb-catch% (list ,@(cdr exceptions)) ,(car exceptions) ,body)))
 
+(defprim bb-primitive-type (name)
+  (:pretty () (list 'bb-primitive-type (list :name name)))
+  (:typescript () (hcat (text "~a" (lower-camel name))))
+  (:java () (hcat (text "~a" (lower-camel name)))))
+
+(defprim bb-array-type (type)
+  (:pretty () (list 'bb-array-type (list :type type)))
+  (:typescript () (hcat (synth :typescript type) 
+                        (text "[]")))
+  (:java () (hcat (synth :java type) 
+                  (text "[]"))))
+
+(defprim bb-object-type (name)
+  (:pretty () (list 'bb-object-type (list :name name)))
+  (:typescript () (upper-camel name))
+  (:java () (textify (upper-camel name))))
+
 (defprim bb-type (name &key primitive array template)
   (:pretty () (list 'bb-type (list :name name :primitive primitive :array array :template template)))
   (:typescript () (hcat (text "~a" (if (or (eq name :string)
@@ -341,7 +358,7 @@
                          (as (getf (rest-key args) :as))
                          (chain (hcat (car calls) (apply #'prepend (dot) t (cdr calls)))))
                     (if as 
-                        (parens (hcat+ (parens (text "~a" (upper-camel as))) 
+                        (parens (hcat+ (parens (synth :java as)) 
                                       chain))
                         chain))))
 

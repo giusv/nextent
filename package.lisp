@@ -63,7 +63,9 @@
 
 (defpackage :lang
   (:use :cl :lol :utils :grammar :doc)
-  (:export :bb-empty :bb-comment :bb-const :bb-type :bb-pair :bb-array :bb-element
+  (:export :bb-empty :bb-comment :bb-const 
+           :bb-type :bb-primitive-type :bb-array-type :bb-object-type
+           :bb-pair :bb-array :bb-element
            :bb-object :bb-annotation :bb-with-annotations :bb-class :bb-interface :bb-method :bb-signature 
            :bb-import :bb-package :bb-new :bb-call :bb-static :bb-dynamic :bb-chain :bb-constructor :bb-arrow 
            :bb-list :bb-unit :bb-template :bb-assign :bb-return :bb-throw :bb-statement
@@ -97,6 +99,7 @@
            :with-fields
            :concat% :concat
            :empty :create-entity% :create-entity
+           :update-entity% :update-entity
            :find-entity% :find-entity
            :create-transfer% :create-transfer
            :mu% :mu :mapcomm :fork

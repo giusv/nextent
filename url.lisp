@@ -26,14 +26,14 @@
   (:pretty () (list 'path-parameter (list :name name :type type :validators (synth-all :pretty validators))))
   (:type () (doc:text "path"))
   (:declaration (&optional full) 
-                (let ((pair (bb-pair (lower-camel name) (bb-type type)))) 
+                (let ((pair (bb-pair (symb (lower-camel name) "-ID") (bb-type type)))) 
                   (if full
                       (bb-with-annotations (cons (bb-annotation '|PathParam| :|value| (doc:double-quotes (doc:textify name)))
                                                  (synth-all :annotation validators))
                                            pair
                                            :newline nil)
                       pair)))
-  (:call () (lang:bb-dynamic name))
+  (:call () (lang:bb-dynamic (symb (lower-camel name) "-ID")))
   (:req () (html:taglist 
             (html:span-color (string-downcase name))
             (doc:text "(parametro path)")))

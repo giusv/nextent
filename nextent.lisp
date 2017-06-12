@@ -59,7 +59,13 @@
                                                              (server:create-transfer place-format 
                                                                                      :name name))) 
                                                       ((server:respond :ok ret)))))))
-                     (server:rest-put place-format (server:empty)))))
+                     (server:rest-put place-format 
+                                      (server:concat
+                                       (ret (server:with-fields ((place-name name)) place-format
+                                              (server:update-entity place-entity
+                                                                    place
+                                                                    :name place-name))) 
+                                       ((server:respond :no-content)))))))
 
 (defparameter place-collection 
   (server:rest-collection 'places (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty))) place-item))
@@ -103,11 +109,10 @@
                                                                                         (server:with-fields ((place-name name) (places places)) place-format
                                                                                           (server:create-entity 
                                                                                            place-entity
-                                                                                           :name place-name
-
-                                                                                           )))
+                                                                                           :name place-name)))
                                                                              places))))
-                                                  cities)))))))
+                                                  cities)))
+                               ))))
    trip-item))
 (server:defservice server (server:rest-service 'trip-service (url:void) trip-collection))
 

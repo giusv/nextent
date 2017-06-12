@@ -27,6 +27,7 @@
                                     (bb-import (symb package '|.jto|) '|*|)
                                     (bb-import (symb package '|.model|) '|*|)
                                     (bb-import '|java.util| '|List|)
+                                    (bb-import '|java.util| '|Arrays|)
                                     (bb-with-annotations 
                                      (list (bb-annotation '|Stateless|))
                                      (bb-class bean-name 
@@ -89,7 +90,7 @@
   `(bb-try (bb-list
             (bb-statement (bb-pair 'context (bb-type 'context) :init (bb-new 'initial-context)))
             (bb-statement (bb-pair ,bean-name (bb-type ,bean-name) :init (bb-chain (bb-dynamic 'context) 
-                                                                                 (bb-call 'lookup (bb-const (mkstr "java:module/" (lower-camel ,bean-name)) )) :as ,bean-name)))
+                                                                                 (bb-call 'lookup (bb-const (mkstr "java:module/" (lower-camel ,bean-name)) )) :as (bb-object-type ,bean-name))))
             ,body)
            (list (bb-catch (e :naming-exception) 
                            (bb-statement (bb-chain (bb-dynamic e)
@@ -103,7 +104,7 @@
                       (if mtypes (apply #'bb-annotation '|Produces| 
                                         (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
                 (bb-method (doc:text "get~a" (upper-camel (synth :name chunk)))
-                           (synth-all :declaration (append queries (synth :path-parameters path)))
+                           (synth-all :declaration (append queries (synth :path-parameters path)) t)
                            (bb-type 'response)
                            (let* ((bean-name (symb bean "-BEAN")))
                              (with-lookup bean-name
@@ -144,14 +145,14 @@
                 (let ((name (symb (synth :name format) "-J-T-O"))) 
                   (bb-method (doc:text "post~a" (upper-camel (singular (synth :name chunk)))) 
                              (append* (synth-all :declaration (synth :path-parameters path) t)
-                                          (bb-pair name (bb-type name)))
+                                          (bb-pair (synth :name format) (bb-type name)))
                              (bb-type 'response)
                              (let* ((bean-name (symb bean "-BEAN")))
                                (with-lookup bean-name
                                  (bb-statement (bb-chain (bb-dynamic bean-name) 
                                                          (apply #'bb-call (symb 'add "-" (singular (synth :name chunk)))
                                                                 (append*  (synth-all :call (synth :path-parameters path))
-                                                                          (bb-dynamic name)))))))))))
+                                                                          (bb-dynamic (synth :name format))))))))))))
   (:bean-method (path chunk type)
                 (let ((name (symb (synth :name format) "-J-T-O"))) 
                   (bb-method (doc:text "add~a" (upper-camel (singular (synth :name chunk))))
@@ -175,17 +176,17 @@
                                     (let ((name (symb (synth :name format) "-J-T-O"))) 
                                       (bb-method (doc:text "put~a" (upper-camel (synth :name chunk))) 
                                                  (append* (synth-all :declaration (synth :path-parameters path) t)
-                                                              (bb-pair name (bb-type name)))
+                                                              (bb-pair (synth :name format) (bb-type name)))
                                                  (bb-type 'response)
                                                  (let* ((bean-name (symb bean "-BEAN")))
                                                    (with-lookup bean-name
                                                      (bb-statement (bb-chain (bb-dynamic bean-name) 
                                                                              (apply #'bb-call (symb 'update "-" (synth :name chunk))
                                                                                     (append*  (synth-all :call (synth :path-parameters path))
-                                                                                                 (bb-dynamic name)))))))))))
+                                                                                                 (bb-dynamic (synth :name format))))))))))))
   (:bean-method (path chunk type) (let ((name (symb (synth :name format) "-J-T-O"))) 
                                     (bb-method (doc:text "update~a" (upper-camel (synth :name chunk)))
                                                (append* (synth-all :declaration (synth :path-parameters path))
-                                                            (bb-pair name (bb-type name)))
+                                                            (bb-pair (synth :name format) (bb-type name)))
                                                (bb-type :void)
                                                (synth :logic action)))))
