@@ -55,10 +55,7 @@
 
 (defpackage :expr
   (:use :cl :lol :utils :grammar)
-  (:export :const 
-           :attr
-           :variab
-           :value
+  (:export :const :attr :variab :value :param
            :+true+ :+false+ :+and+ :+or+ :+not+ :+equal+ :+less-than+ :+greater-than+ :+null+))
 
 (defpackage :lang
@@ -80,10 +77,6 @@
   (:export :void :static-chunk :dynamic-chunk :expression-chunk :path-parameter :query-parameter :login-parameter 
            :backward-chain :multi :forward-chain :queried
            :url))
-
-(defpackage :query
-  (:use :cl :lol :utils :parser :grammar :doc :lang)
-  (:export :relation :project :restrict :equijoin))
 
 (defpackage :server
   (:use :cl :lol :utils :grammar :lang)
@@ -115,8 +108,10 @@
            :jsbool :jsnumber :jsstring :jsprop :jsobject :jsarray
            :filter :ident :prop :elem :comp
            :atype :attribute :primary-key :entity :relationship
-           :defent :defrel :deformat
-           :*entities* :*relationships* :*formats*))
+           :defent :defrel :deformat :defquery
+           :query :relation :product :project :restrict :equijoin :with-queries 
+           :named-query
+           :*entities* :*relationships* :*formats* :*queries*))
 
 (defpackage :validator
   (:use :cl :lol :utils :grammar :lang)

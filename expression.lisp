@@ -12,7 +12,7 @@
                       ((eq t lit) (doc:text "true"))
                       (t (error "unknown constant type"))))
   (:blub () (lang:bb-const lit))
-  (:sql () (doc:text "~a" lit)))
+  (:sql () (doc:single-quotes (doc:text "~a" lit))))
 
 (defprim attr (name exp)
   (:pretty () (list 'attr (list :name name :exp exp)))
@@ -35,16 +35,16 @@
   (:string () (text "~{~a~^ ++ ~}" (synth-all :string exps)))
   (:blub () (reduce #'bb-+ exps)))
 
-
 (defprim variab (name)
   (:pretty () (list 'variab (list :name name)))
   (:string () (textify name))
   (:blub () (lang:bb-dynamic name)))
 
-(defprim value (name)
+(defprim param (name)
   (:pretty () (list 'value (list :name name)))
   (:string () (textify name))
-  (:blub () (lang:bb-dynamic name)))
+  (:blub () (lang:bb-dynamic name))
+  (:sql () (doc:text ":~a" (lower-camel name))))
 
 
   ;; (:html () (span (list :class "label label-danger") (text "~a" name))))
