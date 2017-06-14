@@ -57,9 +57,9 @@
 
 (defprim named-query (name template)
   (:pretty () (list 'named-query (list :name name :template (synth :pretty template))))
-  (:annotation () (bb-annotation '|NamedQuery|
-                                 :|name| (doc:double-quotes (doc:textify name))
-                                 :|query| (doc:double-quotes (synth :sql template)))))
+  (:annotation () (synth :java (bb-annotation '|NamedQuery|
+                                  :|name| (doc:double-quotes (doc:textify name))
+                                  :|query| (doc:double-quotes (synth :sql template))))))
 
 (defprim named-query-instance (name &rest args)
   (:pretty () (list 'named-query (list :name name :args (synth-plist :pretty args))))
