@@ -59,11 +59,12 @@
      collect (if (eq (synth :name (synth :subordinate rel)) (synth :name entity)) rel)))
 
 
-(defprim entity (name &key desc primary fields)
+(defprim entity (name &key desc primary fields queries)
   (:pretty () (list 'entity :name name
                     :desc desc
                     :primary (synth :pretty primary)
-                    :fields (synth-all :pretty fields)))
+                    :fields (synth-all :pretty fields)
+                    :queries (synth-all :pretty queries)))
   (:entity (package) (bb-unit name
                               (bb-package (symb package '|.model|))
                               (bb-import '|javax.persistence| '|Column| '|Entity| '|Id| '|Table| '|ManyToOne| '|OneToMany| '|OneToOne| '|ManyToMany|)
@@ -72,7 +73,9 @@
                                (list 
                                 (bb-annotation '|SuppressWarnings| (doc:double-quotes (doc:text "unused")))
                                 (bb-annotation '|Entity|)
-                                (bb-annotation '|Table| :|name| (doc:double-quotes (doc:textify name))))
+                                (bb-annotation '|Table| :|name| (doc:double-quotes (doc:textify name)))
+                                (if queries (bb-annotation '|NamedQueries| 
+                                                           (synth-all :annotation queries))))
                                (bb-class name
                                          :public t
                                          :fields (append*

@@ -174,7 +174,8 @@
                                                                          (second pair))) 
                                                   props))))
                         ((and (listp props) (= (length props) 1)) (parens (car props)))
-                        (listp props) (parens (braces (punctuate (comma) nil props)))
+                        (listp props) (parens (braces (apply #'punctuate (comma) t
+                                                             (synth-all :java props))))
                         (t (error "case not allowed"))))))
 
 (defprim bb-class (name &key public interfaces parent fields constructor methods)

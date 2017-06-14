@@ -83,19 +83,7 @@
                            ,body)))
           
           (setf (gethash ',name *queries*) (symbol-function ',name))))
-(defquery q (name) 
-  (with-queries ((tr (relation 'trips))
-                  (ct (relation 'cities)))
-    (project (restrict (product tr ct)
-                       (expr:+and+ 
-                        (expr:+equal+ (expr:attr tr 'id)
-                                      (expr:attr ct 'id))
-                        (expr:+equal+ (expr:attr tr 'name)
-                                      name))))))
 
-;; (synth :output (synth :sql (q (expr:const "name"))) 0)
-(synth :output (synth :java (synth :annotation q)) 0)
-(synth :output (synth :java (synth :call (q (expr:const 1)))) 0)
 
 
 
