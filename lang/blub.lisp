@@ -90,10 +90,10 @@
   (:java () (hcat (synth :java type) 
                   (text "[]"))))
 
-(defprim bb-object-type (name)
-  (:pretty () (list 'bb-object-type (list :name name)))
-  (:typescript () (upper-camel name))
-  (:java () (textify (upper-camel name))))
+;; (defprim bb-object-type (name)
+;;   (:pretty () (list 'bb-object-type (list :name name)))
+;;   (:typescript () (upper-camel name))
+;;   (:java () (textify (upper-camel name))))
 
 (defprim bb-type (name &key primitive array template)
   (:pretty () (list 'bb-type (list :name name :primitive primitive :array array :template template)))
@@ -130,7 +130,9 @@
 (defprim bb-array (&rest elems)
   (:pretty () (list 'bb-array (list :elems (synth-all :pretty elems))))
   (:typescript () (brackets (apply #'punctuate (comma) t (synth-all :typescript (apply #'append* elems))) :padding 1 :newline nil))
-  (:java () (brackets (apply #'punctuate (comma) t (synth-all :java (apply #'append* elems))) :padding 1 :newline nil)))
+  (:java () (braces 
+             (nest 4 (apply #'punctuate (comma) t (synth-all :java (apply #'append* elems))))
+             :newline t)))
 
 (defprim bb-object (&rest elems)
   (:pretty () (list 'bb-object (list :elems (synth-plist :pretty (apply #'append* elems)))))
@@ -141,7 +143,10 @@
                                                           (synth :typescript (second pair)))) 
                                    (apply #'append* elems))))
                    :newline t))
-  (:java () (error "not available in java")))
+  (:java () (apply #'punctuate (comma) t 
+                   (synth-plist-merge 
+                    #'(lambda (pair) (hcat (textify (car pair)) (equals) (synth :java (cadr pair)))) 
+                    (apply #'append* elems)))))
 
 (defprim bb-template (element)
   (:pretty () (list 'bb-template (list :element (synth :pretty element))))
@@ -176,6 +181,13 @@
                         ((and (listp props) (= (length props) 1)) (parens (car props)))
                         ((listp props) (parens (braces (apply #'punctuate (comma) nil props))))
                         (t (error "case not allowed"))))))
+
+(defprim bb-annotation2 (name &optional content)
+  (:pretty () (list 'bb-annotation2 (list name name :content (synth :pretty content))))
+  (:typescript () (error "not implemented yet"))
+  (:java () (hcat (text "@~a" name) 
+                  (cond ((null content) (empty))
+                        (t (parens (synth :java content)))))))
 
 (defprim bb-class (name &key public interfaces parent fields constructor methods)
   (:pretty () (list 'bb-class (list :name name 

@@ -16,7 +16,7 @@
                                  (bb-import (symb package '|.ejb|) '|*|)
                                  (bb-import (symb package '|.jto|) '|*|)
                                  (bb-with-annotations 
-                                  (list (bb-annotation '|Path| (doc:double-quotes (synth :url url))))
+                                  (list (bb-annotation2 '|Path| (bb-const (synth :string (synth :url url)))))
                                   (bb-class name :public t
                                             :methods (apply #'append (synth-all :jax-methods resources name url))))))
   (:bean-class (package) (let ((bean-name (symb name "-BEAN")))
@@ -29,12 +29,12 @@
                                     (bb-import '|java.util| '|List|)
                                     (bb-import '|java.util| '|Arrays|)
                                     (bb-with-annotations 
-                                     (list (bb-annotation '|Stateless|))
+                                     (list (bb-annotation2 '|Stateless|))
                                      (bb-class bean-name 
                                                :public t
                                                ;; :interfaces (list (symb name "-BEAN"))
                                                ;; :constructor (bb-constructor name nil)
-                                               :fields (list (bb-with-annotations (list (bb-annotation '|PersistenceContext|))
+                                               :fields (list (bb-with-annotations (list (bb-annotation2 '|PersistenceContext|))
                                                                                   (bb-statement (bb-pair 'entity-manager (bb-type 'entity-manager) :private t))))
                                                :methods (apply #'append (synth-all :bean-methods resources url))))))))
 
@@ -82,7 +82,7 @@
 
 (defun parlist (type pars)
   (mapcar (lambda (par)
-            (bb-with-annotations (list (bb-annotation type (doc:double-quotes (doc:text "~a" (lower-camel par)))))
+            (bb-with-annotations (list (bb-annotation2 type (bb-const (synth :string (doc:text "~a" (lower-camel par))))))
                                  (bb-pair (lower-camel par) (bb-type 'String)) :newline nil)) 
           pars))
 
@@ -98,11 +98,14 @@
 (defprim rest-get% (queries action &key (mtypes (list '|application/json|)))
   (:pretty () (list 'rest-get (list :queries (synth-all :pretty queries) :action (synth :pretty action) :mtypes mtypes)))
   (:jax-method (bean path chunk) 
-               (bb-with-annotations 
-                (list (bb-annotation '|GET|)
-                      (bb-annotation '|Path| (doc:double-quotes (synth :url path)))
-                      (if mtypes (apply #'bb-annotation '|Produces| 
-                                        (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
+               (bb-with-annotations ()
+                (list (bb-annotation2 '|GET|)
+                      (bb-annotation2 '|Path| (bb-const (synth :string (synth :url path))))
+                      (if mtypes 
+                          (bb-annotation2 '|Produces| 
+                                          (apply #'bb-array (mapcar 
+                                                             (lambda (type) (bb-const (mkstr type))) 
+                                                             mtypes)))))
                 (bb-method (doc:text "get~a" (upper-camel (synth :name chunk)))
                            (synth-all :declaration (append queries (synth :path-parameters path)) t)
                            (bb-type 'response)
@@ -137,15 +140,17 @@
   (:pretty () (list 'rest-post (list :format format :action (synth :pretty action) :mtypes mtypes)))
   (:jax-method (bean path chunk) 
                (bb-with-annotations 
-                (list (bb-annotation '|POST|)
-                      (bb-annotation '|Path| (doc:double-quotes (synth :url path)))
+                (list (bb-annotation2 '|POST|)
+                      (bb-annotation2 '|Path| (bb-const (synth :string (synth :url path))))
                       (if mtypes 
-                          (apply #'bb-annotation '|Consumes|  
-                                 (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
+                          (bb-annotation2 '|Consumes|  
+                                          (apply #'bb-array (mapcar 
+                                                             (lambda (type) (bb-const (mkstr type))) 
+                                                             mtypes)))))
                 (let ((name (symb (synth :name format) "-J-T-O"))) 
                   (bb-method (doc:text "post~a" (upper-camel (singular (synth :name chunk)))) 
                              (append* (synth-all :declaration (synth :path-parameters path) t)
-                                          (bb-pair (synth :name format) (bb-type name)))
+                                      (bb-pair (synth :name format) (bb-type name)))
                              (bb-type 'response)
                              (let* ((bean-name (symb bean "-BEAN")))
                                (with-lookup bean-name
@@ -157,7 +162,7 @@
                 (let ((name (symb (synth :name format) "-J-T-O"))) 
                   (bb-method (doc:text "add~a" (upper-camel (singular (synth :name chunk))))
                              (append* (synth-all :declaration (synth :path-parameters path))
-                                          (bb-pair (synth :name format) (bb-type name)))
+                                      (bb-pair (synth :name format) (bb-type name)))
                              (bb-type 'string)
                              (synth :logic action)))))
 
@@ -168,25 +173,27 @@
 (defprim rest-put (format action &key (mtypes (list '|application/json|)))
   (:pretty () (list 'rest-put (list :format format :action (synth :pretty action) :mtypes mtypes)))
   (:jax-method (bean path chunk)
-               (bb-with-annotations (list (bb-annotation '|PUT|)
-                                          (bb-annotation '|Path| (doc:double-quotes (synth :url path)))
+               (bb-with-annotations (list (bb-annotation2 '|PUT|)
+                                          (bb-annotation2 '|Path| (bb-const (synth :string (synth :url path))))
                                           (if mtypes 
-                                              (apply #'bb-annotation '|Consumes|  
-                                                     (mapcar (lambda (type) (doc:double-quotes (doc:text "~a" type))) mtypes))))
+                                              (bb-annotation2 '|Consumes|  
+                                                              (apply #'bb-array (mapcar 
+                                                                                 (lambda (type) (bb-const (mkstr type))) 
+                                                                                 mtypes)))))
                                     (let ((name (symb (synth :name format) "-J-T-O"))) 
                                       (bb-method (doc:text "put~a" (upper-camel (synth :name chunk))) 
                                                  (append* (synth-all :declaration (synth :path-parameters path) t)
-                                                              (bb-pair (synth :name format) (bb-type name)))
+                                                          (bb-pair (synth :name format) (bb-type name)))
                                                  (bb-type 'response)
                                                  (let* ((bean-name (symb bean "-BEAN")))
                                                    (with-lookup bean-name
                                                      (bb-statement (bb-chain (bb-dynamic bean-name) 
                                                                              (apply #'bb-call (symb 'update "-" (synth :name chunk))
                                                                                     (append*  (synth-all :call (synth :path-parameters path))
-                                                                                                 (bb-dynamic (synth :name format))))))))))))
+                                                                                              (bb-dynamic (synth :name format))))))))))))
   (:bean-method (path chunk type) (let ((name (symb (synth :name format) "-J-T-O"))) 
                                     (bb-method (doc:text "update~a" (upper-camel (synth :name chunk)))
                                                (append* (synth-all :declaration (synth :path-parameters path))
-                                                            (bb-pair (synth :name format) (bb-type name)))
+                                                        (bb-pair (synth :name format) (bb-type name)))
                                                (bb-type :void)
                                                (synth :logic action)))))

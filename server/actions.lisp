@@ -93,6 +93,13 @@
   `(let ((result (gensym (symbol-name (synth :name ,entity)))))
      (values (find-entity% ,entity result ,id) (expr:variab result))))
 
+(defprim exec-query% (query result)
+  (:pretty () (list 'exec-query (list :query (synth :pretty query) :result :result)))
+  (:logic () (bb-statement (bb-chain (bb-dynamic 'entity-manager)
+                                     (synth :call query)))))
+(defmacro exec-query (query)
+  `(let ((result (gensym (symbol-name (synth :name ,query)))))
+     (values (exec-query% ,query result) (expr:variab result))))
 
 (defprim concat% (&rest actions)
   (:pretty () (list 'concat (synth-all :pretty actions)))

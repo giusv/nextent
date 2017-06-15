@@ -15,7 +15,7 @@
   (:pretty () (list 'attribute (list :name name :type (synth :pretty type) :desc desc))) 
   (:entity (&rest annotations) (progn (pprint annotations)
                                       (bb-with-annotations 
-                                       (cons (bb-annotation '|Column| :|name| (doc:double-quotes (doc:textify name)))
+                                       (cons (bb-annotation2 '|Column| (bb-object :|name| (bb-const (mkstr name))))
                                              annotations)
                                        (bb-statement (bb-pair name (synth :entity type) :private t))
                                        :newline t)))
@@ -31,7 +31,7 @@
 
 (defprim primary-key (attribute)
   (:pretty () (list 'primary-key (list :attribute (synth :pretty attribute)))) 
-  (:entity () (synth :entity attribute (bb-annotation '|Id|)))
+  (:entity () (synth :entity attribute (bb-annotation2 '|Id|)))
   (:accessors () (synth :accessors attribute))
   (:paramdecl () (synth :paramdecl attribute))
   (:ddl () (doc:hcat (synth :ddl attribute) (doc:text " NOT NULL PRIMARY KEY"))))
@@ -67,15 +67,15 @@
                     :queries (synth-all :pretty queries)))
   (:entity (package) (bb-unit name
                               (bb-package (symb package '|.model|))
-                              (bb-import '|javax.persistence| '|Column| '|Entity| '|Id| '|Table| '|ManyToOne| '|OneToMany| '|OneToOne| '|ManyToMany|)
+                              (bb-import '|javax.persistence| '|Column| '|Entity| '|Id| '|Table| '|ManyToOne| '|OneToMany| '|OneToOne| '|ManyToMany| '|NamedQueries| '|NamedQuery|)
                               ;; (bb-import '|java.util| '|List|)
                               (bb-with-annotations 
                                (list 
-                                (bb-annotation '|SuppressWarnings| (doc:double-quotes (doc:text "unused")))
-                                (bb-annotation '|Entity|)
-                                (bb-annotation '|Table| :|name| (doc:double-quotes (doc:textify name)))
-                                (if queries (bb-annotation '|NamedQueries| 
-                                                           (synth-all :annotation queries))))
+                                (bb-annotation2 '|SuppressWarnings| (bb-const "unused"))
+                                (bb-annotation2 '|Entity|)
+                                (bb-annotation2 '|Table| (bb-object :|name| (bb-const (mkstr name))))
+                                (if queries (bb-annotation2 '|NamedQueries| 
+                                                           (apply #'bb-array (synth-all :annotation queries)))))
                                (bb-class name
                                          :public t
                                          :fields (append*
@@ -118,35 +118,35 @@
                                         :cardinality cardinality
                                         :participation participation)))
   (:source () (case cardinality
-                (:one-to-one (stuff (list (bb-annotation '|OneToOne|)) 
+                (:one-to-one (stuff (list (bb-annotation2 '|OneToOne|)) 
                                     (synth :name subordinate)
                                     (bb-type (synth :name subordinate))))
-                (:many-to-one (stuff (list (bb-annotation '|ManyToOne|)) 
+                (:many-to-one (stuff (list (bb-annotation2 '|ManyToOne|)) 
                                      (synth :name subordinate)
                                      (bb-type (synth :name subordinate))))
-                (:one-to-many (stuff (list (bb-annotation '|OneToMany|
-                                                          :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))))
+                (:one-to-many (stuff (list (bb-annotation2 '|OneToMany|
+                                                           (bb-object :|mappedBy| (bb-const (mkstr (lower-camel (synth :name owner)))))))
                                      (symb (synth :name subordinate) "-LIST")
                                      (bb-type (synth :name subordinate) :array t)))
-                (:many-to-many (stuff (list (bb-annotation '|ManyToMany|))
+                (:many-to-many (stuff (list (bb-annotation2 '|ManyToMany|))
                                       (symb (synth :name subordinate) "-LIST")
                                       (bb-type (synth :name subordinate) :array t))))) 
   (:target () (case cardinality
                 (:one-to-one (if participation 
-                                 (stuff (list (bb-annotation '|OneToOne|
-                                                             :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner))))
-                                                             :|optional| (doc:textify '|false|))) 
+                                 (stuff (list (bb-annotation2 '|OneToOne|
+                                                              (bb-object  :|mappedBy| (bb-const (mkstr (lower-camel (synth :name owner))))
+                                                                          :|optional| (bb-const (mkstr '|false|))))) 
                                         (synth :name owner) (bb-type (synth :name owner)))))
                 (:many-to-one (stuff 
-                               (list (bb-annotation '|OneToMany|
-                                                    :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (synth :name owner)))))) 
+                               (list (bb-annotation2 '|OneToMany|
+                                                    (bb-object :|mappedBy| (bb-const (mkstr (lower-camel (synth :name owner))))))) 
                                (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t)))
                 (:one-to-many (stuff 
-                               (list (bb-annotation '|ManyToOne|)) 
+                               (list (bb-annotation2 '|ManyToOne|)) 
                                (synth :name owner) (bb-type (synth :name owner))))
                 (:many-to-many (stuff 
-                                (list (bb-annotation '|ManyToMany|
-                                                     :|mappedBy| (doc:double-quotes (doc:textify (lower-camel (symb (synth :name subordinate) "-LIST")))))) 
+                                (list (bb-annotation2 '|ManyToMany|
+                                                      (bb-object :|mappedBy| (bb-const (mkstr (lower-camel (symb (synth :name subordinate) "-LIST"))))))) 
                                 (symb (synth :name owner) "-LIST") (bb-type (synth :name owner) :array t)))))
   (:target-paramdecl () (case cardinality
                           (:one-to-one (if participation (bb-pair (synth :name subordinate) (bb-type (synth :name subordinate)))))

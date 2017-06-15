@@ -28,7 +28,7 @@
   (:declaration (&optional full) 
                 (let ((pair (bb-pair (symb (lower-camel name) "-ID") (bb-type type)))) 
                   (if full
-                      (bb-with-annotations (cons (bb-annotation '|PathParam| :|value| (doc:double-quotes (doc:textify name)))
+                      (bb-with-annotations (cons (bb-annotation2 '|PathParam| (bb-object :|value| (bb-const (lower-camel name))))
                                                  (synth-all :annotation validators))
                                            pair
                                            :newline nil)
@@ -51,7 +51,7 @@
   (:declaration (&optional full) 
                 (let ((pair (bb-pair (lower-camel name) (bb-type type)))) 
                   (if full
-                      (bb-with-annotations (cons (bb-annotation '|QueryParam| :|value| (doc:double-quotes (doc:textify name)))
+                      (bb-with-annotations (cons (bb-annotation2 '|QueryParam| (bb-object :|value| (bb-const (lower-camel name))))
                                                  (synth-all :annotation validators))
                                            pair
                                            :newline nil)
