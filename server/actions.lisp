@@ -14,8 +14,7 @@
      ,@actions))
 
 (defprim create-entity% (entity result bindings)
-  (:pretty () (list 'create-entity (list :entity entity :result result :bindings (synth-plist :pretty bindings))))
-  
+  (:pretty () (list 'create-entity (list :entity entity :result result :bindings (synth-plist :pretty bindings)))) 
   (:logic () (let* ((new-entity-name (gensym (symbol-name (synth :name entity)))) 
                     (new-entity (bb-dynamic new-entity-name)))
                (bb-list
@@ -95,8 +94,12 @@
 
 (defprim exec-query% (query result)
   (:pretty () (list 'exec-query (list :query (synth :pretty query) :result :result)))
-  (:logic () (bb-statement (bb-chain (bb-dynamic 'entity-manager)
-                                     (synth :call query)))))
+  (:logic () (bb-with-annotations 
+              (list (bb-annotation2 '|SuppressWarnings| (bb-const "unchecked")))
+              (bb-statement (bb-pair result (synth :type query)
+                                     :init (bb-chain (bb-dynamic 'entity-manager)
+                                                     (synth :call query)
+                                                     :as (synth :type query)))))))
 (defmacro exec-query (query)
   `(let ((result (gensym (symbol-name (synth :name ,query)))))
      (values (exec-query% ,query result) (expr:variab result))))
@@ -112,7 +115,6 @@
     `(bindall ,new-bindings
       (concat% ,@(mapcar #'car new-bindings)))))
 
-
 (defprim mu% (input command)
   (:pretty () (list 'mu (list :input input :command command)))
   (:logic () (bb-arrow (list (bb-dynamic input)) (synth :logic command)))
@@ -124,16 +126,26 @@
      (mu% ,input ,command)))
 
 
-(defprim mapcomm (command collection)
+(defprim mapcomm% (command result collection)
   (:pretty () (list 'mapcomm (list :command command :collection collection)))
-  (:logic () (bb-statement (bb-chain (synth :blub collection) 
-                                     (bb-call 'map (synth :logic command)))))
+  (:logic () (bb-statement
+              (bb-pair result (synth :type this)
+                       :init (bb-chain (bb-static 'arrays)
+                                       (bb-call 'stream (synth :blub collection))
+                                       (bb-call 'map (synth :logic command))
+                                       (bb-call 'to-array)
+                                       :as  (synth :type this)))))
   (:blub () (bb-chain (bb-static 'arrays)
                       (bb-call 'stream (synth :blub collection))
                       (bb-call 'map (synth :blub command))
                       (bb-call 'to-array)
                       :as (synth :type this)))
   (:type () (bb-array-type (synth :type command))))
+
+
+(defmacro mapcomm (command collection)
+  `(let ((result (gensym (symbol-name (symb (synth :name ,collection))))))
+     (values (mapcomm% ,command result ,collection) (expr:variab result))))
 
 (defprim fork (condition success failure)
   (:pretty () (list 'fork (list :condition condition :success success :failure failure)))
@@ -143,7 +155,9 @@
 
 (defprim create-transfer% (target result bindings)
   (:pretty () (list 'create-transfer (list :target target :result result :bindings (synth-plist :pretty bindings))))
-  (:logic () (let* ((new-class (symb (synth :name target) "-J-T-O")))
+  (:logic () (synth :blub this))
+  (:type () (bb-object-type (symb (synth :name target) "-J-T-O")))
+  (:blub () (let* ((new-class (symb (synth :name target) "-J-T-O")))
                (bb-list
                 (bb-statement (bb-pair result (bb-type new-class)
                                        :init (bb-new new-class)))
@@ -151,7 +165,8 @@
                  (lambda (binding)
                    (bb-statement (bb-chain (bb-dynamic result)
                                            (bb-call (symb "SET-" (car binding)) (synth :blub (cadr binding))))))
-                 bindings)))))
+                 bindings)
+                (bb-return (bb-dynamic result))))))
 
 (defmacro create-transfer (target &rest bindings)
   `(let ((result (gensym (symbol-name (symb (synth :name ,target) "-J-T-O")))))

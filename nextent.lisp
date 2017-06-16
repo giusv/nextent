@@ -24,7 +24,7 @@
                  (data:jsprop 'cities t (data:jsarray 'cities "aaa" city-format))))
 
 
-(data:defquery q (name) 
+(data:defquery q (name) trip-entity
   (data:with-queries ((tr (data:relation 'trips))
                       (ct (data:relation 'cities)))
     (data:project (data:restrict (data:product tr ct)
@@ -107,7 +107,22 @@
   (server:rest-collection 
    'trips
    (list (server:rest-get ((name (url:query-parameter 'name :string))) 
-                          (server:exec-query (q name))) 
+                          (server:concat
+                           (trip-list (server:exec-query (q name)))
+                           (ret (server:mapcomm 
+                                 (server:mu trip
+                                            (server:with-fields ((trip-name name)) trip
+                                              (server:create-transfer trip-format 
+                                                                      :name trip-name
+                                                                      :cities(server:mapcomm 
+                                                                                 (server:mu city
+                                                                                            (server:with-fields ((city-name name)) city
+                                                                                              (server:create-transfer city-format 
+                                                                                                                      :name city-name)))
+                                                                                 trip-list) )))
+                                 trip-list))
+                           ((server:respond :ok ret))
+                           )) 
          (server:rest-post% trip-format 
                             (server:with-fields ((trip-name name) (cities cities)) trip-format
                               (server:concat
@@ -138,8 +153,8 @@
   (pprint (pathname-name basedir)))
 
 (let* ((package '|it.bancaditalia.nextent|)
-       ;; (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
-       (basedir "D:/giusv/temp/nextent/")
+       (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
+       ;; (basedir "D:/giusv/temp/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
        (app-services (loop for value being the hash-values of server:*services* collect value))) 

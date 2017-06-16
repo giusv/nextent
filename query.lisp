@@ -55,30 +55,33 @@
 ;;                                     (expr:+true+))
 ;;                           'id 'name))))
 
-(defprim named-query (name template)
-  (:pretty () (list 'named-query (list :name name :template (synth :pretty template))))
+(defprim named-query (name entity template)
+  (:pretty () (list 'named-query (list :name name :entity (synth :pretty entity)
+                                       :template (synth :pretty template))))
   (:annotation () (bb-annotation2 '|NamedQuery|
                                   (bb-object :|name| (bb-const (mkstr name))
                                              :|query| (bb-const (synth :string (synth :sql template)))))))
 
-(defprim named-query-instance (name &rest args)
-  (:pretty () (list 'named-query (list :name name :args (synth-plist :pretty args))))
+(defprim named-query-instance (name entity &rest args)
+  (:pretty () (list 'named-query (list :name name :entity entity :args (synth-plist :pretty args))))
+  (:type () (bb-array-type (bb-object-type (synth :name entity))))
   (:call () (bb-chain (bb-call 'create-named-query (bb-const (mkstr name)))
                       (synth-plist-merge 
                        (lambda (arg)
                          (bb-call 'set-parameter (bb-const (mkstr (car arg))) (synth :call (cadr arg)))) 
                        args)
-                      (bb-call '|getResultList|))))
+                      (bb-call 'get-result-list)
+                      (bb-call 'to-array))))
 
 (defparameter *queries* (make-hash-table))
-(defmacro defquery (name args body)
+(defmacro defquery (name args entity body)
   `(progn (defun ,name ,args 
-            (named-query-instance ',name ,@(apply #'append (mapcar #`(,(keyw a1) ,a1) args))))
+            (named-query-instance ',name ,entity ,@(apply #'append (mapcar #`(,(keyw a1) ,a1) args))))
           ;; (defparameter ,(symb name "-TEMPLATE")
           ;;   (let ,(mapcar #`(,a1 (expr:param ',a1)) args)
           ;;     (named-query ',name ,body)))
           (defparameter ,name 
-            (named-query ',name 
+            (named-query ',name ,entity
                          (let ,(mapcar #`(,a1 (expr:param ',a1)) args)
                            ,body)))
           

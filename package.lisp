@@ -96,7 +96,7 @@
            :exec-query% :exec-query
            :find-entity% :find-entity
            :create-transfer% :create-transfer
-           :mu% :mu :mapcomm :fork
+           :mu% :mu :mapcomm% :mapcomm :fork
            :respond))
 
 

@@ -20,7 +20,10 @@
                          (doc:text "!~a"  (lower-camel exp))))
   (:string () (doc:text "~a!~a" (lower-camel (synth :name name)) (lower-camel exp)))
   (:template () (doc:text "{{~a.~a}}" (lower-camel name) (lower-camel exp)))
-  (:blub () (lang:bb-chain (lang:bb-dynamic (synth :name name)) (lang:bb-call (symb "GET-" exp))))
+  (:blub () (lang:bb-chain (lang:bb-dynamic (if (functionp name)
+                                                (synth :name name)
+                                                name)) 
+                           (lang:bb-call (symb "GET-" exp))))
   (:sql () (doc:hcat (doc:text "~a" (synth :name name)) (doc:text ".~a" exp))))
 
 (defprim value (exp)

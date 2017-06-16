@@ -108,7 +108,7 @@
                                                              mtypes)))))
                 (bb-method (doc:text "get~a" (upper-camel (synth :name chunk)))
                            (synth-all :declaration (append queries (synth :path-parameters path)) t)
-                           (bb-type 'response)
+                           (bb-object-type 'response)
                            (let* ((bean-name (symb bean "-BEAN")))
                              (with-lookup bean-name
                                (bb-statement (bb-chain (bb-dynamic bean-name)  
@@ -119,10 +119,9 @@
                 (bb-method (doc:text "retrieve~a" (upper-camel (synth :name chunk)))
                            (synth-all :declaration (append queries (synth :path-parameters path)))
                            (cond ((eq type 'single) 
-                                  (bb-type (symb (synth :name chunk) "-J-T-O")))
+                                  (bb-object-type (symb (synth :name chunk) "-J-T-O")))
                                  ((eq type 'collection) 
-                                  (bb-type 'list 
-                                           :template (bb-type (symb (singular (synth :name chunk)) "-J-T-O")))))
+                                  (bb-array-type (bb-object-type (symb (singular (synth :name chunk)) "-J-T-O")))))
                            (synth :logic action))))
 
 ;; (defmacro rest-get ((&rest queries) action &key mtypes)
