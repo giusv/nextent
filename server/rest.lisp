@@ -98,7 +98,7 @@
 (defprim rest-get% (queries action &key (mtypes (list '|application/json|)))
   (:pretty () (list 'rest-get (list :queries (synth-all :pretty queries) :action (synth :pretty action) :mtypes mtypes)))
   (:jax-method (bean path chunk) 
-               (bb-with-annotations ()
+               (bb-with-annotations
                 (list (bb-annotation2 '|GET|)
                       (bb-annotation2 '|Path| (bb-const (synth :string (synth :url path))))
                       (if mtypes 

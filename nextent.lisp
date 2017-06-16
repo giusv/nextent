@@ -106,7 +106,8 @@
 (defparameter trip-collection
   (server:rest-collection 
    'trips
-   (list (server:rest-get ((name (url:query-parameter 'name :string))) (server:empty)) 
+   (list (server:rest-get ((name (url:query-parameter 'name :string))) 
+                          (server:exec-query (q name))) 
          (server:rest-post% trip-format 
                             (server:with-fields ((trip-name name) (cities cities)) trip-format
                               (server:concat
@@ -137,8 +138,8 @@
   (pprint (pathname-name basedir)))
 
 (let* ((package '|it.bancaditalia.nextent|)
-       (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
-       ;; (basedir "D:/giusv/temp/nextent/")
+       ;; (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
+       (basedir "D:/giusv/temp/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
        (app-services (loop for value being the hash-values of server:*services* collect value))) 

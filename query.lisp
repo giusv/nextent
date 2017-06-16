@@ -66,7 +66,7 @@
   (:call () (bb-chain (bb-call 'create-named-query (bb-const (mkstr name)))
                       (synth-plist-merge 
                        (lambda (arg)
-                         (bb-call 'set-parameter (bb-const (mkstr (car arg))) (synth :blub (cadr arg)))) 
+                         (bb-call 'set-parameter (bb-const (mkstr (car arg))) (synth :call (cadr arg)))) 
                        args)
                       (bb-call '|getResultList|))))
 

@@ -90,10 +90,10 @@
   (:java () (hcat (synth :java type) 
                   (text "[]"))))
 
-;; (defprim bb-object-type (name)
-;;   (:pretty () (list 'bb-object-type (list :name name)))
-;;   (:typescript () (upper-camel name))
-;;   (:java () (textify (upper-camel name))))
+(defprim bb-object-type (name)
+  (:pretty () (list 'bb-object-type (list :name name)))
+  (:typescript () (upper-camel name))
+  (:java () (textify (upper-camel name))))
 
 (defprim bb-type (name &key primitive array template)
   (:pretty () (list 'bb-type (list :name name :primitive primitive :array array :template template)))
