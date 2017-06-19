@@ -24,6 +24,15 @@
                  (data:jsprop 'cities t (data:jsarray 'cities "aaa" city-format))))
 
 
+(data:defent trip-entity
+    (data:entity 'trip
+                 :primary (data:attribute 'id (data:atype :integer))
+                 :fields (list (data:attribute 'name (data:atype :string :size 20))
+                               (data:attribute 'when (data:atype :string :size 20)))))
+
+;; (synth :output (synth :sql (q (expr:const "name"))) 0)
+;; (synth :output (synth :java (synth :annotation q)) 0)
+;; (synth :output (synth :java (synth :call (q (expr:const 1)))) 0)
 (data:defquery q (name) trip-entity
   (data:with-queries ((tr (data:relation 'trips))
                       (ct (data:relation 'cities)))
@@ -34,15 +43,6 @@
                                   (expr:+equal+ (expr:attr tr 'name)
                                                 name))))))
 
-;; (synth :output (synth :sql (q (expr:const "name"))) 0)
-;; (synth :output (synth :java (synth :annotation q)) 0)
-;; (synth :output (synth :java (synth :call (q (expr:const 1)))) 0)
-(data:defent trip-entity
-    (data:entity 'trip
-                 :primary (data:attribute 'id (data:atype :integer))
-                 :fields (list (data:attribute 'name (data:atype :string :size 20))
-                               (data:attribute 'when (data:atype :string :size 20)))
-                 :queries (list q)))
 
 (data:defent city-entity
     (data:entity 'city 
@@ -153,8 +153,8 @@
   (pprint (pathname-name basedir)))
 
 (let* ((package '|it.bancaditalia.nextent|)
-       (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
-       ;; (basedir "D:/giusv/temp/nextent/")
+       ;; (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
+       (basedir "D:/giusv/temp/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
        (app-services (loop for value being the hash-values of server:*services* collect value))) 

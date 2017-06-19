@@ -58,13 +58,17 @@
      ;; (pprint (eq  (synth :name (synth :owner rel)) (synth :name entity)))
      collect (if (eq (synth :name (synth :subordinate rel)) (synth :name entity)) rel)))
 
-
-(defprim entity (name &key desc primary fields queries)
+(defun get-queries (entity)
+  (loop for q being the hash-values of *queries*
+     do (pprint (synth :name (synth :entity q)))
+       (pprint (synth :name entity))
+       (pprint (eq (synth :name (synth :entity q)) (synth :name entity)))
+     collect (if (eq (synth :name (synth :entity q)) (synth :name entity)) q)))
+(defprim entity (name &key desc primary fields)
   (:pretty () (list 'entity :name name
                     :desc desc
                     :primary (synth :pretty primary)
-                    :fields (synth-all :pretty fields)
-                    :queries (synth-all :pretty queries)))
+                    :fields (synth-all :pretty fields)))
   (:entity (package) (bb-unit name
                               (bb-package (symb package '|.model|))
                               (bb-import '|javax.persistence| '|Column| '|Entity| '|Id| '|Table| '|ManyToOne| '|OneToMany| '|OneToOne| '|ManyToMany| '|NamedQueries| '|NamedQuery|)
@@ -74,8 +78,9 @@
                                 (bb-annotation2 '|SuppressWarnings| (bb-const "unused"))
                                 (bb-annotation2 '|Entity|)
                                 (bb-annotation2 '|Table| (bb-object :|name| (bb-const (mkstr name))))
-                                (if queries (bb-annotation2 '|NamedQueries| 
-                                                           (apply #'bb-array (synth-all :annotation queries)))))
+                                (aif (get-queries this)
+                                     (bb-annotation2 '|NamedQueries| 
+                                                     (apply #'bb-array (synth-all :annotation it)))))
                                (bb-class name
                                          :public t
                                          :fields (append*
@@ -97,8 +102,8 @@
                                                              (bb-type name)))))
   (:ddl () (doc:vcat (doc:text "CREATE TABLE ~a" name)
                      (doc:parens (doc:nest 4 (apply #'doc:punctuate (doc:comma) t (synth-all :ddl (remove nil (append* (primary-key primary) fields
-                                                                                                                           (synth-all :target-foreign-key (get-sources this))
-                                                                                                                           (synth-all :source-foreign-key (get-targets this))))))) :newline t))))
+                                                                                                                       (synth-all :target-foreign-key (get-sources this))
+                                                                                                                       (synth-all :source-foreign-key (get-targets this))))))) :newline t))))
 
 (defun stuff (annotations name type)
   (bb-list (bb-with-annotations annotations
