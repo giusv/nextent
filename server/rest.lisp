@@ -1,5 +1,10 @@
 (in-package :server)
 
+(defparameter *resources* (make-hash-table))
+(defmacro defresource (name resource)
+  `(progn (defparameter ,name ,resource) 
+         (setf (gethash ',name *resources*) ,name)))
+
 (defparameter *services* (make-hash-table))
 (defmacro defservice (name service)
   `(progn (defparameter ,name ,service) 

@@ -132,7 +132,7 @@
               (bb-pair result (synth :type this)
                        :init (bb-chain (bb-static 'arrays)
                                        (bb-call 'stream (synth :blub collection))
-                                       (bb-call 'map (synth :logic command))
+                                       (bb-call 'map (synth :blub command))
                                        (bb-call 'to-array)
                                        :as  (synth :type this)))))
   (:blub () (bb-chain (bb-static 'arrays)
@@ -155,9 +155,7 @@
 
 (defprim create-transfer% (target result bindings)
   (:pretty () (list 'create-transfer (list :target target :result result :bindings (synth-plist :pretty bindings))))
-  (:logic () (synth :blub this))
-  (:type () (bb-object-type (symb (synth :name target) "-J-T-O")))
-  (:blub () (let* ((new-class (symb (synth :name target) "-J-T-O")))
+  (:logic () (let* ((new-class (symb (synth :name target) "-J-T-O")))
                (bb-list
                 (bb-statement (bb-pair result (bb-type new-class)
                                        :init (bb-new new-class)))
@@ -166,7 +164,11 @@
                    (bb-statement (bb-chain (bb-dynamic result)
                                            (bb-call (symb "SET-" (car binding)) (synth :blub (cadr binding))))))
                  bindings)
-                (bb-return (bb-dynamic result))))))
+                )))
+  (:type () (bb-object-type (symb (synth :name target) "-J-T-O")))
+  (:blub () (bb-list 
+             (synth :logic this)
+             (bb-return (bb-dynamic result)))))
 
 (defmacro create-transfer (target &rest bindings)
   `(let ((result (gensym (symbol-name (symb (synth :name ,target) "-J-T-O")))))

@@ -13,12 +13,11 @@
 
 (defprim attribute (name type &optional desc)
   (:pretty () (list 'attribute (list :name name :type (synth :pretty type) :desc desc))) 
-  (:entity (&rest annotations) (progn (pprint annotations)
-                                      (bb-with-annotations 
-                                       (cons (bb-annotation2 '|Column| (bb-object :|name| (bb-const (mkstr name))))
-                                             annotations)
-                                       (bb-statement (bb-pair name (synth :entity type) :private t))
-                                       :newline t)))
+  (:entity (&rest annotations) (bb-with-annotations 
+                                (cons (bb-annotation2 '|Column| (bb-object :|name| (bb-const (mkstr name))))
+                                      annotations)
+                                (bb-statement (bb-pair name (synth :entity type) :private t))
+                                :newline t))
   (:accessors () (list (bb-method (doc:text "get~a" (upper-camel name)) nil (synth :entity type)
                                   (bb-return (bb-dynamic name)))
                        (bb-method (doc:text "set~a" (upper-camel name)) (list (bb-pair name (synth :entity type))) (bb-type :void)
@@ -60,9 +59,10 @@
 
 (defun get-queries (entity)
   (loop for q being the hash-values of *queries*
-     do (pprint (synth :name (synth :entity q)))
-       (pprint (synth :name entity))
-       (pprint (eq (synth :name (synth :entity q)) (synth :name entity)))
+     ;; do (pprint (synth :name (synth :entity q)))
+       ;; (pprint (synth :pretty q))
+       ;; (pprint (synth :name entity))
+       ;; (pprint (eq (synth :name (synth :entity q)) (synth :name entity)))
      collect (if (eq (synth :name (synth :entity q)) (synth :name entity)) q)))
 (defprim entity (name &key desc primary fields)
   (:pretty () (list 'entity :name name

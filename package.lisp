@@ -80,7 +80,9 @@
 
 (defpackage :server
   (:use :cl :lol :utils :grammar :lang)
-  (:export :defservice
+  (:export :defresource
+           :*resources*
+           :defservice
            :*services*
            :rest-service 
            :rest-collection

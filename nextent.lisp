@@ -2,159 +2,117 @@
 
 (in-package :nextent)
 
-(defun to-string (x)
-  (synth :string (synth :doc (synth :typescript x))))
+(data:deformat parameter-format
+    (data:jsobject 'formato-parametro "Formato DATA:JSON del valore di un parametro relativo a un indicatore"
+              (data:jsprop 'id-parametro nil (data:jsstring 'id-parametro "Identificativo univoco del parametro"))
+              (data:jsprop 'nome t (data:jsstring 'nome "Nome"))
+              (data:jsprop 'valore t (data:jsstring 'valore "Valore"))))
 
-(defun process (name code) 
-  ;; (format t "~%~%~a~%--------------------------------------------------~%~%~a~%--------------------------------------------------~%" name (to-string code))
-  (write-file name (to-string code)))
+(data:deformat indicator-format 
+    (data:jsobject 'formato-indicatore "Formato DATA:JSON di un indicatore dinamico"
+              (data:jsprop 'nome t (data:jsstring 'nome "Nome indicatore"))
+              (data:jsprop 'codice t (data:jsstring 'codice "Codice sorgente"))
+              (data:jsprop 'data-inizio t (data:jsstring 'data-inizio "Data inizio validit&agrave;"))
+              (data:jsprop 'parametri t (data::jsarray 'nome "aaa" parameter-format))))
 
-(data:deformat place-format
-  (data:jsobject 'place "aaa"
-                 (data:jsprop 'name t (data:jsstring 'name "aaa"))))
-
-(data:deformat city-format
-  (data:jsobject 'city "aaa"
-                 (data:jsprop 'name t (data:jsstring 'name "aaa"))
-                 (data:jsprop 'places t (data:jsarray 'places "aaa" place-format))))
-
-(data:deformat trip-format
-  (data:jsobject 'trip "aaa"
-                 (data:jsprop 'name t (data:jsstring 'name "aaa"))
-                 (data:jsprop 'cities t (data:jsarray 'cities "aaa" city-format))))
-
-
-(data:defent trip-entity
-    (data:entity 'trip
-                 :primary (data:attribute 'id (data:atype :integer))
-                 :fields (list (data:attribute 'name (data:atype :string :size 20))
-                               (data:attribute 'when (data:atype :string :size 20)))))
-
-;; (synth :output (synth :sql (q (expr:const "name"))) 0)
-;; (synth :output (synth :java (synth :annotation q)) 0)
-;; (synth :output (synth :java (synth :call (q (expr:const 1)))) 0)
-(data:defquery q (name) trip-entity
-  (data:with-queries ((tr (data:relation 'trips))
-                      (ct (data:relation 'cities)))
-    (data:project (data:restrict (data:product tr ct)
-                                 (expr:+and+ 
-                                  (expr:+equal+ (expr:attr tr 'id)
-                                                (expr:attr ct 'id))
-                                  (expr:+equal+ (expr:attr tr 'name)
-                                                name))))))
+(data:defent indicator-entity
+    (data:entity 'indicatore 
+                 :primary (data:attribute 'id-indicatore (data:atype :integer))
+                 :fields (list (data:attribute 'nome (data:atype :string :size 20) "Nome dell'indicatore")
+                               (data:attribute 'codice-sorgente (data:atype :string :size 200)
+                                               "Codice sorgente scritto dall'utente")
+                               (data:attribute 'codice-oggetto (data:atype :string :size 200) 
+                                               "Codice oggetto prodotto dal compilatore")
+                               (data:attribute 'data-inizio (data:atype :string :size 8)
+                                               "Data inizio validita"))))
 
 
-(data:defent city-entity
-    (data:entity 'city 
-                 :primary (data:attribute 'id (data:atype :integer))
-                 :fields (list (data:attribute 'name (data:atype :string :size 20)))))
+(data:defent parameter-entity
+    (data:entity 'parametro
+                 :primary (data:attribute 'id-parametro (data:atype :integer))
+                 :fields (list (data:attribute 'nome (data:atype :string :size 20) 
+                                               "Nome del parametro")
+                               (data:attribute 'valore (data:atype :string :size 20) 
+                                               "Valore del parametro"))))
 
-(data:defent place-entity
-    (data:entity 'place 
-                 :primary (data:attribute 'id (data:atype :integer))
-                 :fields (list (data:attribute 'name (data:atype :string :size 20))
-                               (data:attribute 'sights (data:atype :string :size 20)))))
+(data:defrel indicator-parameters
+    (data:relationship 'parametri-indicatore indicator-entity parameter-entity :one-to-many))
 
-(data:defrel trip-city
-    (data:relationship 'trip-city trip-entity city-entity :one-to-many))
 
-(data:defrel city-place
-    (data:relationship 'city-place city-entity place-entity :one-to-many))
-
-(defparameter place-item
-  (server:rest-item 'place ((place (url:path-parameter 'place :integer))) 
+(server:defresource indicator-item
+  (server:rest-item 'indicator ((indicator (url:path-parameter 'indicator :integer))) 
                     (list 
                      (server:rest-get () 
                                       (server:concat
-                                       (inst (server:find-entity place-entity place)) 
-                                       ((server:fork (expr:+null+ inst)
-                                                     (server:respond :not-found)
-                                                     (server:concat 
-                                                      (ret (server:with-fields ((name name)) inst
-                                                             (server:create-transfer place-format 
-                                                                                     :name name))) 
-                                                      ((server:respond :ok ret)))))))
-                     (server:rest-put place-format 
+                                       (inst (server:find-entity indicator-entity indicator))
+                                       (ret (server:with-fields ((nome nome)
+                                                                 (codice codice-sorgente)
+                                                                 (data-inizio data-inizio)) inst
+                                              (server:create-transfer indicator-format 
+                                                                      :nome nome
+                                                                      :codice codice
+                                                                      :data-inizio data-inizio))) 
+                                       ((server:respond :ok ret))))
+                     (server:rest-put indicator-format 
                                       (server:concat
-                                       (ret (server:with-fields ((place-name name)) place-format
-                                              (server:update-entity place-entity
-                                                                    place
-                                                                    :name place-name))) 
-                                       ((server:respond :no-content)))))))
+                                       (ret (server:with-fields ((nome nome)
+                                                                 (codice codice-sorgente)
+                                                                 (data-inizio data-inizio)) indicator-format
+                                              (server:update-entity indicator-entity
+                                                                    :nome nome
+                                                                    :codice codice
+                                                                    :data-inizio data-inizio))) 
+                                       ((server:respond :no-content)))))
+                    ;; parameters-collection
+                    ))
 
-(defparameter place-collection 
-  (server:rest-collection 'places (list (server:rest-get () (server:empty)) (server:rest-post place-format nil (server:empty))) place-item))
+(server:defresource indicators-collection
+  (server:rest-collection 'indicators
+                    (list 
+                     (server:rest-get () 
+                                      (server:empty))
+                     (server:rest-post% indicator-format 
+                                      (server:concat
+                                       (ret (server:with-fields ((nome nome)
+                                                                 (codice codice-sorgente)
+                                                                 (data-inizio data-inizio)) indicator-format
+                                              (server:create-entity indicator-entity
+                                                                    :nome nome
+                                                                    :codice codice
+                                                                    :data-inizio data-inizio))) 
+                                       ((server:respond :created)))))
+                    indicator-item))
 
-(defparameter city-item
-  (server:rest-item 'city  ((city (url:path-parameter 'city :integer)))
-                    (list (server:rest-get () (server:empty)) 
-                          (server:rest-put city-format (server:empty)))
-                    place-collection))
+;; (defparameter parameters-collection
+;;   (server:rest-collection 'parameters
+;;                          (list 
+;;                           (server:rest-put (data:jsarray 'parameter-array "aaa" parameter-format)
+;;                                            (server:concat
+;;                                             (server:mapcomm 
+;;                                              (server:mu param
+;;                                                         (server:with-fields ((nome nome)
+;;                                                                              (valore valore)) param
+;;                                                           (server:create-entity 
+;;                                                                 parameter-entity
+;;                                                                 :nome nome
+;;                                                                 :valore valore)))
+;;                                              trip-list)
+;;                                             (ret (server:with-fields ((nome nome)
+;;                                                                       (codice codice-sorgente)
+;;                                                                       (data-inizio data-inizio)) inst
+;;                                                    (server:update-entity indicator-format 
+;;                                                                          :nome nome
+;;                                                                          :codice codice
+;;                                                                          :data-inizio data-inizio))) 
+;;                                             ((server:respond :no-content)))))
+;;                          parameter-item))
 
-(defparameter city-collection 
-  (server:rest-collection 'cities  (list (server:rest-get ((city (url:query-parameter 'city :integer :validators (list (validator:required))))) (server:empty)) 
-                                         (server:rest-post city-format nil (server:empty)))
-                          city-item))
 
-(defparameter trip-item 
-  (server:rest-item 'trip ((trip (url:path-parameter 'trip :integer))) 
-                    (list (server:rest-get () (server:empty)) 
-                          (server:rest-put trip-format
-                                           (server:empty))) 
-                    city-collection))
-
-(defparameter trip-collection
-  (server:rest-collection 
-   'trips
-   (list (server:rest-get ((name (url:query-parameter 'name :string))) 
-                          (server:concat
-                           (trip-list (server:exec-query (q name)))
-                           (ret (server:mapcomm 
-                                 (server:mu trip
-                                            (server:with-fields ((trip-name name)) trip
-                                              (server:create-transfer trip-format 
-                                                                      :name trip-name
-                                                                      :cities(server:mapcomm 
-                                                                                 (server:mu city
-                                                                                            (server:with-fields ((city-name name)) city
-                                                                                              (server:create-transfer city-format 
-                                                                                                                      :name city-name)))
-                                                                                 trip-list) )))
-                                 trip-list))
-                           ((server:respond :ok ret))
-                           )) 
-         (server:rest-post% trip-format 
-                            (server:with-fields ((trip-name name) (cities cities)) trip-format
-                              (server:concat
-                               (inst (server:create-entity 
-                                      trip-entity
-                                      :name trip-name
-                                      :city-list (server:mapcomm 
-                                                  (server:mu city
-                                                             (server:with-fields ((city-name name) (places places)) city-format
-                                                               (server:create-entity 
-                                                                city-entity
-                                                                :name city-name
-                                                                :place-list (server:mapcomm 
-                                                                             (server:mu place
-                                                                                        (server:with-fields ((place-name name) (places places)) place-format
-                                                                                          (server:create-entity 
-                                                                                           place-entity
-                                                                                           :name place-name)))
-                                                                             places))))
-                                                  cities)))))))
-   trip-item))
-(server:defservice server (server:rest-service 'trip-service (url:void) trip-collection))
-
-(let* ((package '|it-bancaditalia-nextent|)
-       (basedir (pathname "D:/Dati/Profili/m026980/workspace/nextent/src/main/java")) 
-       ;; ((glue '|it-bancaditalia-nextent| "/"))
-       )
-  (pprint (pathname-name basedir)))
+(server:defservice server (server:rest-service 'indicator-service (url:void) indicators-collection))
 
 (let* ((package '|it.bancaditalia.nextent|)
-       ;; (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
-       (basedir "D:/giusv/temp/nextent/")
+       (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
+       ;; (basedir "D:/giusv/temp/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
        (app-services (loop for value being the hash-values of server:*services* collect value))) 
@@ -189,6 +147,13 @@
           app-services))
 
 
+
+;; (defun to-string (x)
+;;   (synth :string (synth :doc (synth :typescript x))))
+
+;; (defun process (name code) 
+;;   ;; (format t "~%~%~a~%--------------------------------------------------~%~%~a~%--------------------------------------------------~%" name (to-string code))
+;;   (write-file name (to-string code)))
 
 
 ;; (pprint (synth-all :pretty (synth :source (car (data::get-sources trip-entity)))))

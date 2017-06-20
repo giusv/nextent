@@ -85,7 +85,7 @@
                          (let ,(mapcar #`(,a1 (expr:param ',a1)) args)
                            ,body)))
           
-          (setf (gethash ',name *queries*) (symbol-function ',name))))
+          (setf (gethash ',name *queries*) ,name)))
 
 
 
