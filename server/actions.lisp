@@ -86,7 +86,8 @@
   (:logic () (bb-statement (bb-pair result (bb-type (synth :name entity)) 
                                     :init (bb-chain (bb-dynamic 'entity-manager)
                                                     (bb-call 'find (bb-chain (bb-static (synth :name entity)) (bb-dynamic 'class)) 
-                                                             (synth :call id)))))))
+                                                             (synth :call id))))))
+  (:type () (bb-object-type (synth :name entity))))
 
 (defmacro find-entity (entity id)
   `(let ((result (gensym (symbol-name (synth :name ,entity)))))
@@ -99,14 +100,16 @@
               (bb-statement (bb-pair result (synth :type query)
                                      :init (bb-chain (bb-dynamic 'entity-manager)
                                                      (synth :call query)
-                                                     :as (synth :type query)))))))
+                                                     :as (synth :type query))))))
+  (:type () (synth :type query)))
 (defmacro exec-query (query)
   `(let ((result (gensym (symbol-name (synth :name ,query)))))
      (values (exec-query% ,query result) (expr:variab result))))
 
 (defprim concat% (&rest actions)
   (:pretty () (list 'concat (synth-all :pretty actions)))
-  (:logic () (bb-list (synth-all :logic actions))))
+  (:logic () (bb-list (synth-all :logic actions)))
+  (:type () (synth :type (car (last actions)))))
 
 (defmacro concat (&rest bindings)
   (let ((new-bindings (mapcar #'(lambda (binding)

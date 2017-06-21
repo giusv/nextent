@@ -3,40 +3,40 @@
 (in-package :nextent)
 
 (data:deformat parameter-format
-    (data:jsobject 'formato-parametro "Formato DATA:JSON del valore di un parametro relativo a un indicatore"
-              (data:jsprop 'id-parametro nil (data:jsstring 'id-parametro "Identificativo univoco del parametro"))
-              (data:jsprop 'nome t (data:jsstring 'nome "Nome"))
-              (data:jsprop 'valore t (data:jsstring 'valore "Valore"))))
+    (data:jsobject 'parameter "Formato DATA:JSON del valore di un parametro relativo a un indicatore"
+              (data:jsprop 'parameter-id nil (data:jsstring 'id-parameter "Identificativo univoco del parametro"))
+              (data:jsprop 'name t (data:jsstring 'name "Name"))
+              (data:jsprop 'value t (data:jsstring 'value "Valore"))))
 
 (data:deformat indicator-format 
-    (data:jsobject 'formato-indicatore "Formato DATA:JSON di un indicatore dinamico"
-              (data:jsprop 'nome t (data:jsstring 'nome "Nome indicatore"))
-              (data:jsprop 'codice t (data:jsstring 'codice "Codice sorgente"))
-              (data:jsprop 'data-inizio t (data:jsstring 'data-inizio "Data inizio validit&agrave;"))
-              (data:jsprop 'parametri t (data::jsarray 'nome "aaa" parameter-format))))
+    (data:jsobject 'indicator "Formato DATA:JSON di un indicatore dinamico"
+              (data:jsprop 'name t (data:jsstring 'name "Nome indicatore"))
+              (data:jsprop 'source-code t (data:jsstring 'code "Codice sorgente"))
+              (data:jsprop 'start-date t (data:jsstring 'start-date "Data inizio validit&agrave;"))
+              (data:jsprop 'parameters t (data::jsarray 'name "aaa" parameter-format))))
 
 (data:defent indicator-entity
-    (data:entity 'indicatore 
-                 :primary (data:attribute 'id-indicatore (data:atype :integer))
-                 :fields (list (data:attribute 'nome (data:atype :string :size 20) "Nome dell'indicatore")
-                               (data:attribute 'codice-sorgente (data:atype :string :size 200)
+    (data:entity 'indicator 
+                 :primary (data:attribute 'indicator-id (data:atype :integer))
+                 :fields (list (data:attribute 'name (data:atype :string :size 20) "Nome dell'indicatore")
+                               (data:attribute 'source-code (data:atype :string :size 200)
                                                "Codice sorgente scritto dall'utente")
-                               (data:attribute 'codice-oggetto (data:atype :string :size 200) 
+                               (data:attribute 'object-code (data:atype :string :size 200) 
                                                "Codice oggetto prodotto dal compilatore")
-                               (data:attribute 'data-inizio (data:atype :string :size 8)
+                               (data:attribute 'start-date (data:atype :string :size 8)
                                                "Data inizio validita"))))
 
 
 (data:defent parameter-entity
-    (data:entity 'parametro
-                 :primary (data:attribute 'id-parametro (data:atype :integer))
-                 :fields (list (data:attribute 'nome (data:atype :string :size 20) 
-                                               "Nome del parametro")
-                               (data:attribute 'valore (data:atype :string :size 20) 
+    (data:entity 'parameter
+                 :primary (data:attribute 'parameter-id (data:atype :integer))
+                 :fields (list (data:attribute 'name (data:atype :string :size 20) 
+                                               "Name del parametro")
+                               (data:attribute 'value (data:atype :string :size 20) 
                                                "Valore del parametro"))))
 
 (data:defrel indicator-parameters
-    (data:relationship 'parametri-indicatore indicator-entity parameter-entity :one-to-many))
+    (data:relationship 'parameters-indicator indicator-entity parameter-entity :one-to-many))
 
 
 (server:defresource indicator-item
@@ -45,61 +45,94 @@
                        (server:rest-get () 
                                         (server:concat
                                          (inst (server:find-entity indicator-entity indicator))
-                                         (ret (server:with-fields ((nome nome)
-                                                                   (codice codice-sorgente)
-                                                                   (data-inizio data-inizio)
-                                                                   (parametri parametro-list)) inst
+                                         (ret (server:with-fields ((name name)
+                                                                   (code source-code)
+                                                                   (start-date start-date)
+                                                                   (parameters parameter-list)) inst
                                                 (server:create-transfer indicator-format 
-                                                                        :nome nome
-                                                                        :codice codice
-                                                                        :data-inizio data-inizio
-                                                                        :parametri (server:mapcomm 
+                                                                        :name name
+                                                                        :source-code code
+                                                                        :start-date start-date
+                                                                        :parameters (server:mapcomm 
                                                                                     (server:mu parameter
-                                                                                               (server:with-fields ((parameter-name name) (parameter-value)) parameter
-                                                                                                 (server:create-entity 
-                                                                                                  parameter-entity
-                                                                                                  :nome parameter-name
-                                                                                                  :valore parameter-value)))
-                                                                                    parametri)))) 
+                                                                                               (server:with-fields ((parameter-name name) (parameter-value value)) parameter
+                                                                                                 (server:create-transfer parameter-format 
+                                                                                                  :name parameter-name
+                                                                                                  :value parameter-value)))
+                                                                                    parameters)))) 
                                          ((server:respond :ok ret))))
                        (server:rest-put indicator-format 
                                         (server:concat
-                                         ((server:with-fields ((nome nome)
-                                                               (codice codice-sorgente)
-                                                               (data-inizio data-inizio)
-                                                               (parametri parametro-list)) indicator-format
+                                         ((server:with-fields ((name name)
+                                                               (code source-code)
+                                                               (start-date start-date)
+                                                               (parameters parameters)) indicator-format
                                             (server:update-entity indicator-entity indicator
-                                                                  :nome nome
-                                                                  :codice codice
-                                                                  :data-inizio data-inizio
-                                                                  :parametri (server:mapcomm 
+                                                                  :name name
+                                                                  :source-code code
+                                                                  :start-date start-date
+                                                                  :parameter-list (server:mapcomm 
                                                                               (server:mu parameter
-                                                                                         (server:with-fields ((parameter-name name) (parameter-value)) parameter
+                                                                                         (server:with-fields ((parameter-name name) (parameter-value value)) parameter
                                                                                            (server:create-entity 
                                                                                             parameter-entity
-                                                                                            :nome parameter-name
-                                                                                            :valore parameter-value)))
-                                                                              parametri))))
+                                                                                            :name parameter-name
+                                                                                            :value parameter-value)))
+                                                                              parameters))))
                                          ((server:respond :no-content)))))
                       ;; parameters-collection
                       ))
+(data:defquery indicator-by-name (name) indicator-entity
+  (data:with-queries ((inds (data:relation 'indicators))
+                      (pars (data:relation 'parameters)))
+    (data:project (data:restrict (data:product inds pars)
+                                 (expr:+and+ 
+                                  (expr:+equal+ (expr:attr inds 'id)
+                                                (expr:attr pars 'id))
+                                  (expr:+equal+ (expr:attr inds 'name)
+                                                name))))))
+(data:defquery all-indicators () indicator-entity
+  (data:with-queries ((inds (data:relation 'indicators)))
+    (data:project inds)))
 
 (server:defresource indicators-collection
-  (server:rest-collection 'indicators
-                    (list 
-                     (server:rest-get () 
-                                      (server:empty))
-                     (server:rest-post% indicator-format 
-                                      (server:concat
-                                       (ret (server:with-fields ((nome nome)
-                                                                 (codice codice-sorgente)
-                                                                 (data-inizio data-inizio)) indicator-format
-                                              (server:create-entity indicator-entity
-                                                                    :nome nome
-                                                                    :codice codice
-                                                                    :data-inizio data-inizio))) 
-                                       ((server:respond :created)))))
-                    indicator-item))
+    (server:rest-collection 
+     'indicators
+     (list 
+      (server:rest-get 
+       () 
+       (server:concat
+        (indicator-list (server:exec-query (all-indicators)))
+        (ret (server:mapcomm 
+              (server:mu indicator
+                         (server:with-fields ((name name)
+                                              (code source-code)
+                                              (start-date start-date)
+                                              (parameters parameter-list)) indicator
+                           (server:create-transfer indicator-format 
+                                                   :name name
+                                                   :source-code code
+                                                   :start-date start-date
+                                                   :parameters (server:mapcomm 
+                                                                (server:mu parameter
+                                                                           (server:with-fields ((parameter-name name) (parameter-value value)) parameter
+                                                                             (server:create-transfer parameter-format 
+                                                                                                     :name parameter-name
+                                                                                                     :value parameter-value)))
+                                                                parameters))))
+              indicator-list))
+        ((server:respond :ok ret))))
+      (server:rest-post% indicator-format 
+                         (server:concat
+                          (ret (server:with-fields ((name name)
+                                                    (code source-code)
+                                                    (start-date start-date)) indicator-format
+                                 (server:create-entity indicator-entity
+                                                       :name name
+                                                       :source-code code
+                                                       :start-date start-date))) 
+                          ((server:respond :created)))))
+     indicator-item))
 
 ;; (defparameter parameters-collection
 ;;   (server:rest-collection 'parameters
@@ -108,20 +141,20 @@
 ;;                                            (server:concat
 ;;                                             (server:mapcomm 
 ;;                                              (server:mu param
-;;                                                         (server:with-fields ((nome nome)
-;;                                                                              (valore valore)) param
+;;                                                         (server:with-fields ((name name)
+;;                                                                              (value value)) param
 ;;                                                           (server:create-entity 
 ;;                                                                 parameter-entity
-;;                                                                 :nome nome
-;;                                                                 :valore valore)))
+;;                                                                 :name name
+;;                                                                 :value value)))
 ;;                                              trip-list)
-;;                                             (ret (server:with-fields ((nome nome)
-;;                                                                       (codice codice-sorgente)
-;;                                                                       (data-inizio data-inizio)) inst
+;;                                             (ret (server:with-fields ((name name)
+;;                                                                       (code source-code)
+;;                                                                       (start-date start-date)) inst
 ;;                                                    (server:update-entity indicator-format 
-;;                                                                          :nome nome
-;;                                                                          :codice codice
-;;                                                                          :data-inizio data-inizio))) 
+;;                                                                          :name name
+;;                                                                          :code code
+;;                                                                          :start-date start-date))) 
 ;;                                             ((server:respond :no-content)))))
 ;;                          parameter-item))
 
@@ -129,8 +162,8 @@
 (server:defservice server (server:rest-service 'indicator-service (url:void) indicators-collection))
 
 (let* ((package '|it.bancaditalia.nextent|)
-       ;; (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
-       (basedir "D:/giusv/temp/nextent/")
+       (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
+       ;; (basedir "D:/giusv/temp/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
        (app-services (loop for value being the hash-values of server:*services* collect value))) 
