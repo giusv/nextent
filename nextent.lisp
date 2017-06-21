@@ -40,31 +40,49 @@
 
 
 (server:defresource indicator-item
-  (server:rest-item 'indicator ((indicator (url:path-parameter 'indicator :integer))) 
-                    (list 
-                     (server:rest-get () 
-                                      (server:concat
-                                       (inst (server:find-entity indicator-entity indicator))
-                                       (ret (server:with-fields ((nome nome)
-                                                                 (codice codice-sorgente)
-                                                                 (data-inizio data-inizio)) inst
-                                              (server:create-transfer indicator-format 
-                                                                      :nome nome
-                                                                      :codice codice
-                                                                      :data-inizio data-inizio))) 
-                                       ((server:respond :ok ret))))
-                     (server:rest-put indicator-format 
-                                      (server:concat
-                                       (ret (server:with-fields ((nome nome)
-                                                                 (codice codice-sorgente)
-                                                                 (data-inizio data-inizio)) indicator-format
-                                              (server:update-entity indicator-entity
-                                                                    :nome nome
-                                                                    :codice codice
-                                                                    :data-inizio data-inizio))) 
-                                       ((server:respond :no-content)))))
-                    ;; parameters-collection
-                    ))
+    (server:rest-item 'indicator ((indicator (url:path-parameter 'indicator :integer))) 
+                      (list 
+                       (server:rest-get () 
+                                        (server:concat
+                                         (inst (server:find-entity indicator-entity indicator))
+                                         (ret (server:with-fields ((nome nome)
+                                                                   (codice codice-sorgente)
+                                                                   (data-inizio data-inizio)
+                                                                   (parametri parametro-list)) inst
+                                                (server:create-transfer indicator-format 
+                                                                        :nome nome
+                                                                        :codice codice
+                                                                        :data-inizio data-inizio
+                                                                        :parametri (server:mapcomm 
+                                                                                    (server:mu parameter
+                                                                                               (server:with-fields ((parameter-name name) (parameter-value)) parameter
+                                                                                                 (server:create-entity 
+                                                                                                  parameter-entity
+                                                                                                  :nome parameter-name
+                                                                                                  :valore parameter-value)))
+                                                                                    parametri)))) 
+                                         ((server:respond :ok ret))))
+                       (server:rest-put indicator-format 
+                                        (server:concat
+                                         ((server:with-fields ((nome nome)
+                                                               (codice codice-sorgente)
+                                                               (data-inizio data-inizio)
+                                                               (parametri parametro-list)) indicator-format
+                                            (server:update-entity indicator-entity indicator
+                                                                  :nome nome
+                                                                  :codice codice
+                                                                  :data-inizio data-inizio
+                                                                  :parametri (server:mapcomm 
+                                                                              (server:mu parameter
+                                                                                         (server:with-fields ((parameter-name name) (parameter-value)) parameter
+                                                                                           (server:create-entity 
+                                                                                            parameter-entity
+                                                                                            :nome parameter-name
+                                                                                            :valore parameter-value)))
+                                                                              parametri))))
+                                         ((server:respond :no-content)))))
+                      ;; parameters-collection
+                      ))
 
 (server:defresource indicators-collection
   (server:rest-collection 'indicators
@@ -111,8 +129,8 @@
 (server:defservice server (server:rest-service 'indicator-service (url:void) indicators-collection))
 
 (let* ((package '|it.bancaditalia.nextent|)
-       (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
-       ;; (basedir "D:/giusv/temp/nextent/")
+       ;; (basedir "D:/Dati/Profili/m026980/workspace/nextent/src/main/java/it/bancaditalia/nextent/")
+       (basedir "D:/giusv/temp/nextent/")
        (app-entities (loop for value being the hash-values of data:*entities* collect value))
        (app-formats (loop for value being the hash-values of data:*formats* collect value))
        (app-services (loop for value being the hash-values of server:*services* collect value))) 
