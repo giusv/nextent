@@ -14,7 +14,8 @@
                (:file "html")
                (:module "lang"
                         :serial t
-                        :components ((:file "blub")))
+                        :components ((:file "blub")
+                                     (:file "clang")))
                (:file "expression")
                (:file "validator") 
                (:file "url")
@@ -48,6 +49,11 @@
                         :serial t
                         :components ((:file "rest")
                                      (:file "actions")))
-               (:file "nextent")))
+               (:module "ml"
+                        :serial t
+                        :components ((:file "node")))
+               ;; (:file "ml")
+               ;; (:file "nextent")
+               ))
 
 

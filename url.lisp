@@ -133,7 +133,7 @@
 
 ;; (merge-urls (seg1 / seg2) (seg3 / seg4))
 
-(merge-urls :seg1 (seg3 / seg4))
+;; (merge-urls :seg1 (seg3 / seg4))
 (defmacro url (u)
   `(parse (parse-url) ,u))
 ;;(synth output (synth :url (chain 'a (multi (chain 'b) (chain 'c)))) 0)

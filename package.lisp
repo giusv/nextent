@@ -15,6 +15,7 @@
            :singular
            :bindall
            :glue
+           :lower
            :lower-camel :upper-camel
            :split-str :interleave
            :append* 
@@ -22,7 +23,7 @@
 
 (defpackage :parser
   (:use :cl :lol :utils)
-  (:export :tuple :result :apply-parser :parse :bind :fail :item :do-with :sat :sym :choose :zero :plus :choice 
+  (:export :tuple :resut :apply-parser :parse :bind :fail :item :do-with :sat :sym :choose :zero :plus :choice 
            :many :many1 :sepby :sepby1 :sublist :pair :optional :atomic :var-init :req-var :opt-var :lambda-list :arg-names)) 
 
 
@@ -70,7 +71,11 @@
            :bb-try :bb-catch% :bb-catch
            :bb-if
            :bb-+
-           :bb-equal))
+           :bb-equal
+           :c-empty :c-comment :c-pair :c-const :c-type :c-array-type :c-array :c-for
+           :c-statement :c-list :c-signature :c-include :c-assign :c-increment :c-decrement 
+           :c-call :c-dynamic 
+           :c-element :c-unit :c-return :c-if :fprim :c-equal :c-nil))
 
 (defpackage :url
   (:use :cl :lol :utils :parser :grammar :doc :lang)
@@ -136,6 +141,12 @@
            :description :description%
            :panel
            :link :navbar))
+
+(defpackage :ml
+  (:use :cl :lol :utils :grammar :lang)
+  (:export :perceptron
+           :sum
+           :loss))
 
 (defpackage :nextent
   (:use :cl :lol :utils :doc :grammar :lang))
