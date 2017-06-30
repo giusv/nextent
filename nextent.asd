@@ -52,8 +52,12 @@
                (:module "ml"
                         :serial t
                         :components ((:file "node")))
+               (:module "pgen"
+                        :serial t
+                        :components ((:file "pgen")))
                ;; (:file "ml")
                ;; (:file "nextent")
+               
                ))
 
 

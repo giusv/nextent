@@ -19,9 +19,9 @@
                                       (c-empty)))))))
 
 
-(let ((p (sigm '|1|)))
-  (pprint (synth :output (synth :c (synth :allocation p)) 0))
-  (pprint (synth :output (synth :c (synth :forward p)) 0)))
+;; (let ((p (sigm '|1|)))
+;;   (pprint (synth :output (synth :c (synth :allocation p)) 0))
+;;   (pprint (synth :output (synth :c (synth :forward p)) 0)))
 
 ;; (let ((p (sigm 23))
 ;;       (q (sigm 24)))

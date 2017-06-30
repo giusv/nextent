@@ -74,7 +74,7 @@
 
 ;; (pprint (untype-lambdalist '((name :string) &rest ((types nil types-supplied-p) :integer))))
 
-(pprint (args '((name :string) &optional ((opt 0) :string) &rest ((types nil types-supplied-p) (list :integer)) &key (key1 :string) ((key2 8 key2-supplied-p) :string))))
+;; (pprint (args '((name :string) &optional ((opt 0) :string) &rest ((types nil types-supplied-p) (list :integer)) &key (key1 :string) ((key2 8 key2-supplied-p) :string))))
 
 
 ;; (defprim text (template &rest args)
