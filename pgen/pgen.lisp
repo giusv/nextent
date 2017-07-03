@@ -72,8 +72,7 @@
                                                      (mapcar (lambda (symbol)
                                                                (bb-statement (synth :call symbol)))
                                                              symbols)))))
-                                         cases)))
-                         )))
+                                         cases))))))
   (:call () (bb-call symbol)))
 
 (defparameter *nonterminals* (make-hash-table))
@@ -88,10 +87,39 @@
 (defnonterminal tt nil)
 (defnonterminal tp (synth-attr 'term (bb-object-type 'term) (inher-attr 'factor (bb-object-type 'factor))))
 (defnonterminal ff nil)
+
+
+
+(defprim with-bindings% (bindings expr)
+  (:pretty () (list 'with-bindings (list :bindings (synth-all :pretty bindings) :expr (synth :pretty expr)))))
+
+;; (defprim invoke% (nonterminal &rest parameters)
+;;   (:pretty () (list 'invoke (list :nonterminal (synth :pretty nonterminal) :parameters (synth-all :pretty parameters)))))
+
+(defprim binding% (lhs rhs)
+  (:pretty () (list 'binding (list :lhs (synth :pretty lhs) :rhs (synth :pretty rhs)))))
+
 (defprim production (head &rest body)
   (:pretty () (list 'production (list :head (synth :pretty head) :body (synth-all :pretty body)))))
 
-(defproduction ee)
+
+(defproduction ee 
+    (with-bindings ((node (invoke tt))
+                    (syn (invoke ep node)))
+      syn))
+
+(defproduction ep
+    (with-inherited ((inh factor))
+      (with-bindings (((invoke (terminal :plus)))
+                      (node (invoke tt))
+                      (syn (invoke ep (bb-new 'sum inh node))))
+        syn)))
+
+(defproduction ep
+    (with-inherited (inh)
+      (with-bindings (((invoke (epsilon))))
+        inh)))
+
 (defproduction ee
     tt ep)
 
