@@ -437,6 +437,27 @@
                    (nest 4 (synth :java failure))
                    :newline t))))
 
+(defprim bb-switch (expression &rest cases)
+  (:pretty () (list 'bb-switch (list :expression expression :cases (synth-all :pretty cases))))
+  (:typescript () (error "not implemented yet"))
+  (:java () (vcat (hcat (text "switch") 
+                        (parens (synth :java expression)))
+                  (braces 
+                   (nest 4 (apply #'vcat (synth-all :java cases)))
+                   :newline t))))
+
+(defprim bb-break ()
+  (:pretty () (list 'bb-break))
+  (:typescript () (error "not implemented yet"))
+  (:java () (text "break;")))
+
+(defprim bb-case (expression statement)
+  (:pretty () (list 'bb-case (list :expression expression :statement statement)))
+  (:typescript () (error "not implemented yet"))
+  (:java () (vcat (hcat (text "case ") (synth :java expression) (colon))
+                  (nest 4 (vcat (synth :java statement)
+                                (synth :java (bb-break)))))))
+
 (defmacro defop (name)
   `(defprim ,(symb "BB-" name) (op1 op2)
      (:pretty () (list ',(symb "BB-" name) (list :op1 op1 :op2 op2)))

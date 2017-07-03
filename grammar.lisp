@@ -12,6 +12,7 @@
 (defmacro defprim (name lambda-list &rest attrs)
   (let ((args (parser:arg-names lambda-list)))
     `(defun ,name ,lambda-list
+       (declare (optimize debug))
        (pandoriclet ,(mapcar #`(,a1 ,a1) args)
                     (dlambda ,@(mapcar #`(,(keyw a1) nil ,a1 ;; (get-pandoric ,name ,a1)
                                            ) args)

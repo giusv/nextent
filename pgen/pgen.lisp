@@ -45,40 +45,53 @@
 (defun hash-table-keys (table)
   (loop for key being the hash-keys of table collect key))
 
-(defprim nonterminal (symbol type synthesized inherited &optional start)
-  (:pretty () (list 'nonterminal (list :symbol symbol :type type :synthesized synthesized :inherited inherited :start start)))
+(defprim inher-attr (name type) 
+  (:pretty () (list 'inher-attr (list name :name type (synth :pretty type)))))
+
+(defprim synth-attr (name type &rest inputs) 
+  (:pretty () (list 'synth-attr (list name :name type (synth :pretty type) :inputs (synth-all :pretty inputs))))
+  (:parameters () (mapcar (lambda (input)
+                            (bb-pair (synth :name input) (synth :type input)))
+                          inputs)))
+
+
+
+
+(defprim nonterminal (symbol synthesized &key start)
+  (:pretty () (list 'nonterminal (list :symbol symbol :synthesized synthesized :start start)))
   (:terminal () nil)
   (:code () (let* ((prodmap (gethash symbol *ptable*))
                    (cases (hash-table-keys prodmap))) 
-              (bb-method (textify symbol) inherited type 
-                         (bb-list 
-                          (mapcar (lambda (case)
-                                    (bb-if (bb-equal (bb-dynamic 'x) (bb-dynamic case)) 
-                                           (bb-list 
-                                            (let ((symbols (synth :body (gethash case prodmap))))
-                                              (mapcar (lambda (symbol)
-                                                        (bb-statement (synth :call symbol)))
-                                                      symbols)))
-                                           nil))
-                                  cases))
+              (bb-method (textify symbol) (synth :parameters synthesized) (synth :type synthesized) 
+                         (bb-list
+                          (apply #'bb-switch (bb-dynamic 'x) 
+                                 (mapcar (lambda (case)
+                                           (bb-case (bb-dynamic case) 
+                                                  (bb-list 
+                                                   (let ((symbols (synth :body (gethash case prodmap))))
+                                                     (mapcar (lambda (symbol)
+                                                               (bb-statement (synth :call symbol)))
+                                                             symbols)))))
+                                         cases)))
                          )))
   (:call () (bb-call symbol)))
 
 (defparameter *nonterminals* (make-hash-table))
-(defmacro defnonterminal (symbol type synthesized inherited &optional start)
-  `(let ((nonterm (nonterminal ',symbol ,type ,synthesized ,inherited ,start))) 
+(defmacro defnonterminal (symbol synthesized &key start)
+  `(let ((nonterm (nonterminal ',symbol ,synthesized :start ,start))) 
      (progn 
        (defparameter ,symbol nonterm)
        (setf (gethash ',symbol *nonterminals*) nonterm))))
 
-(defnonterminal ee nil nil nil t)
-(defnonterminal ep nil nil nil)
-(defnonterminal tt nil nil nil)
-(defnonterminal tp nil nil nil)
-(defnonterminal ff nil nil nil)
+(defnonterminal ee (synth-attr 'expr (bb-object-type 'expr)) :start t)
+(defnonterminal ep nil)
+(defnonterminal tt nil)
+(defnonterminal tp (synth-attr 'term (bb-object-type 'term) (inher-attr 'factor (bb-object-type 'factor))))
+(defnonterminal ff nil)
 (defprim production (head &rest body)
   (:pretty () (list 'production (list :head (synth :pretty head) :body (synth-all :pretty body)))))
 
+(defproduction ee)
 (defproduction ee
     tt ep)
 
