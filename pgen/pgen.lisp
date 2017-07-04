@@ -15,8 +15,8 @@
 
 
 (defparameter *grammar* (make-hash-table))
-(defmacro defproduction (head &rest body)
-  `(let ((prod (production ,head ,@body))) 
+(defmacro defproduction (head body &optional rule)
+  `(let ((prod (production ,head (list ,@body) ,rule))) 
      (put-prod (synth :symbol ,head) prod)))
 
 (defun closure-equal (x y)
@@ -37,10 +37,7 @@
   (:pretty () (list 'dollar))
   (:terminal () t))
 
-(defprim terminal (symbol)
-  (:pretty () (list 'terminal (list :symbol symbol)))
-  (:terminal () t)
-  (:call () (bb-call 'match (bb-dynamic symbol))))
+
 
 (defun hash-table-keys (table)
   (loop for key being the hash-keys of table collect key))
@@ -49,31 +46,42 @@
   (:pretty () (list 'inher-attr (list name :name type (synth :pretty type)))))
 
 (defprim synth-attr (name type &rest inputs) 
-  (:pretty () (list 'synth-attr (list name :name type (synth :pretty type) :inputs (synth-all :pretty inputs))))
-  (:parameters () (mapcar (lambda (input)
-                            (bb-pair (synth :name input) (synth :type input)))
-                          inputs)))
+  (:pretty () (list 'synth-attr (list name :name type (synth :pretty type) :inputs (synth-plist :pretty inputs))))
+  (:parameters () (synth-plist-merge (lambda (pair)
+                                       (bb-pair (car pair) (synth :type (cadr pair))))
+                                     inputs)))
 
+(defprim terminal (symbol)
+  (:pretty () (list 'terminal (list :symbol symbol)))
+  (:terminal () t)
+  (:call () (bb-call 'match (bb-dynamic symbol))))
 
 
 
 (defprim nonterminal (symbol synthesized &key start)
-  (:pretty () (list 'nonterminal (list :symbol symbol :synthesized synthesized :start start)))
+  (:pretty () (list 'nonterminal (list :symbol symbol :synthesized (synth :pretty synthesized) :start start)))
   (:terminal () nil)
-  (:code () (let* ((prodmap (gethash symbol *ptable*))
-                   (cases (hash-table-keys prodmap))) 
-              (bb-method (textify symbol) (synth :parameters synthesized) (synth :type synthesized) 
-                         (bb-list
-                          (apply #'bb-switch (bb-dynamic 'x) 
-                                 (mapcar (lambda (case)
-                                           (bb-case (bb-dynamic case) 
-                                                  (bb-list 
-                                                   (let ((symbols (synth :body (gethash case prodmap))))
-                                                     (mapcar (lambda (symbol)
-                                                               (bb-statement (synth :call symbol)))
-                                                             symbols)))))
-                                         cases))))))
-  (:call () (bb-call symbol)))
+  (:code () 
+         (let* ((prodmap (gethash symbol *ptable*))
+                (cases (hash-table-keys prodmap))
+                (attribute synthesized)) 
+           (bb-method (textify symbol) (synth :parameters attribute) (synth :type attribute) 
+                      (bb-list
+                       (apply #'bb-switch (bb-dynamic 'x) 
+                              (mapcar (lambda (case)
+                                        (bb-case (bb-dynamic case) 
+                                                 (progn 
+                                                   (my-debug "in nonterminal" (gethash case prodmap))
+                                                   (synth :code (gethash case prodmap) attribute))
+                                                 ;; (bb-list 
+                                                 ;;  (let ((symbols (synth :body (gethash case prodmap))))
+                                                 ;;    (mapcar (lambda (symbol)
+                                                 ;;              (bb-statement (synth :call symbol)))
+                                                 ;;            symbols)))
+                                                 ))
+                                      cases))))))
+  (:call () (bb-call symbol))
+  (:type (attribute) (synth :type attribute)))
 
 (defparameter *nonterminals* (make-hash-table))
 (defmacro defnonterminal (symbol synthesized &key start)
@@ -82,67 +90,103 @@
        (defparameter ,symbol nonterm)
        (setf (gethash ',symbol *nonterminals*) nonterm))))
 
-(defnonterminal ee (synth-attr 'expr (bb-object-type 'expr)) :start t)
-(defnonterminal ep nil)
-(defnonterminal tt nil)
-(defnonterminal tp (synth-attr 'term (bb-object-type 'term) (inher-attr 'factor (bb-object-type 'factor))))
-(defnonterminal ff nil)
 
 
+(defprim production (head body &optional rule)
+  (:pretty () (list 'production (list :head (synth :pretty head) :body (synth-all :pretty body) :rule (synth :pretty rule))))
+  (:code (attribute) (synth :code rule attribute)))
 
-(defprim with-bindings% (bindings expr)
-  (:pretty () (list 'with-bindings (list :bindings (synth-all :pretty bindings) :expr (synth :pretty expr)))))
-
-;; (defprim invoke% (nonterminal &rest parameters)
-;;   (:pretty () (list 'invoke (list :nonterminal (synth :pretty nonterminal) :parameters (synth-all :pretty parameters)))))
+(defprim with-inherited% (bindings expr)
+  (:pretty () (list 'with-inherited (list :bindings (synth-all :pretty bindings) :expr (synth :pretty expr))))
+  (:code (attribute) (bb-list (synth-all :code bindings attribute) 
+                                (synth :code expr attribute))))
 
 (defprim binding% (lhs rhs)
-  (:pretty () (list 'binding (list :lhs (synth :pretty lhs) :rhs (synth :pretty rhs)))))
+  (:pretty () (list 'binding (list :lhs lhs :rhs (synth :pretty rhs))))
+  (:code (attribute) (if lhs 
+                         (bb-statement (bb-pair lhs (synth :type rhs attribute) :init (synth :code rhs attribute)))
+                         (bb-statement (synth :code rhs attribute)))))
 
-(defprim production (head &rest body)
-  (:pretty () (list 'production (list :head (synth :pretty head) :body (synth-all :pretty body)))))
+(defprim with-bindings% (bindings expr)
+  (:pretty () (list 'with-bindings (list :bindings (synth-all :pretty bindings) :expr (synth :pretty expr))))
+  (:code (attribute) (bb-list (synth-all :code bindings attribute)
+                              (synth :code expr attribute))))
+(defprim synthesize (expr)
+  (:pretty () (list 'synthesize (list :expr (synth :pretty expr))))
+  (:code () (bb-return expr)))
+
+(defmacro with-bindings ((&rest bindings) expr)
+  `(let* ,(mapcar #`(,(car a1) (bb-dynamic ',(car a1))) (remove-if (lambda (bind) (= 1 (length bind)))
+                                                                   bindings))
+     ;; (with-bindings% (list ,@(mapcar #`(binding% ',(car a1) ,(cadr a1)) bindings))
+     ;;   ,expr) 
+     (with-bindings% (list ,@(mapcar (lambda (a1) 
+                                 `(binding%
+                                   ,@(if (atom (car a1))
+                                         `(',(car a1) ,(cadr a1))
+                                         `(nil ,(car a1)))))
+                               bindings))
+       ,expr)))
 
 
-(defproduction ee 
-    (with-bindings ((node (invoke tt))
-                    (syn (invoke ep node)))
-      syn))
+(defmacro with-inherited ((&rest bindings)  expr)
+  `(let* ,(mapcar #`(,(car a1) (bb-dynamic ',(car a1))) bindings)
+     ;; (with-inherited% (list ,@(mapcar #`(binding% ',(car a1) (getf (synth :inputs ,head) ,(cadr a1))) bindings))
+     ;;   ,expr)
+     ,expr
+     ))
 
-(defproduction ep
-    (with-inherited ((inh factor))
+
+(defprim invoke (symbol &rest parameters)
+  (:pretty () (list 'invoke (list :symbol (synth :pretty symbol) :parameters (synth-all :pretty parameters))))
+  (:code (attribute) (apply #'bb-call (synth :symbol symbol) parameters))
+  (:type (attribute) (synth :type symbol attribute)))
+
+(defnonterminal ee (synth-attr 'expr (bb-object-type 'expr)) :start t)
+(defnonterminal ep (synth-attr 'expr (bb-object-type 'sum) 
+                               :expr (inher-attr 'expr (bb-object-type 'expr))))
+(defnonterminal tt (synth-attr 'expr (bb-object-type 'expr)))
+(defnonterminal tp (synth-attr 'expr (bb-object-type 'product)
+                               :expr (inher-attr 'expr (bb-object-type 'expr))))
+(defnonterminal ff (synth-attr 'expr (bb-object-type 'expr)))
+
+
+
+;; (defproduction ep ((epsilon))
+;;     (with-inherited (inh)
+;;       (with-bindings (((invoke (epsilon))))
+;;         inh)))
+
+(defproduction ee (tt ep)  
+  (with-bindings ((node (invoke tt))
+                  (syn (invoke ep node)))
+    (synthesize syn)))
+
+(defproduction ep ((terminal :plus) tt ep)
+  (with-inherited ((expr :expr))
       (with-bindings (((invoke (terminal :plus)))
                       (node (invoke tt))
-                      (syn (invoke ep (bb-new 'sum inh node))))
-        syn)))
+                      (syn (invoke ep (bb-new 'sum expr node))))
+        (synthesize syn))))
 
-(defproduction ep
-    (with-inherited (inh)
-      (with-bindings (((invoke (epsilon))))
-        inh)))
-
-(defproduction ee
-    tt ep)
-
-(defproduction ep
-    (terminal :plus) tt ep)
-
-(defproduction ep
-    (epsilon))
+;; (defproduction ep ((epsilon))
+;;   (with-inherited ((expr :expr))
+;;     (synthesize expr)))
 
 (defproduction tt
-    ff tp)
+    (ff tp))
 
 (defproduction tp
-    (terminal :times) ff tp)
+    ((terminal :times) ff tp))
 
 (defproduction tp
-    (epsilon))
+    ((epsilon)))
 
 (defproduction ff
-    (terminal :left) ee (terminal :right))
+    ((terminal :left) ee (terminal :right)))
 
 (defproduction ff
-    (terminal :id))
+    ((terminal :id)))
 
 (defmacro my-debug (message &rest vars)
   `(progn (pprint ,message)
@@ -251,4 +295,4 @@
 ;; (pprint (synth-all :pretty (follow-set ff)))
 ;; (pprint (synth-all :pretty (nonterminals *grammar*)))
 ;; (pprint-ptable *ptable*)
-(pprint (synth :output (synth :java (synth :code tp)) 0))
+(pprint (synth-all :output (synth-all :java (synth-all :code (list ee ep))) 0))
