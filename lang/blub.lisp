@@ -251,26 +251,30 @@
   (:typescript () (apply #'punctuate (semi) t (synth-all :typescript (apply #'append* statements))))
   (:java () (apply #'vcat (synth-all :java (apply #'append* statements)))))
 
-(defprim bb-method (name parameters rtype &rest statements)
+(defprim bb-method (name parameters rtype &rest args)
   (:pretty () (list 'bb-method (list :name name 
                                      :parameters (synth-all :pretty parameters) 
                                      :rtype rtype
-                                     :statements (synth-all :pretty statements))))
+                                     :throws (synth-all :pretty (getf (rest-key args) :throws))
+                                     :statements (synth-all :pretty (rest-plain args)))))
   (:typescript () (vcat (hcat name
                               (parens (apply #'punctuate (comma) t (synth-all :typescript parameters)))
                               (text ": ") 
                               (synth :typescript rtype)) 
                         (braces 
                          (nest 4 (apply #'postpend (semi) t 
-                                        (synth-all :typescript statements)))
+                                        (synth-all :typescript (rest-plain args))))
                          :newline t)))
   (:java ()  (vcat (hcat (text "public ") 
                         (synth :java rtype)
                         (blank)
                         name
-                        (parens (apply #'punctuate (comma) t (synth-all :java parameters)))) 
+                        (parens (apply #'punctuate (comma) t (synth-all :java parameters)))
+                        (aif (getf (rest-key args) :throws) 
+                             (hcat+ (text " throws") 
+                                    (apply #'punctuate (comma) t (synth-all :java it))))) 
                   (braces 
-                   (nest 4 (apply #'vcat (synth-all :java statements)))
+                   (nest 4 (apply #'vcat (synth-all :java (rest-plain args))))
                    :newline t))))
 
 (defprim bb-signature (name parameters rtype)
@@ -349,6 +353,11 @@
   (:typescript () (text "~a" (lower-camel name)))
   (:java () (text "~a" (lower-camel name))))
 
+(defprim bb-enum (name)
+  (:pretty () (list 'bb-enum (list :name name)))
+  (:typescript () (text "~a" (string-upcase name)))
+  (:java () (text "~a" (string-upcase name))))
+
 (defprim bb-element (array index)
   (:pretty () (list 'bb-element (list :array array :index (synth :pretty index))))
   (:typescript () (hcat (text "~a" (lower-camel array))
@@ -424,7 +433,7 @@
                         (synth :java expression)
                         (semi))))
 
-(defprim bb-if (expression success failure)
+(defprim bb-if (expression success &optional failure)
   (:pretty () (list 'bb-if (list :expression expression :success success :failure failure)))
   (:typescript () (error "not implemented yet"))
   (:java () (vcat (hcat (text "if") 
@@ -432,18 +441,23 @@
                   (braces 
                    (nest 4 (synth :java success))
                    :newline t)
-                  (text "else")
-                  (braces 
-                   (nest 4 (synth :java failure))
-                   :newline t))))
+                  (if failure 
+                      (vcat (text "else")
+                            (braces 
+                             (nest 4 (synth :java failure))
+                             :newline t))))))
 
-(defprim bb-switch (expression &rest cases)
+(defprim bb-switch (expression default &rest cases)
   (:pretty () (list 'bb-switch (list :expression expression :cases (synth-all :pretty cases))))
   (:typescript () (error "not implemented yet"))
   (:java () (vcat (hcat (text "switch") 
                         (parens (synth :java expression)))
                   (braces 
-                   (nest 4 (apply #'vcat (synth-all :java cases)))
+                   (nest 4 (apply #'vcat (append (synth-all :java cases)
+                                                 (list (vcat (hcat (text "default") (colon))
+                                                             (braces 
+                                                              (nest 4 (vcat (synth :java default)))
+                                                              :newline t))))))
                    :newline t))))
 
 (defprim bb-break ()
@@ -455,8 +469,11 @@
   (:pretty () (list 'bb-case (list :expression expression :statement statement)))
   (:typescript () (error "not implemented yet"))
   (:java () (vcat (hcat (text "case ") (synth :java expression) (colon))
-                  (nest 4 (vcat (synth :java statement)
-                                (synth :java (bb-break)))))))
+                  (braces 
+                   (nest 4 (vcat (synth :java statement)
+                                 ;; (synth :java (bb-break))
+                                 ))
+                   :newline t))))
 
 (defmacro defop (name)
   `(defprim ,(symb "BB-" name) (op1 op2)
@@ -468,6 +485,9 @@
 
 
 (defop +)
+(defop -)
+(defop *)
+(defop /)
 
 (defprim bb-equal (op1 op2)
      (:pretty () (list 'bb-equal (list :op1 op1 :op2 op2)))

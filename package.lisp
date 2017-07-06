@@ -65,13 +65,13 @@
            :bb-type :bb-primitive-type :bb-array-type :bb-object-type
            :bb-pair :bb-array :bb-element
            :bb-object :bb-annotation :bb-annotation2 :bb-with-annotations :bb-class :bb-interface :bb-method :bb-signature 
-           :bb-import :bb-package :bb-new :bb-call :bb-static :bb-dynamic :bb-chain :bb-constructor :bb-arrow 
+           :bb-import :bb-package :bb-new :bb-call :bb-static :bb-dynamic :bb-enum :bb-chain :bb-constructor :bb-arrow 
            :bb-list :bb-unit :bb-template :bb-assign :bb-return :bb-throw :bb-statement
            :bb-null :bb-nil 
            :bb-try :bb-catch% :bb-catch
            :bb-switch :bb-case :bb-bbreak
            :bb-if
-           :bb-+
+           :bb-+ :bb-- :bb-* :bb-/
            :bb-equal
            :c-empty :c-comment :c-pair :c-const :c-type :c-array-type :c-array :c-for
            :c-statement :c-list :c-signature :c-include :c-assign :c-increment :c-decrement 
