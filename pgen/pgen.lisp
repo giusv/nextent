@@ -65,8 +65,6 @@
   (:pretty () (list 'terminal (list :symbol symbol)))
   (:terminal () t))
 
-
-
 (defprim nonterminal (symbol synthesized &key start)
   (:pretty () (list 'nonterminal (list :symbol symbol :synthesized (synth :pretty synthesized) :start start)))
   (:terminal () nil)
@@ -78,11 +76,19 @@
                       :throws (list (bb-static 'i-o-exception))
                       (bb-list
                        (apply #'bb-switch (bb-chain (bb-dynamic 'look) (bb-dynamic 'tag))
-                              (bb-throw (bb-new 'error (bb-const (mkstr symbol))))
+                              :default (bb-throw (bb-new (bb-object-type 'error) 
+                                                         (reduce #'bb-+ 
+                                                                 (list (bb-const (reduce #'mkstr
+                                                                                         (mapcar (lambda (case)
+                                                                                                   (mkstr case ", "))
+                                                                                                 cases)
+                                                                                         :initial-value (mkstr "Error in production for " symbol ": expecting ")))
+                                                                       (bb-const "found ")
+                                                                       (bb-dynamic 'look)))))
                               (mapcar (lambda (case)
                                         (bb-case (bb-chain (bb-static 'tag) (bb-enum case)) 
                                                  (progn 
-                                                   (my-debug "in nonterminal" (car (gethash case prodmap)))
+                                                   ;; (my-debug "in nonterminal" (car (gethash case prodmap)))
                                                    (synth :code (car (gethash case prodmap)) attribute))))
                                       cases)))))) 
   (:type (attribute) (synth :type synthesized)))
@@ -98,131 +104,9 @@
   (:pretty () (list 'production (list :head (synth :pretty head) :body (synth-all :pretty body) :rule (synth :pretty rule))))
   (:code (attribute) (synth :code rule attribute)))
 
-(defprim with-inherited% (bindings expr)
-  (:pretty () (list 'with-inherited (list :bindings (synth-all :pretty bindings) :expr (synth :pretty expr))))
-  (:code (attribute) (bb-list (synth-all :code bindings attribute) 
-                                (synth :code expr attribute))))
-
-(defprim binding% (lhs rhs)
-  (:pretty () (list 'binding (list :lhs lhs :rhs (synth :pretty rhs))))
-  (:code (attribute) (synth :code rhs attribute lhs)))
-
-(defprim with-bindings% (bindings expr)
-  (:pretty () (list 'with-bindings (list :bindings (synth-all :pretty bindings) :expr (synth :pretty expr))))
-  (:code (attribute) (bb-list (synth-all :code bindings attribute)
-                              (synth :code expr attribute))))
-(defprim synthesize (expr)
-  (:pretty () (list 'synthesize (list :expr (synth :pretty expr))))
-  (:code (attribute) (bb-return expr)))
-
-(defmacro with-bindings ((&rest bindings) expr)
-  `(let* ,(mapcar #`(,(car a1) (bb-dynamic ',(car a1))) (remove-if (lambda (bind) (= 1 (length bind)))
-                                                                   bindings))
-     (with-bindings% (list ,@(mapcar (lambda (a1) 
-                                 `(binding%
-                                   ,@(if (atom (car a1))
-                                         `(',(car a1) ,(cadr a1))
-                                         `(nil ,(car a1)))))
-                               bindings))
-       ,expr)))
-
-
-(defmacro with-inherited ((&rest bindings)  expr)
-  `(let* ,(mapcar #`(,(car a1) (bb-dynamic ',(car a1))) bindings)
-     ;; (with-inherited% (list ,@(mapcar #`(binding% ',(car a1) (getf (synth :inputs ,head) ,(cadr a1))) bindings))
-     ;;   ,expr)
-     ,expr
-     ))
-
-
-(defprim invoke (symbol &rest parameters)
-  (:pretty () (list 'invoke (list :symbol (synth :pretty symbol) :parameters (synth-all :pretty parameters))))
-  (:code (attribute lhs) 
-         (bb-statement (bb-pair lhs (synth :type this attribute) 
-                                :init (if (is-terminal symbol)
-                                          (error "terminal symbol in invoke")
-                                          (apply #'bb-call (synth :symbol symbol) parameters)))))
-  (:type (attribute) (synth :type symbol attribute)))
-
-(defprim match (symbol)
-  (:pretty () (list 'match (list :symbol (synth :pretty symbol))))
-  (:code (attribute lhs) 
-         (if (is-terminal symbol)
-             (bb-statement (bb-call 'match (bb-chain (bb-static 'tag) (bb-enum (synth :symbol symbol)))))
-             (error "nonterminal symbol in match"))))
-
-(defprim lexval (symbol type)
-  (:pretty () (list 'lexval (list :symbol (synth :pretty symbol) :type (synth :pretty type))))
-  (:code (attribute lhs) (if (is-terminal symbol)
-                             (bb-list 
-                              (bb-statement (bb-pair lhs type :init (bb-dynamic 'look)))
-                              (synth :code (match symbol) attribute nil))
-                             (error "nonterminal symbol in lexval"))))
-
-(defprim lookup (symbol type)
-  (:pretty () (list 'lookup (list :symbol (synth :pretty symbol) :type (synth :pretty type))))
-  (:code (attribute lhs) (if (is-terminal symbol)
-                             (bb-list 
-                              (bb-statement (bb-pair lhs type :init (bb-chain (bb-dynamic 'top) (bb-call 'get (bb-dynamic 'look)))))
-                              (bb-if (bb-null (bb-dynamic lhs))
-                                     (bb-statement (bb-call 'error (bb-+ (bb-chain (bb-dynamic 'look)
-                                                                                   (bb-call 'to-string))
-                                                                         (bb-const " undeclared"))))) 
-                              (synth :code (match symbol) attribute nil))
-                             (error "nonterminal symbol in lookup"))))
-
-(defnonterminal ee (synth-attr 'expr (bb-primitive-type 'float)) :start t)
-(defnonterminal ep (synth-attr 'expr (bb-primitive-type 'float) 
-                               :expr (inher-attr 'expr (bb-primitive-type 'float))))
-(defnonterminal tt (synth-attr 'expr (bb-primitive-type 'float)))
-(defnonterminal tp (synth-attr 'expr (bb-primitive-type 'float)
-                               :expr (inher-attr 'expr (bb-primitive-type 'float))))
-(defnonterminal ff (synth-attr 'expr (bb-primitive-type 'float)))
 
 
 
-(defproduction ee (tt ep)  
-  (with-bindings ((node (invoke tt))
-                  (syn (invoke ep node)))
-    (synthesize syn)))
-
-(defproduction ep ((terminal :plus) tt ep)
-  (with-inherited ((expr :expr))
-      (with-bindings (((match (terminal :plus)))
-                      (node (invoke tt))
-                      (syn (invoke ep (bb-+ expr node))))
-        (synthesize syn))))
-
-(defproduction ep ((epsilon))
-    (with-inherited ((expr :expr))
-      (synthesize expr)))
-
-(defproduction tt (ff tp)
-  (with-bindings ((node (invoke ff))
-                  (syn (invoke tp node)))
-    (synthesize syn)))
-
-(defproduction tp ((terminal :times) ff tp)
-  (with-inherited ((expr :expr))
-    (with-bindings (((match (terminal :times)))
-                    (node (invoke ff))
-                    (syn (invoke tp (bb-* expr node))))
-      (synthesize syn))))
- 
-(defproduction tp ((epsilon))
-  (with-inherited ((expr :expr))
-    (synthesize expr)))
-
-(defproduction ff ((terminal :left) ee (terminal :right))
-   (with-bindings ((node (invoke ee)))
-    (synthesize node)))
-
-(defproduction ff ((terminal :num))
-  (with-bindings ((node (lexval (terminal :num) (bb-primitive-type 'float))))
-    (synthesize node)))
-(defproduction ff ((terminal :id))
-  (with-bindings ((node (lookup (terminal :id) (bb-primitive-type 'float))))
-    (synthesize node)))
 
 
 (defun first-set (x)
@@ -316,6 +200,181 @@
                         
                         terms))) 
             nonterms)))
+
+
+(defprim with-inherited% (bindings expr)
+  (:pretty () (list 'with-inherited (list :bindings (synth-all :pretty bindings) :expr (synth :pretty expr))))
+  (:code (attribute) (bb-list (synth-all :code bindings attribute) 
+                                (synth :code expr attribute))))
+
+(defprim binding% (lhs rhs)
+  (:pretty () (list 'binding (list :lhs lhs :rhs (synth :pretty rhs))))
+  (:code (attribute) (synth :code rhs attribute lhs)))
+
+(defprim with-bindings% (bindings expr)
+  (:pretty () (list 'with-bindings (list :bindings (synth-all :pretty bindings) :expr (synth :pretty expr))))
+  (:code (attribute) (bb-list (synth-all :code bindings attribute)
+                              (synth :code expr attribute))))
+(defprim synthesize (expr)
+  (:pretty () (list 'synthesize (list :expr (synth :pretty expr))))
+  (:code (attribute) (bb-return expr)))
+
+(defmacro with-bindings ((&rest bindings) expr)
+  `(let* ,(mapcar #`(,(car a1) (bb-dynamic ',(car a1))) (remove-if (lambda (bind) (= 1 (length bind)))
+                                                                   bindings))
+     (with-bindings% (list ,@(mapcar (lambda (a1) 
+                                 `(binding%
+                                   ,@(if (atom (car a1))
+                                         `(',(car a1) ,(cadr a1))
+                                         `(nil ,(car a1)))))
+                               bindings))
+       ,expr)))
+
+
+(defmacro with-inherited ((&rest bindings)  expr)
+  `(let* ,(mapcar #`(,(car a1) (bb-dynamic ',(car a1))) bindings)
+     ;; (with-inherited% (list ,@(mapcar #`(binding% ',(car a1) (getf (synth :inputs ,head) ,(cadr a1))) bindings))
+     ;;   ,expr)
+     ,expr
+     ))
+
+
+(defprim invoke (symbol &rest parameters)
+  (:pretty () (list 'invoke (list :symbol (synth :pretty symbol) :parameters (synth-all :pretty parameters))))
+  (:code (attribute lhs) 
+         (bb-statement (bb-pair lhs (synth :type this attribute) 
+                                :init (if (is-terminal symbol)
+                                          (error "terminal symbol in invoke")
+                                          (apply #'bb-call (synth :symbol symbol) parameters)))))
+  (:type (attribute) (synth :type symbol attribute)))
+
+(defprim match (symbol)
+  (:pretty () (list 'match (list :symbol (synth :pretty symbol))))
+  (:code (attribute lhs) 
+         (if (is-terminal symbol)
+             (bb-statement (bb-call 'match (bb-chain (bb-static 'tag) (bb-enum (synth :symbol symbol)))))
+             (error "nonterminal symbol in match"))))
+
+(defprim lexval (symbol type)
+  (:pretty () (list 'lexval (list :symbol (synth :pretty symbol) :type (synth :pretty type))))
+  (:code (attribute lhs) (if (is-terminal symbol)
+                             (bb-list 
+                              (bb-statement (bb-pair lhs type 
+                                                     :init (bb-new type (bb-chain (bb-dynamic 'look :as (bb-object-type 'num)) 
+                                                                                  (bb-dynamic 'value)))))
+                              (synth :code (match symbol) attribute nil))
+                             (error "nonterminal symbol in lexval"))))
+
+(defprim lookup (symbol type)
+  (:pretty () (list 'lookup (list :symbol (synth :pretty symbol) :type (synth :pretty type))))
+  (:code (attribute lhs) (if (is-terminal symbol)
+                             (bb-list 
+                              (bb-statement (bb-pair lhs type :init (bb-chain (bb-dynamic 'top) 
+                                                                              (bb-call 'get (bb-new (bb-object-type 'identifier)
+                                                                                                    (bb-dynamic 'look :as (bb-object-type 'word)))) 
+                                                                              :as type)))
+                              (bb-if (bb-null (bb-dynamic lhs))
+                                     (bb-statement (bb-call 'error (bb-+ (bb-chain (bb-dynamic 'look)
+                                                                                   (bb-call 'to-string))
+                                                                         (bb-const " undeclared"))))) 
+                              (synth :code (match symbol) attribute nil))
+                             (error "nonterminal symbol in lookup"))))
+
+(defprim push-environment ()
+  (:pretty () (list 'push-environment))
+  (:code () (bb-list (bb-statement (bb-pair 'saved (bb-object-type 'env) :init (bb-dynamic 'top)))
+                     (bb-statement (bb-assign (bb-dynamic 'top) (bb-new (bb-object-type 'env)) (bb-dynamic 'top))))))
+
+(defprim pop-environment ()
+  (:pretty () (list 'pop-environment))
+  (:code () (bb-statement (bb-assign (bb-dynamic 'top) (bb-dynamic 'saved)))))
+
+(defprim store ()
+  (:pretty () (list 'pop-environment))
+  (:code () (bb-statement (bb-assign (bb-dynamic 'top) (bb-dynamic 'saved)))))
+
+;; (defparameter etype (bb-template-type 'expression (bb-object-type 'float)))
+(defparameter arith (bb-object-type 'arithmetic-expression))
+(defparameter expr (bb-object-type 'expression))
+
+(defnonterminal ee (synth-attr 'expr arith) :start t)
+(defnonterminal ep (synth-attr 'expr arith 
+                               :expr (inher-attr 'expr arith)))
+(defnonterminal tt (synth-attr 'expr arith))
+(defnonterminal tp (synth-attr 'expr arith
+                               :expr (inher-attr 'expr arith)))
+(defnonterminal ff (synth-attr 'expr arith))
+
+(defnonterminal indy-let (synth-attr 'expr expr) :start t)
+(defnonterminal indy-binds nil)
+(defnonterminal indy-bind (synth-attr 'expr expr))
+
+(defproduction indy-let ((terminal :let) indy-binds (terminal :in) ee)
+  (with-bindings (((match (terminal :let)))
+                  ((push-environment))
+                  ((invoke indy-binds))
+                  ((match (terminal :in)))
+                  (node (invoke ee))
+                  ((pop-environment)))
+    (synthesize node)))
+
+(defproduction indy-binds ((epsilon)))
+
+(defproduction indy-binds (indy-binds indy-bind)
+(with-bindings (((invoke indy-binds))
+                (invoke indy-bind))
+  nil))
+
+(defproduction indy-bind ((terminal :id) (terminal :equal) ee)
+  (store-bind (terminal :id) (terminal :equal) ee))
+
+
+(defproduction ee (tt ep)  
+  (with-bindings ((node (invoke tt))
+                  (syn (invoke ep node)))
+    (synthesize syn)))
+
+(defproduction ep ((terminal :plus) tt ep)
+  (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :plus)))
+                      (node (invoke tt))
+                      (syn (invoke ep (bb-new arith (bb-+ (bb-chain expr (bb-call 'get-value)) 
+                                                                           (bb-chain node (bb-call 'get-value)))))))
+        (synthesize syn))))
+
+(defproduction ep ((epsilon))
+    (with-inherited ((expr :expr))
+      (synthesize expr)))
+
+(defproduction tt (ff tp)
+  (with-bindings ((node (invoke ff))
+                  (syn (invoke tp node)))
+    (synthesize syn)))
+
+(defproduction tp ((terminal :times) ff tp)
+  (with-inherited ((expr :expr))
+    (with-bindings (((match (terminal :times)))
+                    (node (invoke ff))
+                    (syn (invoke tp (bb-new arith (bb-* (bb-chain expr (bb-call 'get-value)) 
+                                                                         (bb-chain node (bb-call 'get-value)))))))
+      (synthesize syn))))
+ 
+(defproduction tp ((epsilon))
+  (with-inherited ((expr :expr))
+    (synthesize expr)))
+
+(defproduction ff ((terminal :left) ee (terminal :right))
+   (with-bindings (((match (terminal :left)))
+                   (node (invoke ee))
+                   ((match (terminal :right))))
+    (synthesize node)))
+
+(defproduction ff ((terminal :num))
+  (with-bindings ((node (lexval (terminal :num) arith)))
+    (synthesize node)))
+(defproduction ff ((terminal :id))
+  (with-bindings ((node (lookup (terminal :id) arith)))
+    (synthesize node)))
 
 (defparameter *ptable* (make-ptable *grammar*))
 

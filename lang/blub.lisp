@@ -95,6 +95,14 @@
   (:typescript () (upper-camel name))
   (:java () (textify (upper-camel name))))
 
+(defprim bb-template-type (name &rest types)
+  (:pretty () (list 'bb-template-type (list :name name :types (synth-all :pretty types))))
+  (:typescript () )
+  (:java () (hcat (textify (upper-camel name))
+                  (angular (apply #'punctuate (comma) nil (mapcar (lambda (type)
+                                                            (synth :java type))
+                                                          types))))))
+
 (defprim bb-type (name &key primitive array template)
   (:pretty () (list 'bb-type (list :name name :primitive primitive :array array :template template)))
   (:typescript () (hcat (text "~a" (if (or (eq name :string)
@@ -320,12 +328,13 @@
                         (if as (parens (text "~a" (upper-camel as))))
                         (synth :java rhs))))
 
-(defprim bb-new (name &rest parameters)
-  (:pretty () (list 'bb-new (list :name name 
+(defprim bb-new (type &rest parameters)
+  (:pretty () (list 'bb-new (list :type (synth :pretty type) 
                                   :parameters (synth-all :pretty parameters))))
-  (:typescript () (hcat (text "new ~a" (upper-camel name)) 
+  (:typescript () (hcat (text "new ~a" (upper-camel type)) 
                         (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters)))))
-  (:java () (hcat (text "new ~a" (upper-camel name)) 
+  (:java () (hcat (text "new ")
+                        (synth :java type)
                         (parens (apply #'punctuate (comma) nil (synth-all :java parameters))))))
 
 (defprim bb-call (name &rest args)
@@ -348,10 +357,12 @@
   (:java () (text "~a" (upper-camel name))))
 
 
-(defprim bb-dynamic (name)
-  (:pretty () (list 'bb-dynamic (list :name name)))
+(defprim bb-dynamic (name &key as)
+  (:pretty () (list 'bb-dynamic (list :name name :as as)))
   (:typescript () (text "~a" (lower-camel name)))
-  (:java () (text "~a" (lower-camel name))))
+  (:java () (if as
+                (parens (hcat+ (parens (synth :java as)) (text "~a" (lower-camel name))))
+                (text "~a" (lower-camel name)))))
 
 (defprim bb-enum (name)
   (:pretty () (list 'bb-enum (list :name name)))
@@ -447,16 +458,18 @@
                              (nest 4 (synth :java failure))
                              :newline t))))))
 
-(defprim bb-switch (expression default &rest cases)
-  (:pretty () (list 'bb-switch (list :expression expression :cases (synth-all :pretty cases))))
+(defprim bb-switch (expression &rest cases)
+  (:pretty () (list 'bb-switch (list :expression expression 
+                                     :cases (synth-all :pretty (rest-plain cases)) 
+                                     :default (getf (rest-key cases) :default))))
   (:typescript () (error "not implemented yet"))
   (:java () (vcat (hcat (text "switch") 
                         (parens (synth :java expression)))
                   (braces 
-                   (nest 4 (apply #'vcat (append (synth-all :java cases)
+                   (nest 4 (apply #'vcat (append (synth-all :java (rest-plain cases))
                                                  (list (vcat (hcat (text "default") (colon))
                                                              (braces 
-                                                              (nest 4 (vcat (synth :java default)))
+                                                              (nest 4 (vcat (synth :java (getf (rest-key cases) :default))))
                                                               :newline t))))))
                    :newline t))))
 
