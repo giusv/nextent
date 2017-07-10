@@ -69,7 +69,7 @@
            :bb-list :bb-unit :bb-template :bb-assign :bb-return :bb-throw :bb-statement
            :bb-null :bb-nil 
            :bb-try :bb-catch% :bb-catch
-           :bb-switch :bb-case :bb-bbreak
+           :bb-switch :bb-case :bb-break
            :bb-if
            :bb-+ :bb-- :bb-* :bb-/
            :bb-equal

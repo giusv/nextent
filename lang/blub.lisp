@@ -436,13 +436,14 @@
   (:typescript () (apply #'vcat (synth-all :typescript (apply #'append* elements))))
   (:java () (apply #'vcat (synth-all :java (apply #'append* elements)))))
 
-(defprim bb-return  (expression)
+(defprim bb-return (&optional expression)
   (:pretty () (list 'bb-return (list :expression expression)))
   (:typescript () (hcat (text "return ")
                         (synth :typescript expression)))
-  (:java () (hcat (text "return ")
-                        (synth :java expression)
-                        (semi))))
+  (:java () (if expression (hcat (text "return ")
+                                 (synth :java expression)
+                                 (semi))
+                (hcat (text "return") (semi)))))
 
 (defprim bb-if (expression success &optional failure)
   (:pretty () (list 'bb-if (list :expression expression :success success :failure failure)))
@@ -483,17 +484,16 @@
   (:typescript () (error "not implemented yet"))
   (:java () (vcat (hcat (text "case ") (synth :java expression) (colon))
                   (braces 
-                   (nest 4 (vcat (synth :java statement)
-                                 ;; (synth :java (bb-break))
-                                 ))
-                   :newline t))))
+                   (nest 4 (synth :java statement))
+                   :newline t)
+                  ;; (synth :java (bb-break))
+                  ))) 
 
 (defmacro defop (name)
   `(defprim ,(symb "BB-" name) (op1 op2)
      (:pretty () (list ',(symb "BB-" name) (list :op1 op1 :op2 op2)))
      (:typescript () (error "not implemented yet"))
-     (:java () (hcat (synth :java op1)
-                     (text " ~a " ',name)
+     (:java () (hcat (synth :java op1)                     (text " ~a " ',name)
                      (synth :java op2)))))
 
 
