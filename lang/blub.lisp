@@ -502,12 +502,12 @@
 (defop *)
 (defop /)
 
-(defprim bb-equal (op1 op2)
-     (:pretty () (list 'bb-equal (list :op1 op1 :op2 op2)))
-     (:typescript () (error "not implemented yet"))
-     (:java () (hcat (synth :java op1)
-                     (text " == ")
-                     (synth :java op2))))
+;; (defprim bb-equal (op1 op2)
+;;      (:pretty () (list 'bb-equal (list :op1 op1 :op2 op2)))
+;;      (:typescript () (error "not implemented yet"))
+;;      (:java () (hcat (synth :java op1)
+;;                      (text " == ")
+;;                      (synth :java op2))))
 (defun bb-null (item)
   (bb-equal item (bb-nil)))
 
@@ -527,3 +527,29 @@
 
 
 
+(defmacro defbexp (operator &optional representation (arity 0))
+  (let ((name (symb "BB-" operator)))
+    `(defprim ,name 
+         ,(if (eq arity 'unbounded)
+              `(&rest exps)
+              (loop for i from 1 to arity collect (symb "EXP" i)))
+       (:pretty () (list ',name 
+			 ,(if (eq arity 'unbounded)
+			      `(list :exps (synth-all :pretty exps))
+			      `(list ,@(apply #'append (loop for i from 1 to arity collect (list (keyw "EXP" i) `(synth :pretty ,(symb "EXP" i)))))))))
+       (:typescript () (error "not implemented yet"))
+       (:java () ,(cond ((eq arity 'unbounded) `(apply #'doc:punctuate (doc:text " ~a " ,representation) nil (synth-all :java exps)))
+                        ((eq arity 1) `(doc:hcat (doc:text "~a " ,representation) (synth :java ,(symb "EXP1"))))
+                        (t `(doc:punctuate (doc:text " ~a " ,representation) nil ,@(loop for i from 1 to arity collect `(synth :java ,(symb "EXP" i))))))))))
+
+
+(defmacro defbexps (&rest bexps)
+  `(progn
+     ,@(mapcar #'(lambda (bexp)
+		   `(defbexp ,(car bexp) ,@(cdr bexp)))
+	       bexps)))
+
+;;(def-bexp true)
+;; (def-bexp equal 2)
+
+(defbexps (true) (false) (and '&& 2) (or '\|\| 2) (not '! 1) (equal '== 2) (less-than '< 2) (greater-than '> 2))

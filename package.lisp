@@ -72,7 +72,9 @@
            :bb-switch :bb-case :bb-break
            :bb-if
            :bb-+ :bb-- :bb-* :bb-/
-           :bb-equal
+           :bb-or :bb-and :bb-not
+           :bb-true :bb-false
+           :bb-equal :bb-greater-than :bb-less-than 
            :c-empty :c-comment :c-pair :c-const :c-type :c-array-type :c-array :c-for
            :c-statement :c-list :c-signature :c-include :c-assign :c-increment :c-decrement 
            :c-call :c-dynamic 

@@ -270,7 +270,7 @@
          (if (is-terminal symbol)
              (if (and (synth :type symbol) lhs)
                  (bb-list (bb-statement (bb-pair lhs (synth :type symbol) 
-                                                 :init (bb-new (bb-object-type 'identifier)
+                                                 :init (bb-new (synth :type symbol)
                                                                (bb-dynamic 'look :as (bb-object-type 'word))))) 
                           (bb-statement (bb-call 'match (bb-chain (bb-static 'tag) (bb-enum (synth :symbol symbol))))))
                  (bb-statement (bb-call 'match (bb-chain (bb-static 'tag) (bb-enum (synth :symbol symbol))))))
@@ -324,9 +324,11 @@
 
 ;; (defparameter etype (bb-template-type 'expression (bb-object-type 'float)))
 (defparameter t-arith (bb-object-type 'arithmetic-expression))
-(defparameter t-bool (bb-primitive-type 'boolean))
+(defparameter t-bool (bb-object-type 'boolean-expression))
 (defparameter t-string (bb-object-type 'string))
 (defparameter t-id (bb-object-type 'identifier))
+
+
 (defparameter terminal-id (terminal :id t-id))
 ;; (defparameter expr (bb-object-type 'expression))
 
@@ -345,27 +347,143 @@
 
 
 
-(defnonterminal argomento (synth-attr t-string))
+(defnonterminal parametri nil)
+(defnonterminal resto-parametri nil)
+(defnonterminal parametro nil)
+;; (defnonterminal argomento (synth-attr t-id))
+(defnonterminal espressione-booleana (synth-attr t-bool))
+(defnonterminal resto-espressione-booleana (synth-attr t-bool
+                                                       :expr (inher-attr t-bool)))
+(defnonterminal termine-booleano (synth-attr t-bool))
+(defnonterminal resto-termine-booleano (synth-attr t-bool
+                                                   :expr (inher-attr t-bool)))
+(defnonterminal fattore-booleano (synth-attr t-bool))
+(defnonterminal relazione (synth-attr t-bool))
+(defnonterminal resto-relazione (synth-attr t-bool
+                                            :expr (inher-attr t-arith)))
 (defnonterminal indicatore (synth-attr t-bool) :start t)
 
 
 
-(defproduction argomento 
-    (with-bindings ((sogg (match (terminal :soggetto t-string))))
-      (synthesize sogg)))
 
-(defproduction argomento 
-    (with-bindings ((veic (match (terminal :veicolo t-string))))
-      (synthesize veic)))
+
+;; (defproduction argomento 
+;;     (with-bindings ((sogg (match (terminal :soggetto t-id))))
+;;       (synthesize sogg)))
+
+;; (defproduction argomento 
+;;     (with-bindings ((veic (match (terminal :veicolo t-id))))
+;;       (synthesize veic)))
+
+
+(defproduction parametro
+    (with-bindings ((id (match terminal-id))
+                    ((match (terminal :assign)))
+                    (node (invoke ee)))
+      (store id node)))
+
+(defproduction resto-parametri)
+
+(defproduction resto-parametri
+    (with-bindings (((match (terminal :comma)))
+                    ((invoke parametro))
+                    ((invoke resto-parametri)))
+      nil))
+
+(defproduction parametri)
+(defproduction parametri
+    (with-bindings (((invoke parametro))
+                    ((invoke resto-parametri)))
+      nil))
+
+(defproduction espressione-booleana 
+    (with-bindings ((node (invoke termine-booleano))
+                    (syn (invoke resto-espressione-booleana node)))
+      (synthesize syn)))
+
+(defproduction resto-espressione-booleana 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :or)))
+                      (node (invoke termine-booleano))
+                      (syn (invoke resto-espressione-booleana 
+                                   (bb-new t-bool (bb-or (bb-chain expr (bb-call 'get-value)) 
+                                                         (bb-chain node (bb-call 'get-value)))))))
+        (synthesize syn))))
+
+(defproduction resto-espressione-booleana 
+    (with-inherited ((expr :expr))
+      (synthesize expr)))
+
+(defproduction termine-booleano
+    (with-bindings ((node (invoke fattore-booleano))
+                    (syn (invoke resto-termine-booleano node)))
+      (synthesize syn)))
+
+(defproduction resto-termine-booleano 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :and)))
+                      (node (invoke fattore-booleano))
+                      (syn (invoke resto-termine-booleano 
+                                   (bb-new t-bool (bb-and (bb-chain expr (bb-call 'get-value)) 
+                                                          (bb-chain node (bb-call 'get-value)))))))
+        (synthesize syn))))
+ 
+(defproduction resto-termine-booleano 
+    (with-inherited ((expr :expr))
+      (synthesize expr)))
+
+(defproduction fattore-booleano 
+    (with-bindings (((match (terminal :left)))
+                    (node (invoke espressione-booleana))
+                    ((match (terminal :right))))
+      (synthesize node)))
+
+(defproduction fattore-booleano 
+    (with-bindings (((match (terminal :not)))
+                    (syn (invoke fattore-booleano)))
+      (synthesize (bb-new t-bool (bb-not (bb-chain syn (bb-call 'get-value)))))))
+
+(defproduction fattore-booleano 
+    (with-bindings (((match (terminal :true))))
+      (synthesize (bb-true))))
+
+(defproduction fattore-booleano 
+    (with-bindings (((match (terminal :false))))
+      (synthesize (bb-false))))
+
+(defproduction fattore-booleano 
+    (with-bindings ((node (lookup (terminal :id t-bool))))
+      (synthesize node)))
+
+(defproduction fattore-booleano 
+    (with-bindings ((node (invoke relazione)))
+      (synthesize node)))
+
+(defproduction relazione 
+    (with-bindings ((node (invoke ee))
+                    (syn (invoke resto-relazione node)))
+      (synthesize syn)))
+
+(defproduction resto-relazione 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :equal)))
+                      (node (invoke ee)))
+        (synthesize (bb-equal expr node)))))
+
 
 (defproduction indicatore 
-    (with-bindings ((id (match terminal-id))
-                    (arg (invoke argomento)))
-      (synthesize arg)))
+    (with-bindings (((push-environment))
+                    (id (match terminal-id))
+                    ;; (arg (invoke argomento))
+                    ((match (terminal :left)))
+                    ((invoke parametri))
+                    ((match (terminal :right)))
+                    (expr (invoke espressione-booleana))
+                    ((pop-environment)))
+      (synthesize expr)))
 
 
-(defproduction indy-let ;; ((terminal :let) indy-binds (terminal :in) ee)
-  (with-bindings (((match (terminal :let)))
+(defproduction indy-let (with-bindings (((match (terminal :let)))
                   ((push-environment))
                   ((invoke indy-binds))
                   ((match (terminal :in)))
@@ -373,23 +491,19 @@
                   ((pop-environment)))
     (synthesize node)))
 
-(defproduction indy-bind ;; ((terminal :id t-id) (terminal :assign) ee)
-  (with-bindings ((id (match terminal-id))
+(defproduction indy-bind (with-bindings ((id (match terminal-id))
                   ((match (terminal :assign)))
                   (node (invoke ee)))
     (store id node)))
 
-(defproduction indy-binds-rest ;; ((epsilon))
-  )
+(defproduction indy-binds-rest)
 
-(defproduction indy-binds-rest ;; ((terminal :comma) indy-bind indy-binds-rest)
-  (with-bindings (((match (terminal :comma)))
+(defproduction indy-binds-rest (with-bindings (((match (terminal :comma)))
                   ((invoke indy-bind))
                   ((invoke indy-binds-rest)))
     nil))
 
-(defproduction indy-binds ;; (indy-bind indy-binds-rest)
-  (with-bindings (((invoke indy-bind))
+(defproduction indy-binds (with-bindings (((invoke indy-bind))
                   ((invoke indy-binds-rest)))
     nil))
 
@@ -397,67 +511,51 @@
 ;;   (with-bindings ((node (invoke indy-let)))
 ;;     (synthesize node)))
 
-(defproduction ee ;; (tt ep)
-  (with-bindings ((node (invoke tt))
+(defproduction ee (with-bindings ((node (invoke tt))
                   (syn (invoke ep node)))
     (synthesize syn)))
 
-(defproduction ep ;; ((terminal :plus) tt ep)
-  (with-inherited ((expr :expr))
+(defproduction ep (with-inherited ((expr :expr))
       (with-bindings (((match (terminal :plus)))
                       (node (invoke tt))
                       (syn (invoke ep (bb-new t-arith (bb-+ (bb-chain expr (bb-call 'get-value)) 
                                                                            (bb-chain node (bb-call 'get-value)))))))
         (synthesize syn))))
 
-(defproduction ep ;; ((epsilon))
-    (with-inherited ((expr :expr))
+(defproduction ep (with-inherited ((expr :expr))
       (synthesize expr)))
 
-(defproduction tt ;; (ff tp)
-  (with-bindings ((node (invoke ff))
+(defproduction tt (with-bindings ((node (invoke ff))
                   (syn (invoke tp node)))
     (synthesize syn)))
 
-(defproduction tp ;; ((terminal :times) ff tp)
-  (with-inherited ((expr :expr))
+(defproduction tp (with-inherited ((expr :expr))
     (with-bindings (((match (terminal :times)))
                     (node (invoke ff))
                     (syn (invoke tp (bb-new t-arith (bb-* (bb-chain expr (bb-call 'get-value)) 
                                                                          (bb-chain node (bb-call 'get-value)))))))
       (synthesize syn))))
  
-(defproduction tp ;; ((epsilon))
-  (with-inherited ((expr :expr))
+(defproduction tp (with-inherited ((expr :expr))
     (synthesize expr)))
 
-(defproduction ff ;; ((terminal :left) ee (terminal :right))
-   (with-bindings (((match (terminal :left)))
+(defproduction ff (with-bindings (((match (terminal :left)))
                    (node (invoke ee))
                    ((match (terminal :right))))
     (synthesize node)))
 
-(defproduction ff ;; ((terminal :num))
-  (with-bindings ((node (lexval (terminal :num) t-arith)))
+(defproduction ff (with-bindings ((node (lexval (terminal :num) t-arith)))
     (synthesize node)))
 
-(defproduction ff ;; ((terminal :id t-arith))
-  (with-bindings ((node (lookup (terminal :id t-arith))))
+(defproduction ff (with-bindings ((node (lookup (terminal :id t-arith))))
     (synthesize node)))
-
-;; (defproduction ff (indy-let)
-;;   (with-bindings ((node (invoke indy-let)))
-;;     (synthesize node)))
-
-
-
 
 (defparameter *ptable* (make-ptable *grammar*))
 
 ;; (pprint (synth-all :pretty (first-set ee)))
 ;; (pprint (synth-all :pretty (follow-set ff)))
 ;; (pprint (synth-all :pretty (nonterminals *grammar*)))
-;; (pprint-ptable *ptable*)
+(pprint-ptable *ptable*)
 
 ;; (pprint (synth-all :pretty (apply #'append (synth-all :body (get-prods-by-head *grammar* (synth :symbol ff))))))
 (write-file "D:/giusv/temp/temp.java"
