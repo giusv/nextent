@@ -8,7 +8,8 @@
                                           (synth-all :pretty ,var)
                                           (synth :pretty ,var)))
                               (format t "~%")))
-                    vars)))
+                    vars)
+          (read)))
 
 (defun put-prod (table key value)
   (if (nth-value 1 (gethash key table))
@@ -40,7 +41,8 @@
 (defprim epsilon ()
   (:pretty () (list 'epsilon))
   (:terminal () t)
-  (:call () (bb-empty)))
+  (:call () (bb-empty))
+  (:docrhs () (empty)))
 
 (defprim dollar ()
   (:pretty () (list 'dollar))
@@ -64,37 +66,47 @@
 
 (defprim terminal (symbol &optional type)
   (:pretty () (list 'terminal (list :symbol symbol :type type)))
-  (:terminal () t))
+  (:terminal () t)
+  (:docrhs () (textify (lower-camel symbol))))
 
 (defprim nonterminal (symbol synthesized &key start)
   (:pretty () (list 'nonterminal (list :symbol symbol :synthesized (synth :pretty synthesized) :start start)))
   (:terminal () nil)
+  (:docrhs () (textify (upper-camel symbol)))
   (:code () 
          (let* ((prodmap (gethash symbol *ptable*))
                 (cases (hash-table-keys prodmap))
                 (attribute synthesized)) 
-           (bb-method (textify (lower-camel symbol)) (synth :parameters attribute) 
-                      (aif (synth :type attribute)
-                           it
-                           (bb-primitive-type 'void))
-                      :throws (list (bb-static 'i-o-exception))
-                      (bb-list
-                       (apply #'bb-switch (bb-chain (bb-dynamic 'look) (bb-dynamic 'tag))
-                              :default (bb-throw (bb-new (bb-object-type 'error) 
-                                                         (reduce #'bb-+ 
-                                                                 (list (bb-const (reduce #'mkstr
-                                                                                         (mapcar (lambda (case)
-                                                                                                   (mkstr case ", "))
-                                                                                                 cases)
-                                                                                         :initial-value (mkstr "Error in production for " symbol ": expecting ")))
-                                                                       (bb-const "found ")
-                                                                       (bb-dynamic 'look)))))
-                              (mapcar (lambda (case)
-                                        (bb-case (bb-chain (bb-static 'tag) (bb-enum case)) 
-                                                 (progn 
-                                                   ;; (my-debug "in nonterminal" (car (gethash case prodmap)))
-                                                   (synth :code (car (gethash case prodmap)) attribute))))
-                                      cases)))))) 
+           (bb-with-annotations 
+            nil ;; (list (bb-annotation2 '|SuppressWarnings| (bb-const "unchecked"))
+                ;;   (bb-annotation2 '|SuppressWarnings| (bb-const "unused")))
+            (bb-method (textify (lower-camel symbol)) (synth :parameters attribute) 
+                       (aif (synth :type attribute)
+                            it
+                            (bb-primitive-type 'void))
+                       :throws (list (bb-static 'i-o-exception))
+                       (bb-list
+                        (apply #'bb-switch (bb-chain (bb-dynamic 'look) (bb-dynamic 'tag))
+                               :default (bb-throw (bb-new (bb-object-type 'error) 
+                                                          (reduce #'bb-+ 
+                                                                  (list (bb-const (reduce #'mkstr
+                                                                                          (mapcar (lambda (case)
+                                                                                                    (mkstr case ", "))
+                                                                                                  cases)
+                                                                                          :initial-value (mkstr "Error in production for " symbol ": expecting ")))
+                                                                        (bb-const "found ")
+                                                                        (bb-dynamic 'look)))))
+                               (mapcar (lambda (case)
+                                         (bb-case (bb-chain (bb-static 'tag) (bb-enum case)) 
+                                                  (progn 
+                                                    ;; (my-debug "in nonterminal" (car (gethash case prodmap)))
+                                                    (synth :code (car (gethash case prodmap)) attribute))))
+                                       cases)))))))
+  (:doc () (let* ((productions (gethash symbol *grammar*))) 
+             (hcat+ (textify (upper-camel symbol))
+                    (text "->")
+                    (apply #'punctuate (text " | ") nil (synth-all :docrhs productions))
+                    (text "."))))
   (:type (attribute) (synth :type synthesized)))
 
 (defparameter *nonterminals* (make-hash-table))
@@ -111,7 +123,8 @@
                          (bb-return)))
   (:body () (aif (synth :body rule)
                  it
-                 (list (epsilon))))) 
+                 (list (epsilon))))
+  (:docrhs () (apply #'hcat+ (synth-all :docrhs (synth :body this))))) 
 
 (defun first-set (x)
   (cond ((null x) nil)
@@ -134,11 +147,12 @@
                                 (adjoin acc (epsilon) :test #'closure-equal)))
                          productions
                          :initial-value nil))))))
-(defun follow-set (x)
+
+(defun follow-set-visited (x visited)
   (let ((productions (remove-if 
                       (lambda (prod) (closure-equal x (synth :head prod))) 
                       (get-prods-by-body *grammar* x))))
-    ;; (my-debug "starting follow-set" x productions)
+    ;; (my-debug "starting follow-set" x visited)
     (reduce (lambda (acc prod)
               (let* ((head (synth :head prod))
                      (body (synth :body prod))
@@ -146,7 +160,11 @@
                      (follow2 (set-difference (first-set beta) (list (epsilon)) :test #'closure-equal))
                      (follow3 (if (or (null beta)
                                       (member (epsilon) (first-set beta) :test #'closure-equal))
-                                  (union follow2 (follow-set head))
+                                  (progn 
+                                    ;; (my-debug "in if" head)
+                                    (if (member head visited :test #'closure-equal)
+                                        follow2
+                                        (union follow2 (follow-set-visited head (cons head visited)))))
                                   follow2)))
                 ;; (my-debug "in let* follow-set" head body beta (first-set beta) follow2 follow3)
                 (union acc follow3 :test #'closure-equal)))
@@ -154,6 +172,8 @@
             :initial-value (if (is-start x)
                                (list (dollar))
                                nil))))
+(defun follow-set (x)
+  (follow-set-visited x nil))
 
 (defun productions (grammar)
   (flatten (hash-table-values grammar)))
@@ -276,15 +296,17 @@
                  (bb-statement (bb-call 'match (bb-chain (bb-static 'tag) (bb-enum (synth :symbol symbol))))))
              (error "nonterminal symbol in match")))
   (:body () symbol))
-(defprim lexval (symbol type)
-  (:pretty () (list 'lexval (list :symbol (synth :pretty symbol) :type (synth :pretty type))))
-  (:code (attribute lhs) (if (is-terminal symbol)
-                             (bb-list 
-                              (bb-statement (bb-pair lhs type 
-                                                     :init (bb-new type (bb-chain (bb-dynamic 'look :as (bb-object-type 'num)) 
-                                                                                  (bb-dynamic 'value)))))
-                              (synth :code (match symbol) attribute nil))
-                             (error "nonterminal symbol in lexval")))
+(defprim lexval (symbol)
+  (:pretty () (list 'lexval (list :symbol (synth :pretty symbol))))
+  (:code (attribute lhs) 
+         (let ((type (synth :type symbol)))
+           (if (is-terminal symbol)
+               (bb-list 
+                (bb-statement (bb-pair lhs type 
+                                       :init (bb-new type (bb-chain (bb-dynamic 'look :as (bb-object-type 'num)) 
+                                                                    (bb-dynamic 'value)))))
+                (synth :code (match symbol) attribute nil))
+               (error "nonterminal symbol in lexval"))))
   (:body () symbol))
 
 (defprim lookup (symbol)
@@ -323,24 +345,29 @@
   (:body () nil))
 
 ;; (defparameter etype (bb-template-type 'expression (bb-object-type 'float)))
+(defparameter t-expr (bb-object-type 'expression))
 (defparameter t-arith (bb-object-type 'arithmetic-expression))
-(defparameter t-bool (bb-object-type 'boolean-expression))
+
+(defun t-template (&optional (type (bb-wildcard-type))) 
+  (bb-template-type 'template-expression type))
+(defparameter t-bool (bb-object-type 'boolean))
 (defparameter t-string (bb-object-type 'string))
 (defparameter t-id (bb-object-type 'identifier))
+(defparameter t-int (bb-object-type 'integer))
 
 
 (defparameter terminal-id (terminal :id t-id))
 ;; (defparameter expr (bb-object-type 'expression))
 
-(defnonterminal ee (synth-attr t-arith) :start t)
-(defnonterminal ep (synth-attr t-arith 
-                               :expr (inher-attr t-arith)))
-(defnonterminal tt (synth-attr t-arith))
-(defnonterminal tp (synth-attr t-arith
-                               :expr (inher-attr t-arith)))
-(defnonterminal ff (synth-attr t-arith))
+(defnonterminal ee (synth-attr (t-template)) :start t)
+(defnonterminal ep (synth-attr (t-template) 
+                               :expr (inher-attr (t-template))))
+(defnonterminal tt (synth-attr (t-template)))
+(defnonterminal tp (synth-attr (t-template)
+                               :expr (inher-attr (t-template))))
+(defnonterminal ff (synth-attr (t-template)))
 
-(defnonterminal indy-let (synth-attr t-arith))
+(defnonterminal indy-let (synth-attr (t-template)))
 (defnonterminal indy-binds nil)
 (defnonterminal indy-binds-rest nil)
 (defnonterminal indy-bind nil)
@@ -351,21 +378,26 @@
 (defnonterminal resto-parametri nil)
 (defnonterminal parametro nil)
 ;; (defnonterminal argomento (synth-attr t-id))
-(defnonterminal espressione-booleana (synth-attr t-bool))
-(defnonterminal resto-espressione-booleana (synth-attr t-bool
-                                                       :expr (inher-attr t-bool)))
-(defnonterminal termine-booleano (synth-attr t-bool))
-(defnonterminal resto-termine-booleano (synth-attr t-bool
-                                                   :expr (inher-attr t-bool)))
-(defnonterminal fattore-booleano (synth-attr t-bool))
-(defnonterminal relazione (synth-attr t-bool))
-(defnonterminal resto-relazione (synth-attr t-bool
-                                            :expr (inher-attr t-arith)))
-(defnonterminal indicatore (synth-attr t-bool) :start t)
+(defnonterminal espressione-booleana (synth-attr (t-template)))
+(defnonterminal resto-espressione-booleana (synth-attr (t-template)
+                                                       :expr (inher-attr (t-template))))
+(defnonterminal termine-booleano (synth-attr (t-template)))
+(defnonterminal resto-termine-booleano (synth-attr (t-template)
+                                                   :expr (inher-attr (t-template))))
+(defnonterminal fattore-booleano (synth-attr (t-template)))
+(defnonterminal relazione (synth-attr (t-template)))
+(defnonterminal resto-relazione (synth-attr (t-template)
+                                            :expr (inher-attr (t-template))))
+(defnonterminal funzione (synth-attr (t-template)))
+(defnonterminal indicatore (synth-attr (t-template)) :start t)
 
 
-
-
+;; (indicatore cust1 (soggetto) ((occorrenze-veicoli numero) (occorrenze-sinistri numero))
+;;             (maggiore (conta (sinistri (e (coinvolto soggetto sinistro)
+;;                                 (maggiore (conta (veicoli (coinvolto veicolo sinistro))
+;;                                                  occorrenze-veicoli))))
+;;                              occorrenze-sinistri)))
+            
 
 ;; (defproduction argomento 
 ;;     (with-bindings ((sogg (match (terminal :soggetto t-id))))
@@ -375,11 +407,17 @@
 ;;     (with-bindings ((veic (match (terminal :veicolo t-id))))
 ;;       (synthesize veic)))
 
+(defproduction funzione
+    (with-bindings (((match (terminal :sinistri)))
+                    ((match (terminal :left)))
+                    (node (invoke espressione-booleana))
+                    ((match (terminal :right))))
+      (synthesize node)))
 
 (defproduction parametro
     (with-bindings ((id (match terminal-id))
                     ((match (terminal :assign)))
-                    (node (invoke ee)))
+                    (node (invoke espressione-booleana)))
       (store id node)))
 
 (defproduction resto-parametri)
@@ -397,6 +435,12 @@
       nil))
 
 (defproduction espressione-booleana 
+    (with-bindings ((node (invoke indy-let)))
+      (synthesize node)))
+
+
+
+(defproduction espressione-booleana 
     (with-bindings ((node (invoke termine-booleano))
                     (syn (invoke resto-espressione-booleana node)))
       (synthesize syn)))
@@ -405,9 +449,11 @@
     (with-inherited ((expr :expr))
       (with-bindings (((match (terminal :or)))
                       (node (invoke termine-booleano))
-                      (syn (invoke resto-espressione-booleana 
-                                   (bb-new t-bool (bb-or (bb-chain expr (bb-call 'get-value)) 
-                                                         (bb-chain node (bb-call 'get-value)))))))
+                      (syn (let ((type (t-template t-bool)))
+                             (invoke resto-espressione-booleana
+                                     (bb-new type
+                                             (bb-or (bb-chain (bb-chain expr :as type) (bb-call 'get-value)) 
+                                                   (bb-chain (bb-chain node :as type) (bb-call 'get-value))))))))
         (synthesize syn))))
 
 (defproduction resto-espressione-booleana 
@@ -423,9 +469,11 @@
     (with-inherited ((expr :expr))
       (with-bindings (((match (terminal :and)))
                       (node (invoke fattore-booleano))
-                      (syn (invoke resto-termine-booleano 
-                                   (bb-new t-bool (bb-and (bb-chain expr (bb-call 'get-value)) 
-                                                          (bb-chain node (bb-call 'get-value)))))))
+                      (syn (let ((type (t-template t-bool)))
+                             (invoke resto-termine-booleano
+                                     (bb-new type
+                                             (bb-and (bb-chain (bb-chain expr :as type) (bb-call 'get-value)) 
+                                                    (bb-chain (bb-chain node :as type) (bb-call 'get-value))))))))
         (synthesize syn))))
  
 (defproduction resto-termine-booleano 
@@ -433,30 +481,25 @@
       (synthesize expr)))
 
 (defproduction fattore-booleano 
-    (with-bindings (((match (terminal :left)))
-                    (node (invoke espressione-booleana))
-                    ((match (terminal :right))))
-      (synthesize node)))
-
-(defproduction fattore-booleano 
     (with-bindings (((match (terminal :not)))
                     (syn (invoke fattore-booleano)))
-      (synthesize (bb-new t-bool (bb-not (bb-chain syn (bb-call 'get-value)))))))
+      (synthesize (let ((type (t-template t-bool)))
+                    (bb-new type (bb-not (bb-chain (bb-chain syn :as type) (bb-call 'get-value))))))))
 
 (defproduction fattore-booleano 
     (with-bindings (((match (terminal :true))))
-      (synthesize (bb-true))))
+      (synthesize (bb-new (t-template t-bool) (bb-true)))))
 
 (defproduction fattore-booleano 
     (with-bindings (((match (terminal :false))))
-      (synthesize (bb-false))))
-
-(defproduction fattore-booleano 
-    (with-bindings ((node (lookup (terminal :id t-bool))))
-      (synthesize node)))
+      (synthesize (bb-new (t-template t-bool) (bb-false)))))
 
 (defproduction fattore-booleano 
     (with-bindings ((node (invoke relazione)))
+      (synthesize node)))
+
+(defproduction fattore-booleano 
+    (with-bindings ((node (invoke funzione)))
       (synthesize node)))
 
 (defproduction relazione 
@@ -464,12 +507,16 @@
                     (syn (invoke resto-relazione node)))
       (synthesize syn)))
 
+(defproduction resto-relazione
+    (with-inherited ((expr :expr))
+      (synthesize expr)))
 (defproduction resto-relazione 
     (with-inherited ((expr :expr))
       (with-bindings (((match (terminal :equal)))
                       (node (invoke ee)))
-        (synthesize (bb-equal expr node)))))
-
+        (synthesize (let ((type (t-template t-bool)))
+                      (bb-new type (bb-equal (bb-chain (bb-chain expr :as type) (bb-call 'get-value)) 
+                                             (bb-chain (bb-chain node :as type) (bb-call 'get-value)))))))))
 
 (defproduction indicatore 
     (with-bindings (((push-environment))
@@ -482,12 +529,11 @@
                     ((pop-environment)))
       (synthesize expr)))
 
-
 (defproduction indy-let (with-bindings (((match (terminal :let)))
                   ((push-environment))
                   ((invoke indy-binds))
                   ((match (terminal :in)))
-                  (node (invoke ee))
+                  (node (invoke espressione-booleana))
                   ((pop-environment)))
     (synthesize node)))
 
@@ -507,21 +553,18 @@
                   ((invoke indy-binds-rest)))
     nil))
 
-;; (defproduction ee (indy-let)  
-;;   (with-bindings ((node (invoke indy-let)))
-;;     (synthesize node)))
-
 (defproduction ee (with-bindings ((node (invoke tt))
                   (syn (invoke ep node)))
     (synthesize syn)))
 
 (defproduction ep (with-inherited ((expr :expr))
-      (with-bindings (((match (terminal :plus)))
-                      (node (invoke tt))
-                      (syn (invoke ep (bb-new t-arith (bb-+ (bb-chain expr (bb-call 'get-value)) 
-                                                                           (bb-chain node (bb-call 'get-value)))))))
-        (synthesize syn))))
-
+                    (with-bindings (((match (terminal :plus)))
+                                    (node (invoke tt))
+                                    (syn (let ((type (t-template t-int)))
+                                           (invoke ep (bb-new type
+                                                              (bb-+ (bb-chain (bb-chain expr :as type) (bb-call 'get-value)) 
+                                                                    (bb-chain (bb-chain node :as type) (bb-call 'get-value))))))))
+                      (synthesize syn))))
 (defproduction ep (with-inherited ((expr :expr))
       (synthesize expr)))
 
@@ -530,36 +573,46 @@
     (synthesize syn)))
 
 (defproduction tp (with-inherited ((expr :expr))
-    (with-bindings (((match (terminal :times)))
-                    (node (invoke ff))
-                    (syn (invoke tp (bb-new t-arith (bb-* (bb-chain expr (bb-call 'get-value)) 
-                                                                         (bb-chain node (bb-call 'get-value)))))))
-      (synthesize syn))))
+                    (with-bindings (((match (terminal :times)))
+                                    (node (invoke ff))
+                                    (syn (let ((type (t-template t-int)))
+                                           (invoke tp (bb-new type
+                                                              (bb-* (bb-chain (bb-chain expr :as type) (bb-call 'get-value)) 
+                                                                    (bb-chain (bb-chain node :as type) (bb-call 'get-value))))))))
+                      (synthesize syn))))
  
-(defproduction tp (with-inherited ((expr :expr))
-    (synthesize expr)))
+(defproduction tp 
+    (with-inherited ((expr :expr))
+      (synthesize expr)))
 
-(defproduction ff (with-bindings (((match (terminal :left)))
-                   (node (invoke ee))
-                   ((match (terminal :right))))
-    (synthesize node)))
+(defproduction ff 
+    (with-bindings (((match (terminal :left)))
+                    (node (invoke espressione-booleana))
+                    ((match (terminal :right))))
+      (synthesize node)))
 
-(defproduction ff (with-bindings ((node (lexval (terminal :num) t-arith)))
-    (synthesize node)))
+(defproduction ff 
+    (with-bindings ((node (lexval (terminal :num (t-template t-int)))))
+      (synthesize node)))
 
-(defproduction ff (with-bindings ((node (lookup (terminal :id t-arith))))
-    (synthesize node)))
+(defproduction ff 
+    (with-bindings ((node (lookup (terminal :id (t-template)))))
+      (synthesize node)))
+
 
 (defparameter *ptable* (make-ptable *grammar*))
 
-;; (pprint (synth-all :pretty (first-set ee)))
-;; (pprint (synth-all :pretty (follow-set ff)))
+;; (let ((sym espressione-booleana))
+;;   (pprint (synth-all :pretty (first-set sym)))
+;;   (pprint (synth-all :pretty (follow-set sym))))
 ;; (pprint (synth-all :pretty (nonterminals *grammar*)))
-(pprint-ptable *ptable*)
+;; (pprint-ptable *ptable*)
 
+;; (pprint (synth :output (apply #'vcat (synth-all :doc (hash-table-values *nonterminals*))) 0))
 ;; (pprint (synth-all :pretty (apply #'append (synth-all :body (get-prods-by-head *grammar* (synth :symbol ff))))))
 (write-file "D:/giusv/temp/temp.java"
             (synth :string (apply #'vcat (synth-all :doc (synth-all :java (synth-all :code (hash-table-values *nonterminals*)))))))
 
 ;; (pprint (synth-all :output (synth-all :java (synth-all :code (list ee ep tt tp ff))) 0))
 ;; (pprint (synth-all :pretty (get-prods-by-head *grammar* (synth :symbol ee))))
+;; (pprint (synth :doc ee))

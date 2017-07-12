@@ -95,6 +95,11 @@
   (:typescript () (upper-camel name))
   (:java () (textify (upper-camel name))))
 
+(defprim bb-wildcard-type ()
+  (:pretty () (list 'bb-wildcard-type))
+  (:typescript () (error "not implemented yet"))
+  (:java () (text "?")))
+
 (defprim bb-template-type (name &rest types)
   (:pretty () (list 'bb-template-type (list :name name :types (synth-all :pretty types))))
   (:typescript () )
@@ -539,6 +544,7 @@
 			      `(list ,@(apply #'append (loop for i from 1 to arity collect (list (keyw "EXP" i) `(synth :pretty ,(symb "EXP" i)))))))))
        (:typescript () (error "not implemented yet"))
        (:java () ,(cond ((eq arity 'unbounded) `(apply #'doc:punctuate (doc:text " ~a " ,representation) nil (synth-all :java exps)))
+                        ((eq arity 0) `(doc:text "~a" ,representation))
                         ((eq arity 1) `(doc:hcat (doc:text "~a " ,representation) (synth :java ,(symb "EXP1"))))
                         (t `(doc:punctuate (doc:text " ~a " ,representation) nil ,@(loop for i from 1 to arity collect `(synth :java ,(symb "EXP" i))))))))))
 
@@ -552,4 +558,4 @@
 ;;(def-bexp true)
 ;; (def-bexp equal 2)
 
-(defbexps (true) (false) (and '&& 2) (or '\|\| 2) (not '! 1) (equal '== 2) (less-than '< 2) (greater-than '> 2))
+(defbexps (true '|true|) (false '|false|) (and '&& 2) (or '\|\| 2) (not '! 1) (equal '== 2) (less-than '< 2) (greater-than '> 2))

@@ -62,7 +62,7 @@
 (defpackage :lang
   (:use :cl :lol :utils :grammar :doc)
   (:export :bb-empty :bb-comment :bb-const 
-           :bb-type :bb-primitive-type :bb-array-type :bb-object-type :bb-template-type
+           :bb-type :bb-primitive-type :bb-array-type :bb-object-type :bb-template-type :bb-wildcard-type
            :bb-pair :bb-array :bb-element
            :bb-object :bb-annotation :bb-annotation2 :bb-with-annotations :bb-class :bb-interface :bb-method :bb-signature 
            :bb-import :bb-package :bb-new :bb-call :bb-static :bb-dynamic :bb-enum :bb-chain :bb-constructor :bb-arrow 
