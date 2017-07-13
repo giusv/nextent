@@ -23,13 +23,13 @@
 
 (defpackage :parser
   (:use :cl :lol :utils)
-  (:export :tuple :resut :apply-parser :parse :bind :fail :item :do-with :sat :sym :choose :zero :plus :choice 
+  (:export :tuple :result :apply-parser :parse :bind :fail :item :do-with :sat :sym :choose :choose-among :zero :plus :choice 
            :many :many1 :sepby :sepby1 :sublist :pair :optional :atomic :var-init :req-var :opt-var :lambda-list :arg-names)) 
 
 
 (defpackage :grammar
   (:use :cl :lol :utils)
-  (:export :defprim 
+  (:export :defprim :defprod
            :synth :synth-all :synth-plist :synth-plist-merge))
 
 (defpackage :doc
@@ -156,3 +156,6 @@
 
 (defpackage :pgen
   (:use :cl :lol :utils :doc :grammar :lang))
+
+(defpackage :indy
+  (:use :cl :lol :utils :parser :doc :grammar))

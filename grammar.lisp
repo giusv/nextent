@@ -9,7 +9,7 @@
 
 
 
-(defmacro defprim (name lambda-list &rest attrs)
+(defmacro defprim (name lambda-list &body attrs)
   (let ((args (parser:arg-names lambda-list)))
     `(defun ,name ,lambda-list
        (declare (optimize debug))

@@ -11,6 +11,7 @@
 
 (defun apply-parser (parser input)
   (funcall parser input))
+
 (defun parse (parser input)
   (let ((res (car (apply-parser parser input)))) 
     (if (null res) 
@@ -55,6 +56,11 @@
 (defun sym (m)
   (do-with ((a (sat #'(lambda (x) (eq m x)))))
     (result a)))
+
+(defmacro choose-among (&rest choices)
+  (cond ((null choices) `(fail))
+        ((= 1 (length choices)) (car choices))
+        (t `(choose ,(car choices) (choose-among ,@(cdr choices))))))
 
 (defun choose (p q)
   #'(lambda (s)

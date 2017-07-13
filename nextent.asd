@@ -11,50 +11,56 @@
                (:file "parser")
                (:file "grammar")
                (:file "doc")
-               (:file "html")
+               ;; (:file "html")
                (:module "lang"
                         :serial t
                         :components ((:file "blub")
                                      (:file "clang")))
-               (:file "expression")
-               (:file "validator") 
-               (:file "url")
-               (:file "query") 
-               (:module "data"
-                        :serial t
-                        :components ((:file "data")
-                                     (:file "json")
-                                     (:file "jsonschema")
-                                     (:file "entity"))) 
-               (:module "gui"
-                        :serial t
-                        :components ((:file "input")
-                                     (:file "button")
-                                     (:file "link")
-                                     (:file "navbar")
-                                     (:file "vert")
-                                     (:file "horz")
-                                     (:file "label")
-                                     (:file "panel")
-                                     (:file "listing")
-                                     (:file "table")
-                                     (:file "description")
-                                     (:file "abst")
-                                     (:file "static")
-                                     (:file "dynamic")
-                                     (:file "alt")
-                                     (:file "form")))
+               ;; (:file "expression")
+               ;; (:file "validator") 
+               ;; (:file "url")
+               ;; (:file "query") 
+               ;; (:module "data"
+               ;;          :serial t
+               ;;          :components ((:file "data")
+               ;;                       (:file "json")
+               ;;                       (:file "jsonschema")
+               ;;                       (:file "entity")))
+               
+               ;; (:module "gui"
+               ;;          :serial t
+               ;;          :components ((:file "input")
+               ;;                       (:file "button")
+               ;;                       (:file "link")
+               ;;                       (:file "navbar")
+               ;;                       (:file "vert")
+               ;;                       (:file "horz")
+               ;;                       (:file "label")
+               ;;                       (:file "panel")
+               ;;                       (:file "listing")
+               ;;                       (:file "table")
+               ;;                       (:file "description")
+               ;;                       (:file "abst")
+               ;;                       (:file "static")
+               ;;                       (:file "dynamic")
+               ;;                       (:file "alt")
+               ;;                       (:file "form")))
               
-               (:module "server"
+               ;; (:module "server"
+               ;;          :serial t
+               ;;          :components ((:file "rest")
+               ;;                       (:file "actions")))
+               ;; (:module "ml"
+               ;;          :serial t
+               ;;          :components ((:file "node")))
+               
+               (:module "indy"
                         :serial t
-                        :components ((:file "rest")
-                                     (:file "actions")))
-               (:module "ml"
-                        :serial t
-                        :components ((:file "node")))
-               (:module "pgen"
-                        :serial t
-                        :components ((:file "pgen")))
+                        :components ((:file "indy")
+                                     (:file "indyparser")))
+               ;; (:module "pgen"
+               ;;          :serial t
+               ;;          :components ((:file "pgen")))
                ;; (:file "ml")
                ;; (:file "nextent")
                
