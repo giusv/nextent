@@ -1,16 +1,16 @@
 (in-package :java)
 
 
-(defprim bb-empty ()
-  (:pretty () (list 'bb-empty)) 
+(defprim java-empty ()
+  (:pretty () (list 'java-empty)) 
   (:java () (empty)))
 
-(defprim bb-comment (text)
-  (:pretty () (list 'bb-comment (list :text text))) 
+(defprim java-comment (text)
+  (:pretty () (list 'java-comment (list :text text))) 
   (:java () (text "//~a" (synth :string text))))
 
-(defprim bb-pair (name type &key init const private)
-  (:pretty () (list 'bb-pair (list :name name :type (synth :pretty type) :init (synth :pretty init) :const const))) 
+(defprim java-pair (name type &key init const private)
+  (:pretty () (list 'java-pair (list :name name :type (synth :pretty type) :init (synth :pretty init) :const const))) 
   (:java () (hcat (if private (text "private ") (empty))
                         (if const (text "const ") (empty))
                         (synth :java type) 
@@ -22,8 +22,8 @@
 
 
 
-(defprim bb-const (lit)
-  (:pretty () (list 'bb-const (list :lit lit))) 
+(defprim java-const (lit)
+  (:pretty () (list 'java-const (list :lit lit))) 
   (:java () (cond ((stringp lit) (double-quotes (text "~a" lit)))
                   ((numberp lit) (text "~a" lit))
                   ((symbolp lit) (text "~a" (lower-camel lit)))
@@ -32,16 +32,16 @@
 
 
 
-(defprim bb-try (body catches &optional finally)
-  (:pretty () (list 'bb-try (list :body (synth :pretty body) :catches (synth-plist :pretty catches)))) 
+(defprim java-try (body catches &optional finally)
+  (:pretty () (list 'java-try (list :body (synth :pretty body) :catches (synth-plist :pretty catches)))) 
   (:java () (apply #'vcat (text "try")
                    (braces 
                     (nest 4 (synth :java body))
                     :newline t)
                    (synth-all :java catches))))
 
-(defprim bb-catch% (exceptions name body)
-  (:pretty () (list 'bb-catch (list :exceptions exceptions :name name :body (synth :pretty body)))) 
+(defprim java-catch% (exceptions name body)
+  (:pretty () (list 'java-catch (list :exceptions exceptions :name name :body (synth :pretty body)))) 
   (:java () (vcat (hcat+ (text "catch")
                          (parens (hcat+ (apply #'punctuate (text " | ") nil (mapcar (lambda (e)
                                                                        (textify (upper-camel e)))
@@ -51,36 +51,36 @@
                    (nest 4 (synth :java body))
                    :newline t))))
 
-(defmacro bb-catch (exceptions body)
+(defmacro java-catch (exceptions body)
   `(let* ((,(car exceptions) ',(car exceptions))) 
-     (bb-catch% (list ,@(cdr exceptions)) ,(car exceptions) ,body)))
+     (java-catch% (list ,@(cdr exceptions)) ,(car exceptions) ,body)))
 
-(defprim bb-primitive-type (name)
-  (:pretty () (list 'bb-primitive-type (list :name name))) 
+(defprim java-primitive-type (name)
+  (:pretty () (list 'java-primitive-type (list :name name))) 
   (:java () (hcat (text "~a" (lower-camel name)))))
 
-(defprim bb-array-type (type)
-  (:pretty () (list 'bb-array-type (list :type type))) 
+(defprim java-array-type (type)
+  (:pretty () (list 'java-array-type (list :type type))) 
   (:java () (hcat (synth :java type) 
                   (text "[]"))))
 
-(defprim bb-object-type (name)
-  (:pretty () (list 'bb-object-type (list :name name))) 
+(defprim java-object-type (name)
+  (:pretty () (list 'java-object-type (list :name name))) 
   (:java () (textify (upper-camel name))))
 
-(defprim bb-wildcard-type ()
-  (:pretty () (list 'bb-wildcard-type)) 
+(defprim java-wildcard-type ()
+  (:pretty () (list 'java-wildcard-type)) 
   (:java () (text "?")))
 
-(defprim bb-template-type (name &rest types)
-  (:pretty () (list 'bb-template-type (list :name name :types (synth-all :pretty types)))) 
+(defprim java-template-type (name &rest types)
+  (:pretty () (list 'java-template-type (list :name name :types (synth-all :pretty types)))) 
   (:java () (hcat (textify (upper-camel name))
                   (angular (apply #'punctuate (comma) nil (mapcar (lambda (type)
                                                             (synth :java type))
                                                           types))))))
 
-(defprim bb-type (name &key primitive array template)
-  (:pretty () (list 'bb-type (list :name name :primitive primitive :array array :template template))) 
+(defprim java-type (name &key primitive array template)
+  (:pretty () (list 'java-type (list :name name :primitive primitive :array array :template template))) 
   (:java () (hcat (text "~a" (if (or (eq name :int)
                                      (eq name :float)
                                      (eq name :double)
@@ -91,42 +91,42 @@
                   (if template (angular (synth :java template))))))
 
 
-;; (defprim bb-bool (value)
-;;   (:pretty () (list 'bb-bool (list :value (synth :pretty value))))
+;; (defprim java-bool (value)
+;;   (:pretty () (list 'java-bool (list :value (synth :pretty value))))
 ;;   (:string () (synth :string value)))
 
-;; (defprim bb-number (value)
-;;   (:pretty () (list 'bb-number (list :value (synth :pretty value))))
+;; (defprim java-number (value)
+;;   (:pretty () (list 'java-number (list :value (synth :pretty value))))
 ;;   (:string () (synth :string value)))
 
-;; (defprim bb-string (value)
-;;   (:pretty () (list 'bb-string (list :value (synth :pretty value))))
+;; (defprim java-string (value)
+;;   (:pretty () (list 'java-string (list :value (synth :pretty value))))
 ;;   (:string () (synth :string value)))
 
-(defprim bb-array (&rest elems)
-  (:pretty () (list 'bb-array (list :elems (synth-all :pretty elems)))) 
+(defprim java-array (&rest elems)
+  (:pretty () (list 'java-array (list :elems (synth-all :pretty elems)))) 
   (:java () (braces 
              (nest 4 (apply #'punctuate (comma) t (synth-all :java (apply #'append* elems))))
              :newline t)))
 
-(defprim bb-object (&rest elems)
-  (:pretty () (list 'bb-object (list :elems (synth-plist :pretty (apply #'append* elems))))) 
+(defprim java-object (&rest elems)
+  (:pretty () (list 'java-object (list :elems (synth-plist :pretty (apply #'append* elems))))) 
   (:java () (apply #'punctuate (comma) t 
                    (synth-plist-merge 
                     #'(lambda (pair) (hcat (textify (car pair)) (equals) (synth :java (cadr pair)))) 
                     (apply #'append* elems)))))
 
-(defprim bb-template (element)
-  (:pretty () (list 'bb-template (list :element (synth :pretty element)))) 
+(defprim java-template (element)
+  (:pretty () (list 'java-template (list :element (synth :pretty element)))) 
   (:java () (error "not available in java")))
 
-(defprim bb-with-annotations (annotations expr &key (newline t))
-  (:pretty () (list 'bb-with-annotation (list :annotations (synth-all :pretty annotations) :expr (synth :pretty expr)))) 
+(defprim java-with-annotations (annotations expr &key (newline t))
+  (:pretty () (list 'java-with-annotation (list :annotations (synth-all :pretty annotations) :expr (synth :pretty expr)))) 
   (:java () (apply (if newline #'vcat #'hcat+) (append* (synth-all :java annotations)
                                                            (synth :java expr)))))
 
-(defprim bb-annotation (name &rest props)
-  (:pretty () (list 'bb-annotation (list name name :props (synth-plist :pretty props)))) 
+(defprim java-annotation (name &rest props)
+  (:pretty () (list 'java-annotation (list name name :props (synth-plist :pretty props)))) 
   (:java () (hcat (text "@~a" name) 
                   (cond ((null props) (empty))
                         ((plist-p props) (parens
@@ -139,14 +139,14 @@
                         ((listp props) (parens (braces (apply #'punctuate (comma) nil props))))
                         (t (error "case not allowed"))))))
 
-(defprim bb-annotation2 (name &optional content)
-  (:pretty () (list 'bb-annotation2 (list name name :content (synth :pretty content)))) 
+(defprim java-annotation2 (name &optional content)
+  (:pretty () (list 'java-annotation2 (list name name :content (synth :pretty content)))) 
   (:java () (hcat (text "@~a" name) 
                   (cond ((null content) (empty))
                         (t (parens (synth :java content)))))))
 
-(defprim bb-class (name &key public interfaces parent fields constructor methods)
-  (:pretty () (list 'bb-class (list :name name 
+(defprim java-class (name &key public interfaces parent fields constructor methods)
+  (:pretty () (list 'java-class (list :name name 
                                     :public public
                                     :interfaces interfaces 
                                     :parent parent 
@@ -168,8 +168,8 @@
                                    (synth-all :java methods))))
                    :newline t))))
 
-(defprim bb-interface (name &key public interfaces methods)
-  (:pretty () (list 'bb-interface (list :name name 
+(defprim java-interface (name &key public interfaces methods)
+  (:pretty () (list 'java-interface (list :name name 
                                         :public public
                                         :interfaces interfaces 
                                         :methods (synth-all :pretty methods)))) 
@@ -186,16 +186,16 @@
 
 
 
-(defprim bb-statement (expression)
-  (:pretty () (list 'bb-statement (list :expression expression))) 
+(defprim java-statement (expression)
+  (:pretty () (list 'java-statement (list :expression expression))) 
   (:java () (hcat (synth :java expression) (semi))))
 
-(defprim bb-list (&rest statements)
-  (:pretty () (list 'bb-list (list :statements (synth-all :pretty (apply #'append* statements))))) 
+(defprim java-list (&rest statements)
+  (:pretty () (list 'java-list (list :statements (synth-all :pretty (apply #'append* statements))))) 
   (:java () (apply #'vcat (synth-all :java (apply #'append* statements)))))
 
-(defprim bb-method (name parameters rtype &rest args)
-  (:pretty () (list 'bb-method (list :name name 
+(defprim java-method (name parameters rtype &rest args)
+  (:pretty () (list 'java-method (list :name name 
                                      :parameters (synth-all :pretty parameters) 
                                      :rtype rtype
                                      :throws (synth-all :pretty (getf (rest-key args) :throws))
@@ -212,8 +212,8 @@
                    (nest 4 (apply #'vcat (synth-all :java (rest-plain args))))
                    :newline t))))
 
-(defprim bb-signature (name parameters rtype)
-  (:pretty () (list 'bb-signature (list :name name 
+(defprim java-signature (name parameters rtype)
+  (:pretty () (list 'java-signature (list :name name 
                                      :parameters (synth-all :pretty parameters) 
                                      :rtype rtype))) 
   (:java ()  (hcat (text "public ") 
@@ -223,63 +223,63 @@
                   (parens (apply #'punctuate (comma) t (synth-all :java parameters))) 
                   (semi))))
 
-(defprim bb-import (name &rest elements)
-  (:pretty () (list 'bb-import (list :name (synth :pretty name) 
+(defprim java-import (name &rest elements)
+  (:pretty () (list 'java-import (list :name (synth :pretty name) 
                                      :elements elements))) 
   (:java () (mapcar (lambda (elem)
                       (hcat (text "import ~a.~a" name elem)
                             (semi)))
                     elements)))
 
-(defprim bb-package (name)
-  (:pretty () (list 'bb-package (list :name name))) 
+(defprim java-package (name)
+  (:pretty () (list 'java-package (list :name name))) 
   (:java () (text "package ~a;" name)))
 
-(defprim bb-assign (lhs rhs &key as)
-  (:pretty () (list 'bb-assign (list :lhs lhs :rhs rhs))) 
+(defprim java-assign (lhs rhs &key as)
+  (:pretty () (list 'java-assign (list :lhs lhs :rhs rhs))) 
   (:java () (hcat (synth :java lhs)
                         (text " = ")
                         (if as (parens (text "~a" (upper-camel as))))
                         (synth :java rhs))))
 
-(defprim bb-new (type &rest parameters)
-  (:pretty () (list 'bb-new (list :type (synth :pretty type) 
+(defprim java-new (type &rest parameters)
+  (:pretty () (list 'java-new (list :type (synth :pretty type) 
                                   :parameters (synth-all :pretty parameters)))) 
   (:java () (hcat (text "new ")
                         (synth :java type)
                         (parens (apply #'punctuate (comma) nil (synth-all :java parameters))))))
 
-(defprim bb-call (name &rest args)
-  (:pretty () (list 'bb-call (list :name name 
-                                   :parameters (synth-all :pretty (rest-plain args))
-                                   :as (getf (rest-key args) :as)))) 
+(defprim java-call (name &rest args)
+  (:pretty () (list 'java-call (list :name name 
+                                     :parameters (synth-all :pretty (rest-plain args))
+                                     :as (getf (rest-key args) :as)))) 
   (:java () (hcat (aif (getf (rest-key args) :as)
-                       (hcat (parens (text "~a" (upper-camel as))) (blank))
+                       (hcat (parens (text "~a" (upper-camel it))) (blank))
                        (empty))
                   (text "~a" (lower-camel name))
                   (parens (apply #'punctuate (comma) nil (synth-all :java (rest-plain args)))))))
-(defprim bb-static (name)
-  (:pretty () (list 'bb-static (list :name name))) 
+(defprim java-static (name)
+  (:pretty () (list 'java-static (list :name name))) 
   (:java () (text "~a" (upper-camel name))))
 
 
-(defprim bb-dynamic (name &key as)
-  (:pretty () (list 'bb-dynamic (list :name name :as as))) 
+(defprim java-dynamic (name &key as)
+  (:pretty () (list 'java-dynamic (list :name name :as as))) 
   (:java () (if as
                 (parens (hcat+ (parens (synth :java as)) (text "~a" (lower-camel name))))
                 (text "~a" (lower-camel name)))))
 
-(defprim bb-enum (name)
-  (:pretty () (list 'bb-enum (list :name name))) 
+(defprim java-enum (name)
+  (:pretty () (list 'java-enum (list :name name))) 
   (:java () (text "~a" (string-upcase name))))
 
-(defprim bb-element (array index)
-  (:pretty () (list 'bb-element (list :array array :index (synth :pretty index)))) 
+(defprim java-element (array index)
+  (:pretty () (list 'java-element (list :array array :index (synth :pretty index)))) 
   (:java () (hcat (text "~a" (lower-camel array))
                       (brackets (synth :java index)))))
 
-(defprim bb-chain (&rest args)
-  (:pretty () (list 'bb-chain (list :calls (synth-all :pretty (apply #'append* (rest-plain args)))
+(defprim java-chain (&rest args)
+  (:pretty () (list 'java-chain (list :calls (synth-all :pretty (apply #'append* (rest-plain args)))
                                     :as (getf (rest-key args) :as)))) 
   (:java () (let* ((calls (synth-all :java (apply #'append* (rest-plain args))))
                          (as (getf (rest-key args) :as))
@@ -289,8 +289,8 @@
                                       chain))
                         chain))))
 
-(defprim bb-constructor (name parameters &rest statements)
-  (:pretty () (list 'bb-constructor (list :name name
+(defprim java-constructor (name parameters &rest statements)
+  (:pretty () (list 'java-constructor (list :name name
                                           :parameters (synth-all :pretty parameters) 
                                           :statements (synth-all :pretty statements)))) 
   (:java () (vcat (hcat (text "public ~a" (upper-camel name)) 
@@ -299,8 +299,8 @@
                          (nest 4 (apply #'vcat (synth-all :java statements)))
                          :newline t))))
 
-;; (defprim bb-arrow (parameters &rest statements)
-;;   (:pretty () (list 'bb-arrow (list :parameters (synth-all :pretty parameters) 
+;; (defprim java-arrow (parameters &rest statements)
+;;   (:pretty () (list 'java-arrow (list :parameters (synth-all :pretty parameters) 
 ;;                                     :statements (synth-all :pretty statements))))
 ;;   (:typescript () (hcat (parens (apply #'punctuate (comma) nil (synth-all :typescript parameters)))
 ;;                         (text " => ") 
@@ -308,8 +308,8 @@
 ;;                          (nest 4 (apply #'postpend (semi) t 
 ;;                                         (synth-all :typescript statements)))
 ;;                          :newline t))))
-(defprim bb-arrow (parameters expression)
-  (:pretty () (list 'bb-arrow (list :parameters (synth-all :pretty parameters) 
+(defprim java-arrow (parameters expression)
+  (:pretty () (list 'java-arrow (list :parameters (synth-all :pretty parameters) 
                                     :expression (synth :pretty expression)))) 
   (:java () (hcat (parens (apply #'punctuate (comma) nil (synth-all :java parameters)))
                   (text " -> ") 
@@ -317,19 +317,19 @@
                           :newline t))))
 
 
-(defprim bb-unit (name &rest elements)
-  (:pretty () (list 'bb-unit (list :name name :elements (synth-all :pretty (apply #'append* elements))))) 
+(defprim java-unit (name &rest elements)
+  (:pretty () (list 'java-unit (list :name name :elements (synth-all :pretty (apply #'append* elements))))) 
   (:java () (apply #'vcat (synth-all :java (apply #'append* elements)))))
 
-(defprim bb-return (&optional expression)
-  (:pretty () (list 'bb-return (list :expression expression))) 
+(defprim java-return (&optional expression)
+  (:pretty () (list 'java-return (list :expression expression))) 
   (:java () (if expression (hcat (text "return ")
                                  (synth :java expression)
                                  (semi))
                 (hcat (text "return") (semi)))))
 
-(defprim bb-if (expression success &optional failure)
-  (:pretty () (list 'bb-if (list :expression expression :success success :failure failure))) 
+(defprim java-if (expression success &optional failure)
+  (:pretty () (list 'java-if (list :expression expression :success success :failure failure))) 
   (:java () (vcat (hcat (text "if") 
                         (parens (synth :java expression)))
                   (braces 
@@ -341,8 +341,8 @@
                              (nest 4 (synth :java failure))
                              :newline t))))))
 
-(defprim bb-switch (expression &rest cases)
-  (:pretty () (list 'bb-switch (list :expression expression 
+(defprim java-switch (expression &rest cases)
+  (:pretty () (list 'java-switch (list :expression expression 
                                      :cases (synth-all :pretty (rest-plain cases)) 
                                      :default (getf (rest-key cases) :default)))) 
   (:java () (vcat (hcat (text "switch") 
@@ -355,22 +355,22 @@
                                                               :newline t))))))
                    :newline t))))
 
-(defprim bb-break ()
-  (:pretty () (list 'bb-break)) 
+(defprim java-break ()
+  (:pretty () (list 'java-break)) 
   (:java () (text "break;")))
 
-(defprim bb-case (expression statement)
-  (:pretty () (list 'bb-case (list :expression expression :statement statement))) 
+(defprim java-case (expression statement)
+  (:pretty () (list 'java-case (list :expression expression :statement statement))) 
   (:java () (vcat (hcat (text "case ") (synth :java expression) (colon))
                   (braces 
                    (nest 4 (synth :java statement))
                    :newline t)
-                  ;; (synth :java (bb-break))
+                  ;; (synth :java (java-break))
                   ))) 
 
 (defmacro defop (name)
-  `(defprim ,(symb "BB-" name) (op1 op2)
-     (:pretty () (list ',(symb "BB-" name) (list :op1 op1 :op2 op2))) 
+  `(defprim ,(symb "JAVA-" name) (op1 op2)
+     (:pretty () (list ',(symb "JAVA-" name) (list :op1 op1 :op2 op2))) 
      (:java () (hcat (synth :java op1)                     (text " ~a " ',name)
                      (synth :java op2)))))
 
@@ -380,20 +380,20 @@
 (defop *)
 (defop /)
 
-;; (defprim bb-equal (op1 op2)
-;;      (:pretty () (list 'bb-equal (list :op1 op1 :op2 op2))) ;;      
+;; (defprim java-equal (op1 op2)
+;;      (:pretty () (list 'java-equal (list :op1 op1 :op2 op2))) ;;      
 ;;      (:java () (hcat (synth :java op1)
 ;;                      (text " == ")
 ;;                      (synth :java op2))))
-(defun bb-null (item)
-  (bb-equal item (bb-nil)))
+(defun java-null (item)
+  (java-equal item (java-nil)))
 
-(defprim bb-nil ()
-  (:pretty () (list 'bb-null)) 
+(defprim java-nil ()
+  (:pretty () (list 'java-null)) 
      (:java () (text "null")))
 
-(defprim bb-throw (exception)
-  (:pretty () (list 'bb-throw (list :exception exception))) 
+(defprim java-throw (exception)
+  (:pretty () (list 'java-throw (list :exception exception))) 
      (:java () (hcat (text "throw ")
                      (synth :java exception)
                      (semi))))
@@ -403,7 +403,7 @@
 
 
 (defmacro defbexp (operator &optional representation (arity 0))
-  (let ((name (symb "BB-" operator)))
+  (let ((name (symb "JAVA-" operator)))
     `(defprim ,name 
          ,(if (eq arity 'unbounded)
               `(&rest exps)

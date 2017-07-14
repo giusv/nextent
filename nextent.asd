@@ -15,7 +15,8 @@
                (:module "lang"
                         :serial t
                         :components ((:file "blub")
-                                     (:file "clang")))
+                                     (:file "c")
+                                     (:file "java")))
                ;; (:file "expression")
                ;; (:file "validator") 
                ;; (:file "url")
@@ -54,13 +55,13 @@
                ;;          :serial t
                ;;          :components ((:file "node")))
                
-               (:module "indy"
-                        :serial t
-                        :components ((:file "indy")
-                                     (:file "indyparser")))
-               ;; (:module "pgen"
+               ;; (:module "indy"
                ;;          :serial t
-               ;;          :components ((:file "pgen")))
+               ;;          :components ((:file "indy")
+               ;;                       (:file "indyparser")))
+               (:module "pgen"
+                        :serial t
+                        :components ((:file "pgen")))
                ;; (:file "ml")
                ;; (:file "nextent")
                

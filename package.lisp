@@ -80,6 +80,23 @@
            :c-call :c-dynamic 
            :c-element :c-unit :c-return :c-if :fprim :c-equal :c-nil))
 
+(defpackage :java
+  (:use :cl :lol :utils :grammar :doc)
+  (:export :java-empty :java-comment :java-const 
+           :java-type :java-primitive-type :java-array-type :java-object-type :java-template-type :java-wildcard-type
+           :java-pair :java-array :java-element
+           :java-object :java-annotation :java-annotation2 :java-with-annotations :java-class :java-interface :java-method :java-signature 
+           :java-import :java-package :java-new :java-call :java-static :java-dynamic :java-enum :java-chain :java-constructor :java-arrow 
+           :java-list :java-unit :java-template :java-assign :java-return :java-throw :java-statement
+           :java-null :java-nil 
+           :java-try :java-catch% :java-catch
+           :java-switch :java-case :java-break
+           :java-if
+           :java-+ :java-- :java-* :java-/
+           :java-or :java-and :java-not
+           :java-true :java-false
+           :java-equal :java-greater-than :java-less-than))
+
 (defpackage :url
   (:use :cl :lol :utils :parser :grammar :doc :lang)
   (:export :void :static-chunk :dynamic-chunk :expression-chunk :path-parameter :query-parameter :login-parameter 
@@ -155,7 +172,7 @@
   (:use :cl :lol :utils :doc :grammar :lang))
 
 (defpackage :pgen
-  (:use :cl :lol :utils :doc :grammar :lang))
+  (:use :cl :lol :utils :doc :grammar :java))
 
 (defpackage :indy
   (:use :cl :lol :utils :parser :doc :grammar))
