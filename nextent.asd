@@ -59,12 +59,12 @@
                ;;          :serial t
                ;;          :components ((:file "indy")
                ;;                       (:file "indyparser")))
-               (:module "pgen"
+               ;; (:module "pgen"
+               ;;          :serial t
+               ;;          :components ((:file "pgen")))
+               (:module "lgen"
                         :serial t
-                        :components ((:file "pgen")))
+                        :components ((:file "lgen")))
                ;; (:file "ml")
                ;; (:file "nextent")
-               
                ))
-
-

@@ -499,8 +499,7 @@
                     (syn (invoke fattore-booleano)))
       ;; (synthesize (let ((type (t-template t-bool)))
       ;;               (java-new type (java-not (java-chain (java-chain syn :as type) (java-call 'get-value)))))) 
-      (synthesize (let ((type (t-template t-bool)))
-                    (java-new t-not syn)))))
+      (synthesize (java-new t-not syn))))
 
 (defproduction fattore-booleano 
     (with-bindings (((match (terminal :true))))

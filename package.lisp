@@ -19,7 +19,12 @@
            :lower-camel :upper-camel
            :split-str :interleave
            :append* 
-           :write-file))
+           :write-file
+           :my-debug
+           :closure-equal
+           :hash-table-keys
+           :hash-table-values
+           :overlaps))
 
 (defpackage :parser
   (:use :cl :lol :utils)
@@ -172,6 +177,9 @@
   (:use :cl :lol :utils :doc :grammar :lang))
 
 (defpackage :pgen
+  (:use :cl :lol :utils :doc :grammar :java))
+
+(defpackage :lgen
   (:use :cl :lol :utils :doc :grammar :java))
 
 (defpackage :indy
