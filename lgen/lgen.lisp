@@ -1,6 +1,9 @@
 (in-package :lgen)
-(defprim node (name)
+(defprim node% (name)
   (:pretty () (list 'node (list :name name))))
+
+(defmacro node (name)
+  `(node% (gensym (mkstr ,name))))
 
 (defprim edge (from to &optional label)
   (:pretty () (list 'edge (list :from (synth :pretty from) :to (synth :pretty to) :label label))))
@@ -13,7 +16,10 @@
                                :start (synth :pretty start)
                                :accept (synth-all :pretty accept)))))
 
-
+;; (defun named-list (lst)
+;;   (if (null lst)
+;;       nil
+;;       (append (list (keyw (synth :name))))))
 ;; (defmacro defsm (&rest ))
 (defprim epsilon ()
   (:pretty () (list 'epsilon))
@@ -54,14 +60,16 @@
   (:pretty () (list 'cat (list :res (synth-all :pretty res))))
   (:nfa () (let* ((nfas (synth-all :nfa res))
                   (nodes (apply #'append (synth-all :nodes nfas)))
-                  (edges (mapcar (lambda (pair)
-                                   (edge (car (synth :accept (car pair)))
-                                         (synth :start (cadr pair))))
-                                 (overlaps nfas))))
-             (progn (my-debug "cat"
-                              nodes 
-                              edges)
-                    (fsm nodes edges (synth :start (car nfas)) (synth :accept (car (last nfas))))))))
+                  (edges (apply #'append (synth-all :edges nfas)))
+                  (connecting-edges (mapcar (lambda (pair)
+                                              (edge (car (synth :accept (car pair)))
+                                                    (synth :start (cadr pair))))
+                                            (overlaps nfas))))
+             (progn ;; (my-debug "cat"
+                    ;;           nodes 
+                    ;;           (append edges connecting-edges))
+                    (fsm nodes (append edges connecting-edges)
+                         (synth :start (car nfas)) (synth :accept (car (last nfas))))))))
 
 (defprim star (re)
   (:pretty () (list 'star (list :re (synth :pretty re))))
@@ -76,5 +84,67 @@
                                   (synth :edges nfa))))
              (fsm nodes edges i (list f)))))
 
+;; (defun epsilon-closure-stack states nfa stack)
+(defun epsilon-closure (states nfa)
+  (labels ((epsilon-closure-single (s nfa)
+             (let ((epsilon-neighbors (synth-all :to (remove-if-not
+                                                      (lambda (edge)
+                                                        (and (closure-equal (synth :from edge) s)
+                                                             (null (synth :label edge))))
+                                                      (synth :edges nfa)))))
+               (progn
+                 ;; (my-debug "epsilon-neighbors" s epsilon-neighbors)
+                 
+                 (if epsilon-neighbors 
+                     (union (epsilon-closure epsilon-neighbors nfa) epsilon-neighbors)
+                     ;; (apply #'append*
+                     ;;        epsilon-neighbors
+                     ;;        (epsilon-closure epsilon-neighbors nfa))
+                     nil)))))
+    (reduce #'union (mapcar (lambda (s) 
+                              (epsilon-closure-single s nfa))
+                            states)
+            :initial-value states)))
 
-(pprint (synth :pretty (synth :nfa (star (sym 'a)))))
+(defun move (states label nfa)
+  (labels ((move-single (s label nfa)
+             (synth-all :to (remove-if-not
+                             (lambda (edge)
+                               (and (closure-equal (synth :from edge) s)
+                                    (equal label (synth :label edge))))
+                             (synth :edges nfa)))))
+    (reduce #'union (mapcar (lambda (s) 
+                              (move-single s label nfa))
+                            states)
+            :initial-value nil)))
+
+(defun alphabet (fsm)
+  (remove nil (reduce #'union 
+                      (mapcar (lambda (edge)
+                                (list (synth :label edge)))
+                              (synth :edges fsm))
+                      :initial-value nil)))
+
+(defun subset-construction (nfa marked dstates dtran state)
+  (let* ((new-marked (cons state marked))
+         (neighbors (mapcar (lambda (sym)
+                              (epsilon-closure (move state sym nfa) nfa)
+                              (alphabet nfa))))
+         (new-dstates (reduce (lambda (u))
+                              neighbors
+                              :initial-value dstates)))))
+;; (defun nfa-to-dfa (nfa marked)
+;;   (let ((start (epsilon-closure (list (synth :start nfa)))))
+    
+;;     ))
+(defun closure-equal (x y)
+   (equal (synth :pretty x) (synth :pretty y)))
+
+(let* ((re (cat (star (bar (sym 'a) (sym 'b)))
+                (sym 'a) (sym 'b) ;; (sym 'b)
+                ))
+       (nfa (synth :nfa re))) 
+  ;; (pprint (synth :pretty nfa))
+  (pprint (synth-all :pretty (epsilon-closure (list (synth :start nfa)) nfa)))
+  (pprint (alphabet nfa))
+  (print (synth-all :pretty (move (epsilon-closure (list (synth :start nfa)) nfa) 'b nfa))))

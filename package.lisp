@@ -21,7 +21,6 @@
            :append* 
            :write-file
            :my-debug
-           :closure-equal
            :hash-table-keys
            :hash-table-values
            :overlaps))

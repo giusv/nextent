@@ -111,8 +111,7 @@
                     vars)
           ;; (read)
           ))
-(defun closure-equal (x y)
-   (equal (synth :pretty x) (synth :pretty y)))
+
 (defun hash-table-keys (table)
   (loop for key being the hash-keys of table collect key))
 (defun hash-table-values (table)
