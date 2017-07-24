@@ -2,6 +2,7 @@
 (defprim node% (name)
   (:pretty () (list 'node (list :name name))))
 
+(setq *gensym-counter* 0)
 (defmacro node (name)
   `(node% (gensym (mkstr ,name))))
 
@@ -125,26 +126,79 @@
                               (synth :edges fsm))
                       :initial-value nil)))
 
-(defun subset-construction (nfa marked dstates dtran state)
-  (let* ((new-marked (cons state marked))
-         (neighbors (mapcar (lambda (sym)
-                              (epsilon-closure (move state sym nfa) nfa)
-                              (alphabet nfa))))
-         (new-dstates (reduce (lambda (u))
-                              neighbors
-                              :initial-value dstates)))))
+;; (defun subset-construction (nfa marked dstates dtran state)
+;;   (let* ((new-marked (cons state marked))
+;;          (neighbors (mapcar (lambda (sym)
+;;                               (epsilon-closure (move state sym nfa) nfa)
+;;                               (alphabet nfa))))
+;;          (new-dstates (reduce (lambda (u))
+;;                               neighbors
+;;                               :initial-value dstates)))))
 ;; (defun nfa-to-dfa (nfa marked)
 ;;   (let ((start (epsilon-closure (list (synth :start nfa)))))
     
 ;;     ))
+
+(defun subset (a b &key (test #'equal))
+  (reduce (lambda (acc elem)
+            (and acc (if (member elem b :test test) t nil)))
+          a
+          :initial-value t))
+
+;; (pprint (subset '(b a) '(a b c)))
+
+
+(defun set-equal (a b &key (test #'equal))
+  (and (subset a b :test test)
+       (subset b a :test test)))
+;; (pprint (set-equal '(a b) '(b a c)))
+
+(defmacro while (test &rest body)
+  `(do ()
+       ((not ,test))
+     ,@body))
+
+(defun subset-construction (nfa)
+  (let* ((dstates (list (epsilon-closure (list (synth :start nfa)) nfa))) 
+         (dtran nil)
+         (unmarked dstates)
+         (alphabet (alphabet nfa)))
+    (while unmarked
+      (let ((tset (pop unmarked)))
+        (dolist (a alphabet)
+          (let ((test (lambda (set1 set2)
+                        (set-equal set1 set2 :test #'closure-equal)))
+                (uset (epsilon-closure (move tset a nfa) nfa)))
+            (if (not (member uset dstates :test test))
+                (progn (setf dstates (adjoin uset dstates :test test))
+                       (setf unmarked (adjoin uset unmarked :test test))))
+            (setf dtran (adjoin (list tset a uset) dtran))))))
+    (values dstates
+            dtran)))
+
+
+
 (defun closure-equal (x y)
    (equal (synth :pretty x) (synth :pretty y)))
 
 (let* ((re (cat (star (bar (sym 'a) (sym 'b)))
-                (sym 'a) (sym 'b) ;; (sym 'b)
-                ))
+                (sym 'a) (sym 'b) (sym 'b)))
        (nfa (synth :nfa re))) 
   ;; (pprint (synth :pretty nfa))
-  (pprint (synth-all :pretty (epsilon-closure (list (synth :start nfa)) nfa)))
-  (pprint (alphabet nfa))
-  (print (synth-all :pretty (move (epsilon-closure (list (synth :start nfa)) nfa) 'b nfa))))
+  ;; (pprint (synth-all :pretty (epsilon-closure (list (synth :start nfa)) nfa)))
+  ;; (pprint (alphabet nfa))
+  ;; (print (synth-all :pretty (move (epsilon-closure (list (synth :start nfa)) nfa) 'b nfa)))
+  (multiple-value-bind (dstates dtran) (subset-construction nfa)
+    (labels ((pprint-statelist (statelist) 
+               (pprint (synth-all :name statelist))
+               ;(format t "~%")
+               )
+             (pprint-transition (transition) 
+               (pprint-statelist (car transition))
+               (pprint (cadr transition))
+               (pprint-statelist (caddr transition))
+               (format t "~%-------------------~%")))
+      (pprint (synth :pretty nfa))
+      (mapcar #'pprint-statelist dstates)      
+      (format t "~%-------------------~%")
+      (mapcar #'pprint-transition dtran))))
