@@ -344,6 +344,8 @@
 
 ;; (defparameter etype (java-template-type 'expression (java-object-type 'float)))
 (defparameter t-expr (java-object-type 'expression))
+(defparameter t-fcall (java-object-type 'function-call))
+(defparameter t-fdecl (java-object-type 'function-declaration))
 (defparameter t-aexpr (java-object-type 'arithmetic-expression))
 (defparameter t-bexpr (java-object-type 'boolean-expression))
 (defparameter t-or (java-object-type 'or))
@@ -354,6 +356,8 @@
 (defparameter t-times (java-object-type 'times))
 (defparameter t-bind (java-object-type 'binding))
 (defparameter t-binds (java-template-type 'array-list t-bind))
+(defparameter t-exprs (java-template-type 'array-list t-expr))
+(defparameter t-pars (java-template-type 'array-list t-id))
 
 
 (defparameter t-bconst (java-object-type 'boolean-constant))
@@ -365,6 +369,7 @@
 (defparameter t-string (java-object-type 'string))
 (defparameter t-id (java-object-type 'identifier))
 (defparameter t-int (java-object-type 'integer))
+(defparameter t-if (java-object-type 'if))
 (defparameter t-let (java-object-type 'let))
 (defparameter t-ind (java-object-type 'indicator))
 
@@ -374,16 +379,29 @@
 
 (defnonterminal espressione (synth-attr t-expr) :start t)
 (defnonterminal resto-espressione (synth-attr t-expr 
-                               :expr (inher-attr t-expr)))
+                                              :expr (inher-attr t-expr)))
 (defnonterminal termine (synth-attr t-expr))
-(defnonterminal tp (synth-attr t-expr
-                               :expr (inher-attr t-expr)))
-(defnonterminal ff (synth-attr t-expr))
+(defnonterminal resto-termine (synth-attr t-expr
+                                          :expr (inher-attr t-expr)))
+(defnonterminal fattore(synth-attr t-expr))
 
-(defnonterminal indy-let (synth-attr t-expr))
-(defnonterminal indy-binds (synth-attr t-binds))
-(defnonterminal indy-binds-rest (synth-attr t-binds))
-(defnonterminal indy-bind (synth-attr t-bind))
+(defnonterminal chiamata-id (synth-attr t-expr))
+(defnonterminal resto-chiamata-id (synth-attr t-expr
+                                              :expr (inher-attr t-expr)))
+
+(defnonterminal sia (synth-attr t-expr))
+(defnonterminal se (synth-attr t-expr))
+
+(defnonterminal dichiarazione-parametri-funzione (synth-attr t-pars))
+(defnonterminal resto-dichiarazione-parametri-funzione (synth-attr t-pars))
+
+(defnonterminal invocazione-parametri-funzione (synth-attr t-exprs))
+(defnonterminal resto-invocazione-parametri-funzione (synth-attr t-exprs))
+
+(defnonterminal legami (synth-attr t-binds))
+(defnonterminal resto-legami (synth-attr t-binds))
+(defnonterminal legame (synth-attr t-bind))
+(defnonterminal resto-legame (synth-attr t-expr))
 
 ;; (defnonterminal parametri nil)
 ;; (defnonterminal resto-parametri nil)
@@ -419,11 +437,14 @@
 ;;       (synthesize veic)))
 
 (defproduction funzione
-    (with-bindings (((match (terminal :sinistri)))
+    (with-bindings (((push-environment))
+                    ((match (terminal :funzione)))
                     ((match (terminal :left)))
-                    (node (invoke espressione-booleana))
-                    ((match (terminal :right))))
-      (synthesize node)))
+                    (pars (invoke dichiarazione-parametri-funzione))
+                    ((match (terminal :right)))
+                    (expr (invoke espressione-booleana))
+                    ((pop-environment)))
+      (synthesize (java-new t-fdecl pars expr))))
 
 ;; (defproduction parametro
 ;;     (with-bindings ((id (match terminal-id))
@@ -447,9 +468,12 @@
 ;;       nil))
 
 (defproduction espressione-booleana 
-    (with-bindings ((node (invoke indy-let)))
+    (with-bindings ((node (invoke sia)))
       (synthesize node)))
 
+(defproduction espressione-booleana 
+    (with-bindings ((node (invoke se)))
+      (synthesize node)))
 
 
 (defproduction espressione-booleana 
@@ -517,9 +541,9 @@
     (with-bindings ((node (invoke relazione)))
       (synthesize node)))
 
-(defproduction fattore-booleano 
-    (with-bindings ((node (invoke funzione)))
-      (synthesize node)))
+;; (defproduction fattore-booleano 
+;;     (with-bindings ((node (invoke funzione)))
+;;       (synthesize node)))
 
 (defproduction relazione 
     (with-bindings ((node (invoke espressione))
@@ -543,91 +567,172 @@
                     (id (match terminal-id))
                     ;; (arg (invoke argomento))
                     ((match (terminal :left)))
-                    (params (invoke indy-binds))
+                    (params (invoke legami))
                     ((match (terminal :right)))
                     (expr (invoke espressione-booleana))
                     ((pop-environment)))
       (synthesize (java-new t-ind id params expr))))
 
-(defproduction indy-let 
+(defproduction sia 
     (with-bindings (((match (terminal :let)))
                     ((push-environment))
-                    (binds (invoke indy-binds))
+                    (binds (invoke legami))
                     ((match (terminal :in)))
                     (node (invoke espressione-booleana))
                     ((pop-environment)))
       (synthesize (java-new t-let binds node))))
 
-(defproduction indy-bind 
-(with-bindings ((id (match terminal-id))
-                ((match (terminal :assign)))
-                (node (invoke espressione))
-                ((store id id)))
-  (synthesize (java-new t-bind id node))))
+(defproduction se
+    (with-bindings (((match (terminal :se)))
+                    (expr (invoke espressione-booleana))
+                    ((match (terminal :allora)))
+                    (then (invoke espressione-booleana))
+                    ((match (terminal :altrimenti)))
+                    (otherwise (invoke espressione-booleana)))
+      (synthesize (java-new t-if (java-chain expr :as t-bexpr) then otherwise))))
 
-(defproduction indy-binds-rest
+(defproduction resto-invocazione-parametri-funzione
+    (synthesize (java-new t-exprs)))
+
+(defproduction resto-invocazione-parametri-funzione 
+    (with-bindings (((match (terminal :comma)))
+                    (par (invoke espressione-booleana))
+                    (pars (invoke resto-invocazione-parametri-funzione)))
+      (synthesize (java-chain :as t-exprs (java-static 'list-utils) (java-call 'cons par pars)))))
+
+(defproduction invocazione-parametri-funzione 
+    (with-bindings ((par (invoke espressione-booleana))
+                    (pars (invoke resto-invocazione-parametri-funzione)))
+      (synthesize (java-chain :as t-exprs (java-static 'list-utils) (java-call 'cons par pars)))))
+
+(defproduction resto-dichiarazione-parametri-funzione
+    (synthesize (java-new t-pars)))
+
+(defproduction resto-dichiarazione-parametri-funzione 
+    (with-bindings (((match (terminal :comma)))
+                    (par (match terminal-id))
+                    ((store par par))
+                    (pars (invoke resto-dichiarazione-parametri-funzione)))
+      (synthesize (java-chain :as t-pars (java-static 'list-utils) (java-call 'cons par pars)))))
+
+(defproduction dichiarazione-parametri-funzione 
+    (with-bindings ((par (match terminal-id))
+                    ((store par par))
+                    (pars (invoke resto-dichiarazione-parametri-funzione)))
+      (synthesize (java-chain :as t-pars (java-static 'list-utils) (java-call 'cons par pars)))))
+
+(defproduction resto-legami
     (synthesize (java-new t-binds)))
 
-(defproduction indy-binds-rest 
+(defproduction resto-legami 
     (with-bindings (((match (terminal :comma)))
-                    (bind (invoke indy-bind))
-                    (binds (invoke indy-binds-rest)))
+                    (bind (invoke legame))
+                    (binds (invoke resto-legami)))
       (synthesize (java-chain :as t-binds (java-static 'list-utils) (java-call 'cons bind binds)))))
 
-(defproduction indy-binds 
-    (with-bindings ((bind (invoke indy-bind))
-                    (binds (invoke indy-binds-rest)))
+(defproduction legami 
+    (with-bindings ((bind (invoke legame))
+                    (binds (invoke resto-legami)))
       (synthesize (java-chain :as t-binds (java-static 'list-utils) (java-call 'cons bind binds)))))
+
+
+(defproduction resto-legame 
+    (with-bindings ((node (invoke funzione)))
+  (synthesize node)))
+
+(defproduction resto-legame 
+    (with-bindings ((node (invoke espressione-booleana)))
+  (synthesize node)))
+
+(defproduction legame 
+    (with-bindings ((id (match terminal-id))
+                    ((match (terminal :assign)))
+                    (node (invoke resto-legame))
+                    ((store id id)))
+      (synthesize (java-new t-bind id node))))
 
 (defproduction espressione (with-bindings ((node (invoke termine))
                   (syn (invoke resto-espressione node)))
     (synthesize syn)))
 
-(defproduction resto-espressione (with-inherited ((expr :expr))
-                    (with-bindings (((match (terminal :plus)))
-                                    (node (invoke termine))
-                                    (syn 
-                                     ;; (let ((type (t-template t-int)))
-                                     ;;   (invoke resto-espressione (java-new type
-                                     ;;                      (java-+ (java-chain (java-chain expr :as type) (java-call 'get-value)) 
-                                     ;;                            (java-chain (java-chain node :as type) (java-call 'get-value))))))
-                                     (invoke resto-espressione (java-new t-plus expr node))))
-                      (synthesize syn))))
-(defproduction resto-espressione (with-inherited ((expr :expr))
-      (synthesize expr)))
+(defproduction resto-espressione 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :plus)))
+                      (node (invoke termine))
+                      (syn 
+                       ;; (let ((type (t-template t-int)))
+                       ;;   (invoke resto-espressione (java-new type
+                       ;;                      (java-+ (java-chain (java-chain expr :as type) (java-call 'get-value)) 
+                       ;;                            (java-chain (java-chain node :as type) (java-call 'get-value))))))
+                       (invoke resto-espressione (java-new t-plus expr node))))
+        (synthesize syn))))
 
-(defproduction termine (with-bindings ((node (invoke ff))
-                  (syn (invoke tp node)))
-    (synthesize syn)))
-
-(defproduction tp (with-inherited ((expr :expr))
-                    (with-bindings (((match (terminal :times)))
-                                    (node (invoke ff))
-                                    (syn 
-                                     ;; (let ((type (t-template t-int)))
-                                     ;;   (invoke tp (java-new type
-                                     ;;                      (java-* (java-chain (java-chain expr :as type) (java-call 'get-value)) 
-                                     ;;                            (java-chain (java-chain node :as type) (java-call 'get-value))))))
-                                     (invoke tp (java-new t-times expr node))))
-                      (synthesize syn))))
- 
-(defproduction tp 
+(defproduction resto-espressione 
     (with-inherited ((expr :expr))
       (synthesize expr)))
 
-(defproduction ff 
+(defproduction termine
+    (with-bindings ((node (invoke fattore))
+                    (syn (invoke resto-termine node)))
+      (synthesize syn)))
+
+(defproduction resto-termine 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :times)))
+                      (node (invoke fattore))
+                      (syn 
+                       ;; (let ((type (t-template t-int)))
+                       ;;   (invoke resto-termine (java-new type
+                       ;;                      (java-* (java-chain (java-chain expr :as type) (java-call 'get-value)) 
+                       ;;                            (java-chain (java-chain node :as type) (java-call 'get-value))))))
+                       (invoke resto-termine (java-new t-times expr node))))
+        (synthesize syn))))
+ 
+(defproduction resto-termine 
+    (with-inherited ((expr :expr))
+      (synthesize expr)))
+
+(defproduction fattore
     (with-bindings (((match (terminal :left)))
                     (node (invoke espressione-booleana))
                     ((match (terminal :right))))
       (synthesize node)))
 
-(defproduction ff 
+(defproduction fattore
     (with-bindings ((node (lexval (terminal :num t-aconst))))
       (synthesize node)))
 
-(defproduction ff 
-    (with-bindings ((node (lookup (terminal :id t-expr))))
+;; (defproduction fattore
+;;     (with-bindings ((node (lookup (terminal :id t-expr))))
+;;       (synthesize node)))
+
+(defproduction fattore
+    (with-bindings ((node (invoke chiamata-id)))
       (synthesize node)))
+
+;; (defproduction chiamata-id
+;;     (with-bindings ((node (terminal :sinistri))
+;;                     (syn (invoke resto-chiamata-id node)))
+;;       (synthesize syn)))
+
+(defproduction chiamata-id
+    (with-bindings ((node (lookup (terminal :id t-expr)))
+                    (syn (invoke resto-chiamata-id node)))
+      (synthesize syn)))
+
+(defproduction resto-chiamata-id
+    (with-inherited ((expr :expr))
+      (synthesize expr)))
+
+(defproduction resto-chiamata-id
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :left)))
+                      (pars (invoke invocazione-parametri-funzione))
+                      ((match (terminal :right))))
+        (synthesize (java-new t-fcall (java-chain expr :as t-id) pars)))))
+
+
+
 
 
 (defparameter *ptable* (make-ptable *grammar*))
@@ -639,10 +744,10 @@
 ;; (pprint-ptable *ptable*)
 
 (pprint (synth :output (apply #'vcat (synth-all :doc (hash-table-values *nonterminals*))) 0))
-;; (pprint (synth-all :pretty (apply #'append (synth-all :body (get-prods-by-head *grammar* (synth :symbol ff))))))
+;; (pprint (synth-all :pretty (apply #'append (synth-all :body (get-prods-by-head *grammar* (synth :symbol fattore))))))
 (write-file "D:/giusv/temp/temp.java"
             (synth :string (apply #'vcat (synth-all :doc (synth-all :java (synth-all :code (hash-table-values *nonterminals*)))))))
 
-;; (pprint (synth-all :output (synth-all :java (synth-all :code (list espressione resto-espressione termine tp ff))) 0))
+;; (pprint (synth-all :output (synth-all :java (synth-all :code (list espressione resto-espressione termine resto-termine fattore))) 0))
 ;; (pprint (synth-all :pretty (get-prods-by-head *grammar* (synth :symbol espressione))))
 ;; (pprint (synth :doc espressione))
