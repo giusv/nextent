@@ -122,3 +122,15 @@
       nil
       (cons (list (car lst) (cadr lst))
             (overlaps (cdr lst)))))
+
+(defmacro with-multiple-value-bindings (bindings form)
+  (if (null bindings)
+      form
+      (aif (caar bindings)
+           `(multiple-value-bind ,it ,(cadar bindings)
+              (with-multiple-value-bindings ,(cdr bindings) ,form))
+           `(with-multiple-value-bindings ,(cdr bindings) ,form))))
+
+;; (with-multiple-value-bindings ((nil (values 1 2))
+;;                                ((c d) (values 3 4)))
+;;   (pprint (list c d)))

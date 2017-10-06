@@ -48,7 +48,38 @@
   (:pretty () (list 'dollar))
   (:terminal () t))
 
-
+(defparameter terminal-strings
+(list '(:id . "identificatore")
+      '(:soggetto . "soggetto")
+      '(:veicolo . "veicolo")
+      '(:colon . ":")
+      '(:assign . "=")
+      '(:comma . ",")
+      '(:sinistri . "sinistri")
+      '(:left . "(")
+      '(:right . ")")
+      '(:or . "||")
+      '(:and . "&&")
+      '(:not . "!")
+      '(:true . "vero")
+      '(:false . "falso")
+      '(:equal . "=")
+      '(:lt . "<")
+      '(:le . "<=")
+      '(:gt . ">")
+      '(:ge . ">=")
+      '(:se . "se")
+      '(:allora . "allora")
+      '(:altrimenti . "altrimenti")
+      '(:let . "sia")
+      '(:in . "in")
+      '(:number . "numero")
+      '(:boolean . "booleano")
+      '(:plus . "+")
+      '(:minus . "-")
+      '(:times . "*")
+      '(:divide . "/")
+      '(:num . "numero")))
 
 (defun hash-table-keys (table)
   (loop for key being the hash-keys of table collect key))
@@ -85,17 +116,25 @@
                             it
                             (java-primitive-type 'void))
                        :throws (list (java-static 'i-o-exception)
+                                     (java-static 'indicator-parsing-exception)
                                      (java-static 'type-exception))
                        (java-list
                         (apply #'java-switch (java-chain (java-dynamic 'look) (java-dynamic 'tag))
-                               :default (java-throw (java-new (java-object-type 'error) 
+                               :default (java-throw (java-new (java-object-type 'indicator-parsing-exception) 
                                                           (reduce #'java-+ 
-                                                                  (list (java-const (reduce #'mkstr
+                                                                  (list (java-const "errore alla linea ")
+                                                                        (java-chain (java-static 'lexer) (java-dynamic 'line))
+                                                                        (java-const ", colonna ")
+                                                                        (java-chain (java-static 'lexer) (java-dynamic 'col))
+                                                                        (java-const (reduce #'mkstr
                                                                                           (mapcar (lambda (case)
-                                                                                                    (mkstr case ", "))
+                                                                                                    ;; (mkstr case ", ")
+                                                                                                    (mkstr "'" (aif (assoc case terminal-strings)
+                                                                                                                    (cdr it)
+                                                                                                                    "file del file") "'" ", "))
                                                                                                   cases)
-                                                                                          :initial-value (mkstr "Error in production for " symbol ": expecting ")))
-                                                                        (java-const "found ")
+                                                                                          :initial-value (mkstr " nella produzione per " symbol ": atteso ")))
+                                                                        (java-const "trovato ")
                                                                         (java-dynamic 'look)))))
                                (mapcar (lambda (case)
                                          (java-case (java-chain (java-static 'tag) (java-enum case)) 
@@ -302,7 +341,7 @@
              (if (and (synth :type symbol) lhs)
                  (java-list (java-statement (java-pair lhs (synth :type symbol) 
                                                  :init (java-new (synth :type symbol)
-                                                               (java-dynamic 'look :as (java-object-type 'word))))) 
+                                                               (java-dynamic 'look :as t-word)))) 
                           (java-statement (java-call 'match (java-chain (java-static 'tag) (java-enum (synth :symbol symbol))))))
                  (java-statement (java-call 'match (java-chain (java-static 'tag) (java-enum (synth :symbol symbol))))))
              (error "nonterminal symbol in match")))
@@ -327,12 +366,18 @@
                                     (not (null type)))
                                (java-list 
                                 (java-statement (java-pair lhs type :init (java-chain (java-dynamic 'top) 
-                                                                                (java-call 'get (java-chain (java-dynamic 'look :as (java-object-type 'word)) (java-dynamic 'lexeme))) 
-                                                                                :as type)))
-                                (java-if (java-null (java-dynamic lhs))
-                                       (java-statement (java-call 'error (java-+ (java-chain (java-dynamic 'look)
-                                                                                     (java-call 'to-string))
-                                                                           (java-const " undeclared"))))) 
+                                                                                      (java-call 'get (java-chain (java-dynamic 'look :as t-word) (java-dynamic 'lexeme))) 
+                                                                                      :as type)))
+                                (java-if (java-null (java-dynamic lhs)) 
+                                         (java-throw (java-new (java-object-type 'indicator-parsing-exception) 
+                                                               (reduce #'java-+ 
+                                                                       (list (java-const "errore alla linea ")
+                                                                             (java-chain (java-static 'lexer) (java-dynamic 'line))
+                                                                             (java-const ", colonna ")
+                                                                             (java-chain (java-static 'lexer) (java-dynamic 'col))
+                                                                             (java-chain (java-dynamic 'look)
+                                                                                         (java-call 'to-string))
+                                                                             (java-const " non dichiarato")))))) 
                                 (synth :code (match symbol) attribute nil))
                                (error "nonterminal symbol in lookup"))))
   (:body () symbol))
@@ -356,6 +401,7 @@
 ;; (defparameter etype (java-template-type 'expression (java-object-type 'float)))
 (defparameter t-string (java-object-type 'string))
 (defparameter t-id (java-object-type 'identifier))
+(defparameter t-word (java-object-type 'word))
 (defparameter t-int (java-object-type 'integer))
 (defparameter t-if (java-object-type 'if))
 (defparameter t-let (java-object-type 'let))
@@ -380,10 +426,11 @@
 (defparameter t-ipar (java-object-type 'parameter))
 (defparameter t-ipars (java-template-type 'array-list t-ipar))
 (defparameter t-type (java-object-type 'type))
-
+(defparameter t-query (java-object-type 'query))
 
 (defparameter t-bconst (java-object-type 'boolean-constant))
 (defparameter t-aconst (java-object-type 'numeric-constant))
+(defparameter t-sconst (java-object-type 'string-constant))
 
 (defun t-template (&optional (type (java-wildcard-type))) 
   (java-template-type 'template-expression type))
@@ -408,6 +455,7 @@
 
 (defnonterminal sia (synth-attr t-expr))
 (defnonterminal se (synth-attr t-expr))
+(defnonterminal query (synth-attr t-expr))
 
 ;; (defnonterminal dichiarazione-parametri-indicatore (synth-attr t-ipars))
 ;; (defnonterminal resto-dichiarazione-parametri-indicatore (synth-attr t-ipars))
@@ -429,6 +477,8 @@
 ;; (defnonterminal resto-parametri nil)
 ;; (defnonterminal parametro nil)
 (defnonterminal argomento (synth-attr t-id))
+;; (defnonterminal resto-argomento (synth-attr t-id
+;;                                             :name (inher-attr t-id)))
 (defnonterminal espressione-booleana (synth-attr t-expr))
 (defnonterminal resto-espressione-booleana (synth-attr t-expr
                                                        :expr (inher-attr t-expr)))
@@ -452,13 +502,28 @@
 
 (defproduction argomento 
     (with-bindings ((sogg (match (terminal :soggetto t-id)))
-                    ((store sogg (java-new t-id sogg (java-chain (java-static 'type) (java-enum 'soggetto))))))
+                    ((store sogg (java-new t-id sogg (java-chain (java-static 'type) (java-enum 'soggetto)))))
+                    ((store (java-new t-id (java-new t-word (java-const "input") (java-chain (java-static 'tag) (java-enum 'input))))
+                            (java-new t-id sogg (java-chain (java-static 'type) (java-enum 'soggetto))))))
       (synthesize sogg)))
 
 (defproduction argomento 
     (with-bindings ((veic (match (terminal :veicolo t-id)))
+                    ((store (java-new t-id (java-new t-word (java-const "input") (java-chain (java-static 'tag) (java-enum 'input))))
+                            (java-new t-id veic (java-chain (java-static 'type) (java-enum 'veicolo)))))
                     ((store veic (java-new t-id veic (java-chain (java-static 'type) (java-enum 'veicolo))))))
-      (synthesize veic)))
+      (synthesize veic))
+  ;; (with-bindings ((veic (match (terminal :veicolo t-id)))
+  ;;                 ((store veic (java-new t-id veic (java-chain (java-static 'type) (java-enum 'veicolo))))))
+  ;;   (synthesize veic))
+  )
+
+;; (defproduction argomento 
+;;     (with-bindings ((id (match terminal-id))
+;;                     ((match (terminal :colon))) 
+;;                     (arg (invoke resto-argomento id)))
+;;       (synthesize arg)))
+
 
 ;; (defproduction parametro
 ;;     (with-bindings ((id (match terminal-id))
@@ -480,6 +545,22 @@
 ;;     (with-bindings (((invoke parametro))
 ;;                     ((invoke resto-parametri)))
 ;;       nil))
+
+;; top.put("sinistro", new Identifier(new Identifier(new Word("sinistro",Tag.ID)),
+;; 					Type.SINISTRO))
+
+(defproduction query 
+    (with-bindings (((match (terminal :sinistri)))
+                    ((match (terminal :left)))
+                    ((push-environment))
+                    ((store (java-new t-id (java-new t-word (java-const "sinistro") (java-chain (java-static 'tag) (java-enum 'id))))
+                            (java-new t-sconst (java-const "sinistro"))))
+                    (node (invoke espressione-booleana))
+                    ((match (terminal :right)))
+                    ((pop-environment)))
+      (synthesize ;; (java-new t-query (java-chain (java-static 'table) (java-enum 'sinistri)) (java-chain node))
+       (java-new t-query (java-chain (java-dynamic 'top) (java-call 'get (java-const "input")) (java-call 'get-type)) (java-chain node)))))
+
 
 (defproduction espressione-booleana 
     (with-bindings ((node (invoke sia)))
@@ -567,19 +648,43 @@
 (defproduction resto-relazione
     (with-inherited ((expr :expr))
       (synthesize expr)))
+
 (defproduction resto-relazione 
     (with-inherited ((expr :expr))
       (with-bindings (((match (terminal :equal)))
                       (node (invoke espressione)))
-        (synthesize ;; (let ((type (t-template t-bool)))
-                    ;;   (java-new type (java-equal (java-chain (java-chain expr :as type) (java-call 'get-value)) 
-                    ;;                          (java-chain (java-chain node :as type) (java-call 'get-value)))))
-         (java-new t-rel (java-chain (java-static 'relop) (java-enum 'equal)) expr node)))))
+        (synthesize (java-new t-rel (java-chain (java-static 'relop) (java-enum 'equal)) expr node)))))
+
+(defproduction resto-relazione 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :lt)))
+                      (node (invoke espressione)))
+        (synthesize (java-new t-rel (java-chain (java-static 'relop) (java-enum 'lt)) expr node)))))
+
+(defproduction resto-relazione 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :le)))
+                      (node (invoke espressione)))
+        (synthesize (java-new t-rel (java-chain (java-static 'relop) (java-enum 'le)) expr node)))))
+
+(defproduction resto-relazione 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :gt)))
+                      (node (invoke espressione)))
+        (synthesize (java-new t-rel (java-chain (java-static 'relop) (java-enum 'gt)) expr node)))))
+
+(defproduction resto-relazione 
+    (with-inherited ((expr :expr))
+      (with-bindings (((match (terminal :ge)))
+                      (node (invoke espressione)))
+        (synthesize (java-new t-rel (java-chain (java-static 'relop) (java-enum 'ge)) expr node)))))
+
+
 
 (defproduction indicatore 
     (with-bindings (((push-environment))
                     (id (match terminal-id))
-                    ((match (terminal :left)))                    
+                    ((match (terminal :left)))
                     (arg (invoke argomento))
                     ((match (terminal :right)))
                     ((match (terminal :left)))
@@ -786,14 +891,18 @@
 ;;     (with-bindings ((node (lookup (terminal :id t-expr))))
 ;;       (synthesize node)))
 
-(defproduction fattore
-    (with-bindings ((node (invoke chiamata-id)))
+(defproduction chiamata-id 
+    (with-bindings ((node (invoke query)))
       (synthesize node)))
 
 ;; (defproduction chiamata-id
 ;;     (with-bindings ((node (terminal :sinistri))
 ;;                     (syn (invoke resto-chiamata-id node)))
 ;;       (synthesize syn)))
+
+(defproduction fattore
+    (with-bindings ((node (invoke chiamata-id)))
+      (synthesize node)))
 
 (defproduction chiamata-id
     (with-bindings ((node (lookup (terminal :id t-expr)))

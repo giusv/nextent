@@ -271,7 +271,7 @@
 
 (defprim java-enum (name)
   (:pretty () (list 'java-enum (list :name name))) 
-  (:java () (text "~a" (string-upcase name))))
+  (:java () (text "~a" (string-upcase (upper-camel name "_")))))
 
 (defprim java-element (array index)
   (:pretty () (list 'java-element (list :array array :index (synth :pretty index)))) 

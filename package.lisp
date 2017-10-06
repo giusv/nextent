@@ -1,5 +1,5 @@
 ;;;; package.lisp 
-;; (push #p"d:/giusv/lisp/nextent/" asdf:*central-registry*)
+;; (push #p"d:/giusv/lisp/6040/" asdf:*central-registry*)
 
 (defpackage :lol
   (:use :cl)
