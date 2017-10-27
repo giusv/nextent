@@ -434,7 +434,7 @@
 
 (defun t-template (&optional (type (java-wildcard-type))) 
   (java-template-type 'template-expression type))
-;; (defparameter t-bool (java-object-type 'boolean))
+(defparameter t-bool (java-object-type 'boolean))
 
 
 
@@ -456,6 +456,7 @@
 (defnonterminal sia (synth-attr t-expr))
 (defnonterminal se (synth-attr t-expr))
 (defnonterminal query (synth-attr t-expr))
+(defnonterminal espressione-query (synth-attr t-expr))
 
 ;; (defnonterminal dichiarazione-parametri-indicatore (synth-attr t-ipars))
 ;; (defnonterminal resto-dichiarazione-parametri-indicatore (synth-attr t-ipars))
@@ -549,13 +550,20 @@
 ;; top.put("sinistro", new Identifier(new Identifier(new Word("sinistro",Tag.ID)),
 ;; 					Type.SINISTRO))
 
+(defproduction espressione-query
+    (synthesize (java-dynamic 'null)))
+(defproduction espressione-query
+    (with-bindings ((node (invoke espressione-booleana)))
+      (synthesize node)))
+   
+  
 (defproduction query 
     (with-bindings (((match (terminal :sinistri)))
                     ((match (terminal :left)))
                     ((push-environment))
-                    ((store (java-new t-id (java-new t-word (java-const "sinistro") (java-chain (java-static 'tag) (java-enum 'id))))
-                            (java-new t-sconst (java-const "sinistro"))))
-                    (node (invoke espressione-booleana))
+                    ((store (java-new t-id (java-new t-word (java-const "context") (java-chain (java-static 'tag) (java-enum 'id))))
+                            (java-new t-bconst (java-new t-bool (java-const 'true)))))
+                    (node (invoke espressione-query))
                     ((match (terminal :right)))
                     ((pop-environment)))
       (synthesize ;; (java-new t-query (java-chain (java-static 'table) (java-enum 'sinistri)) (java-chain node))
@@ -715,6 +723,9 @@
 (defproduction resto-invocazione-parametri-funzione
     (synthesize (java-new t-exprs)))
 
+(defproduction invocazione-parametri-funzione
+    (synthesize (java-new t-exprs)))
+
 (defproduction resto-invocazione-parametri-funzione 
     (with-bindings (((match (terminal :comma)))
                     (par (invoke espressione-booleana))
@@ -762,6 +773,9 @@
 ;;                     (pars (invoke resto-dichiarazione-parametri-indicatore)))
 ;;       (synthesize (java-chain :as t-ipars (java-static 'list-utils) (java-call 'cons (java-new t-ipar par type value) pars)))))
 
+(defproduction dichiarazione-parametri-funzione
+    (synthesize (java-new t-fpars)))
+
 (defproduction resto-dichiarazione-parametri-funzione
     (synthesize (java-new t-fpars)))
 
@@ -783,6 +797,9 @@
       (synthesize (java-chain :as t-fpars (java-static 'list-utils) (java-call 'cons (java-new t-id par type) pars)))))
 
 (defproduction resto-legami
+    (synthesize (java-new t-binds)))
+
+(defproduction legami
     (synthesize (java-new t-binds)))
 
 (defproduction resto-legami 
@@ -935,7 +952,8 @@
                               ;;                                    (java-call 'get-id)
                               ;;                                    (java-dynamic 'lexeme))))
                               (java-chain :as t-fdecl expr)
-                              pars)))))
+                              pars
+                              (java-chain (java-dynamic 'top) (java-call 'get (java-const "context")) :as t-bconst))))))
 
 (defparameter *ptable* (make-ptable *grammar*))
 
@@ -943,7 +961,7 @@
 ;;   (pprint (synth-all :pretty (first-set sym)))
 ;;   (pprint (synth-all :pretty (follow-set sym))))
 ;; (pprint (synth-all :pretty (nonterminals *grammar*)))
-;; (pprint-ptable *ptable*)
+(pprint-ptable *ptable*)
 
 (pprint (synth :output (apply #'vcat (synth-all :doc (hash-table-values *nonterminals*))) 0))
 ;; (pprint (synth-all :pretty (apply #'append (synth-all :body (get-prods-by-head *grammar* (synth :symbol fattore))))))
